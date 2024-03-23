@@ -1,3 +1,8 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.svg-bg {
+    background-image: url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNiIgaGVpZ2h0PSIxNiI+PHBhdGggZmlsbD0iI2RlZGVkZSIgZD0iTTAgMGg4djhIMHpNOCA4aDh2OEg4eiIvPjwvc3ZnPg==);
+    background-repeat: repeat;
+}
