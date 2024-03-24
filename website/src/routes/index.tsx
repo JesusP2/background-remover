@@ -38,7 +38,7 @@ export default function Home() {
 						const newScale = scale() - 0.1;
 						setScale(newScale);
 						updateCanvasScale(scale() * baseScale());
-						reDrawCanvas(img(), scale(), { x: 0, y: 671.72 / scale() });
+						reDrawCanvas(img(), scale() * baseScale(), { x: 0, y: 671.72 / scale() });
 					} else {
 						const newScale = scale() + 0.1;
 						setScale(newScale);

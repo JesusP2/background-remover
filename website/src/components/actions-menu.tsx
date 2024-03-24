@@ -27,14 +27,7 @@ export function ActionsMenu({
     setBaseScale(sourceCtx.canvas.width / img.width);
 		updateCanvasScale(baseScale());
 		const paddingTop = (sourceCtx.canvas.height / baseScale() - img.height) / 2;
-		reDrawCanvas(img, 1, { x: 0, y: paddingTop / scale() });
-    // sourceCtx.fillStyle = "blue";
-    // sourceCtx.fillRect(0, paddingTop / scale(), 500, 500);
-    // setScale(3)
-    // updateCanvasScale(scale() * baseScale())
-    // sourceCtx.fillStyle = "red";
-    // sourceCtx.fillRect(0, paddingTop / scale(), 50, 50);
-		// reDrawCanvas(img, 1, { x: 0, y: paddingTop });
+		reDrawCanvas(img, scale() * baseScale(), { x: 0, y: paddingTop / scale() });
 	}
 
 	function fileToImage(file: File | Blob): Promise<HTMLImageElement> {
