@@ -1,27 +1,40 @@
 import { Accessor, Setter } from "solid-js";
-import { drawImage, getCanvas, updateCanvasScale } from "~/lib/utils";
+import {
+	drawImage,
+	getCanvas,
+	reDrawCanvas,
+	updateCanvasScale,
+} from "~/lib/utils";
 
 export function ActionsMenu({
+	baseScale,
+	setBaseScale,
 	scale,
 	setScale,
 	setImg,
 }: {
+	baseScale: Accessor<number>;
+	setBaseScale: Setter<number>;
 	scale: Accessor<number>;
 	setScale: Setter<number>;
 	setImg: Setter<HTMLImageElement | null>;
 }) {
 	async function onFileChange(file?: File | Blob) {
-		const { sourceCtx, destinationCtx } = getCanvas();
+		const { sourceCtx } = getCanvas();
 		if (!file) return;
 		const img = await fileToImage(file);
 		setImg(img);
-		const newScale = sourceCtx.canvas.width / img.width;
-		const paddingTop =
-			Math.abs(sourceCtx.canvas.height * newScale - img.height) / 2;
-    setScale(newScale);
-    updateCanvasScale(newScale);
-		sourceCtx.drawImage(img, 0, paddingTop, img.width, img.height);
-		destinationCtx.drawImage(img, 0, paddingTop, img.width, img.height);
+    setBaseScale(sourceCtx.canvas.width / img.width);
+		updateCanvasScale(baseScale());
+		const paddingTop = (sourceCtx.canvas.height / baseScale() - img.height) / 2;
+		reDrawCanvas(img, 1, { x: 0, y: paddingTop / scale() });
+    // sourceCtx.fillStyle = "blue";
+    // sourceCtx.fillRect(0, paddingTop / scale(), 500, 500);
+    // setScale(3)
+    // updateCanvasScale(scale() * baseScale())
+    // sourceCtx.fillStyle = "red";
+    // sourceCtx.fillRect(0, paddingTop / scale(), 50, 50);
+		// reDrawCanvas(img, 1, { x: 0, y: paddingTop });
 	}
 
 	function fileToImage(file: File | Blob): Promise<HTMLImageElement> {

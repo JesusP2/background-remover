@@ -17,9 +17,31 @@ export function getCanvas() {
 	return { sourceCtx, destinationCtx };
 }
 
+export function reDrawCanvas(
+	img: HTMLImageElement | null,
+	scale: number,
+	pos: { x: number; y: number },
+) {
+  if (!img) return;
+	const { sourceCtx, destinationCtx } = getCanvas();
+	sourceCtx.clearRect(
+		0,
+		0,
+		sourceCtx.canvas.width / scale,
+		sourceCtx.canvas.height / scale,
+	);
+	destinationCtx.clearRect(
+		0,
+		0,
+		destinationCtx.canvas.width / scale,
+		destinationCtx.canvas.height / scale,
+	);
+	sourceCtx.drawImage(img, 0, pos.y, img.width, img.height);
+	destinationCtx.drawImage(img, 0, pos.y, img.width, img.height);
+}
+
 export function updateCanvasScale(
 	newScale: number,
-	img?: HTMLImageElement | null,
 ) {
 	const { sourceCtx, destinationCtx } = getCanvas();
 	sourceCtx.restore();
@@ -28,20 +50,8 @@ export function updateCanvasScale(
 	destinationCtx.save();
 	sourceCtx.scale(newScale, newScale);
 	destinationCtx.scale(newScale, newScale);
-	sourceCtx.clearRect(
-		0,
-		0,
-		sourceCtx.canvas.width / newScale,
-		sourceCtx.canvas.height / newScale,
-	);
-	destinationCtx.clearRect(
-		0,
-		0,
-		destinationCtx.canvas.width * newScale,
-		destinationCtx.canvas.height * newScale,
-	);
-	if (img) {
-		sourceCtx.drawImage(img, 0, 0, img.width, img.height);
-		destinationCtx.drawImage(img, 0, 0, img.width, img.height);
-	}
+}
+
+export function getMousePos(e: MouseEvent, scale: number) {
+	// console.log(e.clientX / scale, e.clientY / scale);
 }
