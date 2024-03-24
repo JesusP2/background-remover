@@ -27,17 +27,17 @@ export function reDrawCanvas(
 	sourceCtx.clearRect(
 		0,
 		0,
-		sourceCtx.canvas.width / scale,
-		sourceCtx.canvas.height / scale,
+		sourceCtx.canvas.width,
+		sourceCtx.canvas.height,
 	);
 	destinationCtx.clearRect(
 		0,
 		0,
-		destinationCtx.canvas.width / scale,
-		destinationCtx.canvas.height / scale,
+		destinationCtx.canvas.width,
+		destinationCtx.canvas.height,
 	);
-	sourceCtx.drawImage(img, 0, pos.y, img.width, img.height);
-	destinationCtx.drawImage(img, 0, pos.y, img.width, img.height);
+	sourceCtx.drawImage(img, pos.x, pos.y, img.width, img.height);
+	destinationCtx.drawImage(img, pos.x, pos.y, img.width, img.height);
 }
 
 export function updateCanvasScale(
@@ -53,5 +53,6 @@ export function updateCanvasScale(
 }
 
 export function getMousePos(e: MouseEvent, scale: number) {
+  console.log(e.clientX, e.clientY)
 	// console.log(e.clientX / scale, e.clientY / scale);
 }

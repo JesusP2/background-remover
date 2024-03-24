@@ -7,27 +7,34 @@ import {
 } from "~/lib/utils";
 
 export function ActionsMenu({
-	baseScale,
-	setBaseScale,
 	scale,
 	setScale,
 	setImg,
+	translatePos,
+	setTranslatePos,
 }: {
-	baseScale: Accessor<number>;
-	setBaseScale: Setter<number>;
 	scale: Accessor<number>;
 	setScale: Setter<number>;
 	setImg: Setter<HTMLImageElement | null>;
+	translatePos: Accessor<{ x: number; y: number }>;
+	setTranslatePos: Setter<{ x: number; y: number }>;
 }) {
 	async function onFileChange(file?: File | Blob) {
-		const { sourceCtx } = getCanvas();
+		const { sourceCtx, destinationCtx } = getCanvas();
 		if (!file) return;
 		const img = await fileToImage(file);
 		setImg(img);
-    setBaseScale(sourceCtx.canvas.width / img.width);
-		updateCanvasScale(baseScale());
-		const paddingTop = (sourceCtx.canvas.height / baseScale() - img.height) / 2;
-		reDrawCanvas(img, scale() * baseScale(), { x: 0, y: paddingTop / scale() });
+		const newScale = sourceCtx.canvas.width / img.width;
+		const fakePaddingTop =
+			(sourceCtx.canvas.height / newScale - img.height) / 2;
+		const paddingTop = fakePaddingTop * newScale;
+    setScale(newScale);
+		updateCanvasScale(newScale);
+		setTranslatePos({ x: 0, y: paddingTop });
+		reDrawCanvas(img, scale(), {
+			x: 0,
+			y: paddingTop / scale(),
+		});
 	}
 
 	function fileToImage(file: File | Blob): Promise<HTMLImageElement> {

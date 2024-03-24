@@ -8,7 +8,6 @@ import {
 } from "~/lib/utils";
 export default function Home() {
 	const [scale, setScale] = createSignal(1);
-	const [baseScale, setBaseScale] = createSignal(1);
 	const [img, setImg] = createSignal<HTMLImageElement | null>(null);
 	const [translatePos, setTranslatePos] = createSignal({ x: 0, y: 0 });
 
@@ -25,25 +24,39 @@ export default function Home() {
 	return (
 		<main class="flex">
 			<ActionsMenu
-				baseScale={baseScale}
-				setBaseScale={setBaseScale}
 				scale={scale}
 				setScale={setScale}
 				setImg={setImg}
+				translatePos={translatePos}
+				setTranslatePos={setTranslatePos}
 			/>
 			<canvas
 				onWheel={(e) => {
-					const { sourceCtx } = getCanvas();
 					if (e.deltaY > 0) {
-						const newScale = scale() - 0.1;
+						const newScale = scale() - 0.17;
 						setScale(newScale);
-						updateCanvasScale(scale() * baseScale());
-						reDrawCanvas(img(), scale() * baseScale(), { x: 0, y: 671.72 / scale() });
+						updateCanvasScale(scale());
+						reDrawCanvas(img(), scale(), {
+							x: translatePos().x + e.clientX / scale() - e.clientX,
+							y: translatePos().y + e.clientY / scale() - e.clientY,
+						});
 					} else {
-						const newScale = scale() + 0.1;
+						const newScale = scale() + 0.17;
+            console.table({
+              scale: scale(),
+              newScale,
+              y: e.clientY,
+            })
 						setScale(newScale);
-						updateCanvasScale(scale() * baseScale());
-						reDrawCanvas(img(), scale(), { x: 0, y: 671.72 / scale() });
+						updateCanvasScale(scale());
+						// setTranslatePos({
+						// 	x: 0,
+						// 	y: translatePos().y + e.clientY / scale() - e.clientY,
+						// });
+						reDrawCanvas(img(), scale(), {
+							x: translatePos().x + e.clientX / scale() - e.clientX,
+							y: translatePos().y + e.clientY / scale() - e.clientY,
+            });
 					}
 				}}
 				onMouseMove={(e) => getMousePos(e, scale())}

@@ -10,36 +10,31 @@ export default function Playground() {
 		}
 		sourceCanvas.width = innerWidth / 2;
 		sourceCanvas.height = innerHeight;
-    const L = 50;
-    const baseScale = sourceCanvas.width / L;
-    updateScale(baseScale);
-    sourceCtx.fillStyle = "red";
-    let paddingTop = (sourceCanvas.height / baseScale - L) / 2
-    // const paddingTop = 10;
-    sourceCtx.fillRect(0, paddingTop, L, L);
-    setScale(5);
-    updateScale(SCALE() * baseScale);
-    // paddingTop = (sourceCanvas.height / SCALE() - L) / 2
-    sourceCtx.fillStyle = "blue";
-    sourceCtx.fillRect(0, paddingTop / SCALE(), L, L);
-    setScale(0.3);
-    updateScale(SCALE() * baseScale);
-    // paddingTop = (sourceCanvas.height / SCALE() - L) / 2
-    sourceCtx.fillStyle = "green";
-    sourceCtx.fillRect(0, paddingTop / SCALE(), L, L);
-		// const POSITION = 10; // mouse position
-		// sourceCtx.fillStyle = "red";
-		// updateScale(SCALE());
-		// sourceCtx.fillRect(POSITION / SCALE(), POSITION / SCALE(), 100, 100);
-		// setScale(15);
-		// updateScale(SCALE());
-		// sourceCtx.fillStyle = "blue";
-		// sourceCtx.fillRect(POSITION / SCALE(), POSITION / SCALE(), 2, 2);
-		// setScale(4);
-		// updateScale(SCALE());
-		// console.log("translation:", POSITION - POSITION / SCALE());
-		// sourceCtx.fillStyle = "green";
-		// sourceCtx.fillRect(POSITION / SCALE(), POSITION / SCALE(), 2, 2);
+		const L = 50;
+		sourceCtx.fillStyle = "red";
+
+		const baseScale = sourceCtx.canvas.width / L;
+		const fakePaddingTop = (sourceCtx.canvas.height / baseScale - L) / 2;
+		setScale(baseScale);
+		updateScale(baseScale);
+		const paddingTop = SCALE() * fakePaddingTop;
+		sourceCtx.fillRect(
+			0,
+			paddingTop + paddingTop / SCALE() - paddingTop,
+			L,
+			L,
+		);
+		setScale(13);
+		updateScale(13);
+    console.log(paddingTop)
+    console.log(paddingTop + paddingTop / SCALE() - paddingTop)
+		sourceCtx.fillStyle = "blue";
+		sourceCtx.fillRect(
+			0,
+			paddingTop + paddingTop / SCALE() - paddingTop,
+			L,
+			L,
+		);
 	});
 
 	function updateScale(newScale: number) {
@@ -59,7 +54,7 @@ export default function Playground() {
 		if (!sourceCanvas || !sourceCtx) {
 			return;
 		}
-		console.log(e.clientX / SCALE(), e.clientY / SCALE());
+		console.log(e.clientX / SCALE(), e.clientY);
 	}
 	return (
 		<main class="flex">
