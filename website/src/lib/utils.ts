@@ -1,4 +1,19 @@
-import { onMount } from "solid-js";
+import { createSignal, onMount } from "solid-js";
+
+function fileToImage(file: File | Blob): Promise<HTMLImageElement> {
+	return new Promise((resolve) => {
+		const reader = new FileReader();
+		reader.readAsDataURL(file);
+		reader.onload = () => {
+			const img = new Image();
+      if (typeof reader.result !== "string") return;
+			img.src = reader.result
+			img.onload = () => {
+				resolve(img);
+			};
+		};
+	});
+}
 
 export function getCanvas() {
 	const sourceCanvas = document.querySelector<HTMLCanvasElement>("#source");
@@ -13,67 +28,79 @@ export function getCanvas() {
 }
 
 export function useCanvas() {
+	const [img, setImg] = createSignal<HTMLImageElement | null>(null);
 	const matrix = [1, 0, 0, 1, 0, 0];
-	let m = matrix;
 	let scale = 1;
 	const pos = { x: 0, y: 0 };
 	let dirty = true;
-
-	const view = {
-		applyTo() {
-			if (dirty) {
-				this.update();
-			}
-			const { sourceCtx, destinationCtx } = getCanvas();
-			sourceCtx.clearRect(
-				0,
-				0,
-				sourceCtx.canvas.width,
-				sourceCtx.canvas.height,
-			);
-			sourceCtx.setTransform(m[0], m[1], m[2], m[3], m[4], m[5]);
-			sourceCtx.drawImage(sourceCtx.canvas, 0, 0);
-			destinationCtx.clearRect(
-				0,
-				0,
-				destinationCtx.canvas.width,
-				destinationCtx.canvas.height,
-			);
-			destinationCtx.setTransform(m[0], m[1], m[2], m[3], m[4], m[5]);
-			destinationCtx.drawImage(destinationCtx.canvas, 0, 0);
-
-			const zoomMe = document.querySelector("#zoomMe") as HTMLImageElement;
-			zoomMe.style.transform = `matrix(${m[0]},${m[1]},${m[2]},${m[3]},${m[4]},${m[5]})`;
-		},
-		update() {
-			dirty = false;
-			m[3] = m[0] = scale;
-			m[2] = m[1] = 0;
-			m[4] = pos.x;
-			m[5] = pos.y;
-		},
-		pan(amount: any) {
-			if (dirty) {
-				this.update();
-			}
-			pos.x += amount.x;
-			pos.y += amount.y;
-			dirty = true;
-		},
-		scaleAt(at: any, amount: any) {
-			// at in screen coords
-			if (dirty) {
-				this.update();
-			}
-			scale *= amount;
-			pos.x = at.x - (at.x - pos.x) * amount;
-			pos.y = at.y - (at.y - pos.y) * amount;
-			dirty = true;
-		},
-	};
-
 	const mouse = { x: 0, y: 0, oldX: 0, oldY: 0, button: false };
-	function mouseEvent(event: any) {
+
+	function drawInCanvas() {
+		if (dirty) {
+			update();
+		}
+		const { sourceCtx, destinationCtx } = getCanvas();
+    const currentImg = img();
+    if (!currentImg) return;
+		sourceCtx.translate(0, 0);
+		sourceCtx.clearRect(0, 0, 10000, 10000);
+		sourceCtx.setTransform(
+			matrix[0],
+			matrix[1],
+			matrix[2],
+			matrix[3],
+			matrix[4],
+			matrix[5],
+		);
+		sourceCtx.drawImage(currentImg, 0, 0);
+
+		destinationCtx.translate(0, 0);
+		destinationCtx.clearRect(
+			0,
+			0,
+      10000,
+      10000,
+		);
+		destinationCtx.setTransform(
+			matrix[0],
+			matrix[1],
+			matrix[2],
+			matrix[3],
+			matrix[4],
+			matrix[5],
+		);
+		destinationCtx.drawImage(currentImg, 0, 0);
+	}
+
+	function update() {
+		dirty = false;
+		matrix[3] = matrix[0] = scale;
+		matrix[2] = matrix[1] = 0;
+		matrix[4] = pos.x;
+		matrix[5] = pos.y;
+	}
+
+	function pan(amount: { x: number; y: number }) {
+		if (dirty) {
+			update();
+		}
+		pos.x += amount.x;
+		pos.y += amount.y;
+		dirty = true;
+	}
+
+	function scaleAt(at: { x: number; y: number }, amount: number) {
+		if (dirty) {
+			update();
+		}
+		scale *= amount;
+		pos.x = at.x - (at.x - pos.x) * amount;
+		pos.y = at.y - (at.y - pos.y) * amount;
+		dirty = true;
+	}
+
+	function mouseEvent(event: MouseEvent) {
+		const { sourceCtx } = getCanvas();
 		if (event.type === "mousedown") {
 			mouse.button = true;
 		}
@@ -82,45 +109,77 @@ export function useCanvas() {
 		}
 		mouse.oldX = mouse.x;
 		mouse.oldY = mouse.y;
-		mouse.x = event.pageX;
-		mouse.y = event.pageY;
+		mouse.x = event.pageX - sourceCtx.canvas.offsetLeft;
+		mouse.y = event.pageY - sourceCtx.canvas.offsetTop;
 		if (mouse.button) {
-			view.pan({ x: mouse.x - mouse.oldX, y: mouse.y - mouse.oldY });
-			view.applyTo();
+			pan({ x: mouse.x - mouse.oldX, y: mouse.y - mouse.oldY });
+			drawInCanvas();
 		}
 		event.preventDefault();
 	}
-	function mouseWheelEvent(event: any) {
-		const zoomMe = document.querySelector("#zoomMe") as HTMLImageElement;
-    console.log(zoomMe.width, zoomMe.height)
-		const x = event.pageX - zoomMe.width / 2;
-		const y = event.pageY - zoomMe.height / 2;
-		if (event.deltaY < 0) {
-			view.scaleAt({ x, y }, 1.1);
-			view.applyTo();
-		} else {
-			view.scaleAt({ x, y }, 1 / 1.1);
-			view.applyTo();
-		}
-		event.preventDefault();
-	}
-	onMount(() => {
-  //   const { sourceCtx, destinationCtx } = getCanvas();
-  //   sourceCtx.canvas.addEventListener("mousemove", mouseEvent, { passive: false });
-  //   sourceCtx.canvas.addEventListener("mousedown", mouseEvent, { passive: false });
-  //   sourceCtx.canvas.addEventListener("mouseup", mouseEvent, { passive: false });
-  //   sourceCtx.canvas.addEventListener("mouseout", mouseEvent, { passive: false });
-		// sourceCtx.canvas.addEventListener("wheel", mouseWheelEvent, { passive: false });
-  //   destinationCtx.canvas.addEventListener("mousemove", mouseEvent, { passive: false });
-  //   destinationCtx.canvas.addEventListener("mousedown", mouseEvent, { passive: false });
-  //   destinationCtx.canvas.addEventListener("mouseup", mouseEvent, { passive: false });
-  //   destinationCtx.canvas.addEventListener("mouseout", mouseEvent, { passive: false });
-		// destinationCtx.canvas.addEventListener("wheel", mouseWheelEvent, { passive: false });
 
-		document.addEventListener("mousemove", mouseEvent, { passive: false });
-		document.addEventListener("mousedown", mouseEvent, { passive: false });
-		document.addEventListener("mouseup", mouseEvent, { passive: false });
-		document.addEventListener("mouseout", mouseEvent, { passive: false });
-		document.addEventListener("wheel", mouseWheelEvent, { passive: false });
+	function mouseWheelEvent(event: WheelEvent, type: "source" | "destination") {
+		const { sourceCtx, destinationCtx } = getCanvas();
+		let canvas = sourceCtx.canvas;
+		if (type === "destination") {
+			canvas = destinationCtx.canvas;
+		}
+		const x = event.pageX - canvas.offsetLeft;
+		const y = event.pageY - canvas.offsetTop;
+		if (event.deltaY < 0) {
+			scaleAt({ x, y }, 1.1);
+			drawInCanvas();
+		} else {
+			scaleAt({ x, y }, 1 / 1.1);
+			drawInCanvas();
+		}
+		event.preventDefault();
+	}
+
+	async function onFileChange(file?: File | Blob) {
+		const { sourceCtx, destinationCtx } = getCanvas();
+		if (!file) return;
+		const img = await fileToImage(file);
+		setImg(img);
+		const scale = sourceCtx.canvas.width / img.width;
+		const startingY = (sourceCtx.canvas.height / scale - img.height) / 2;
+		pos.y = startingY;
+		scaleAt({ x: 0, y: 0 }, scale);
+		drawInCanvas();
+		sourceCtx.imageSmoothingEnabled = false;
+		destinationCtx.imageSmoothingEnabled = false;
+	}
+
+	function setupListeners(
+		canvas: HTMLCanvasElement,
+		type: "source" | "destination",
+	) {
+		canvas.addEventListener("mousemove", mouseEvent, {
+			passive: false,
+		});
+		canvas.addEventListener("mousedown", mouseEvent, {
+			passive: false,
+		});
+		canvas.addEventListener("mouseup", mouseEvent, {
+			passive: false,
+		});
+		canvas.addEventListener("mouseout", mouseEvent, {
+			passive: false,
+		});
+		canvas.addEventListener("wheel", (e) => mouseWheelEvent(e, type), {
+			passive: false,
+		});
+	}
+
+	onMount(() => {
+		const { sourceCtx, destinationCtx } = getCanvas();
+		sourceCtx.canvas.width = innerWidth / 2;
+		sourceCtx.canvas.height = innerHeight;
+		destinationCtx.canvas.width = innerWidth / 2;
+		destinationCtx.canvas.height = innerHeight;
+		setupListeners(sourceCtx.canvas, "source");
+		setupListeners(destinationCtx.canvas, "destination");
 	});
+
+	return { img, setImg, drawInCanvas, scaleAt, onFileChange };
 }
