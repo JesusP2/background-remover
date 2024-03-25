@@ -25,12 +25,19 @@ export function ActionsMenu({
 		const img = await fileToImage(file);
 		setImg(img);
 		const newScale = sourceCtx.canvas.width / img.width;
+		const factor = newScale / scale();
 		const fakePaddingTop =
 			(sourceCtx.canvas.height / newScale - img.height) / 2;
 		const paddingTop = fakePaddingTop * newScale;
-    setScale(newScale);
+		setScale(newScale);
 		updateCanvasScale(newScale);
-		setTranslatePos({ x: 0, y: paddingTop });
+		// setTranslatePos({ x: 0, y: paddingTop / scale() });
+		console.log(
+			paddingTop,
+			newScale,
+			paddingTop / scale(),
+			paddingTop / factor,
+		);
 		reDrawCanvas(img, scale(), {
 			x: 0,
 			y: paddingTop / scale(),

@@ -42,20 +42,21 @@ export default function Home() {
 						});
 					} else {
 						const newScale = scale() + 0.17;
-            console.table({
-              scale: scale(),
-              newScale,
-              y: e.clientY,
-            })
+						const factor = newScale / 0.927;
 						setScale(newScale);
 						updateCanvasScale(scale());
 						// setTranslatePos({
 						// 	x: 0,
 						// 	y: translatePos().y + e.clientY / scale() - e.clientY,
 						// });
+						// setTranslatePos({
+						// 	x: 0,
+						// 	y:
+						// 		translatePos().y / factor - (e.clientY - translatePos().y) / scale(),
+						// });
 						reDrawCanvas(img(), scale(), {
-							x: translatePos().x + e.clientX / scale() - e.clientX,
-							y: translatePos().y + e.clientY / scale() - e.clientY,
+              x: 0,
+              y: (183.907 + 0) / factor - 0,
             });
 					}
 				}}
