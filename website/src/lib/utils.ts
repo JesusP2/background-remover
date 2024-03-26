@@ -218,6 +218,24 @@ export function useCanvas() {
     destinationCtx.imageSmoothingEnabled = false;
   }
 
+  async function sendImage() {
+    const { sourceCtx } = getCanvas();
+    const copy = document.createElement('canvas');
+    const copyCtx = copy.getContext('2d');
+    const _img = img();
+    if (!copyCtx || !_img) return;
+    copy.width = _img.width;
+    copy.height = _img.height;
+    copyCtx.drawImage(_img, 0, 0);
+    redrawActions(copyCtx);
+    const data = copy.toDataURL('image/png');
+    const anchor = document.createElement('a');
+    anchor.href = data;
+    anchor.download = 'hello.png';
+    anchor.target = '_self';
+    anchor.click();
+  }
+
   function setupListeners(
     canvas: HTMLCanvasElement,
     type: 'source' | 'destination',
@@ -249,5 +267,5 @@ export function useCanvas() {
     setupListeners(destinationCtx.canvas, 'destination');
   });
 
-  return { img, setImg, drawInCanvas, scaleAt, onFileChange, setCurrentMode };
+  return { img, setImg, drawInCanvas, scaleAt, onFileChange, setCurrentMode, sendImage };
 }
