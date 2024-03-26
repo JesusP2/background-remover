@@ -27,6 +27,15 @@ export function getCanvas() {
 	return { sourceCtx, destinationCtx };
 }
 
+type Action = {
+  type: "move" | "draw-green" | "draw-red" | "erase";
+  x: number;
+  y: number;
+  oldX: number;
+  oldY: number;
+  pos: { x: number; y: number };
+  scale: number;
+}
 export function useCanvas() {
 	const [img, setImg] = createSignal<HTMLImageElement | null>(null);
 	const [currentMode, setCurrentMode] = createSignal<
@@ -43,6 +52,8 @@ export function useCanvas() {
 		oldY: number;
 		button: null | number;
 	};
+  const actions: Action[] = [];
+  const redoActions: Action[] = [];
 
 	function drawInCanvas() {
 		if (dirty) {
@@ -74,6 +85,7 @@ export function useCanvas() {
 			matrix[5],
 		);
 		destinationCtx.drawImage(currentImg, 0, 0);
+    redrawStrokes();
 	}
 
 	function update() {
@@ -142,16 +154,42 @@ export function useCanvas() {
 		}
 	}
 
+  function redrawStrokes() {
+    const { sourceCtx } = getCanvas();
+    actions.forEach((action) => {
+      if (action.type === "draw-green") {
+        const { x, y, oldX, oldY, pos: { x: posX, y: posY }, scale } = action;
+        sourceCtx.beginPath();
+        sourceCtx.lineWidth = 10;
+        sourceCtx.lineCap = "round";
+        sourceCtx.strokeStyle = "green";
+        sourceCtx.moveTo(oldX / scale - posX / scale, oldY / scale - posY / scale);
+        sourceCtx.lineTo(x / scale - posX / scale, y / scale - posY / scale);
+        sourceCtx.stroke();
+        sourceCtx.closePath();
+      }
+    });
+  }
+
 	function drawStroke() {
 		const { sourceCtx } = getCanvas();
 		sourceCtx.beginPath();
 		sourceCtx.lineWidth = 10;
 		sourceCtx.lineCap = "round";
 		sourceCtx.strokeStyle = "green";
-		sourceCtx.moveTo(mouse.oldX - pos.x, mouse.oldY - pos.y);
-		sourceCtx.lineTo(mouse.x - pos.x, mouse.y - pos.y);
+		sourceCtx.moveTo(mouse.oldX / scale - pos.x / scale, mouse.oldY / scale - pos.y / scale);
+		sourceCtx.lineTo(mouse.x / scale - pos.x / scale, mouse.y / scale - pos.y / scale);
 		sourceCtx.stroke();
 		sourceCtx.closePath();
+    actions.push({
+      type: "draw-green",
+      x: mouse.x,
+      y: mouse.y,
+      oldX: mouse.oldX,
+      oldY: mouse.oldY,
+      pos: { x: pos.x, y: pos.y },
+      scale,
+    });
 	}
 
 	function mouseWheelEvent(event: WheelEvent, type: "source" | "destination") {
@@ -180,7 +218,7 @@ export function useCanvas() {
 		const scale = sourceCtx.canvas.width / img.width;
 		const startingY = (sourceCtx.canvas.height / scale - img.height) / 2;
 		pos.y = startingY;
-		// scaleAt({ x: 0, y: 0 }, scale);
+		scaleAt({ x: 0, y: 0 }, scale);
 		drawInCanvas();
 		sourceCtx.imageSmoothingEnabled = false;
 		destinationCtx.imageSmoothingEnabled = false;
