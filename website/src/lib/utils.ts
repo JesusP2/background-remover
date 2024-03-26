@@ -166,7 +166,7 @@ export function useCanvas() {
       if (action.type === 'draw-green' || action.type === 'draw-red') {
         const { oldX, oldY, pos, scale } = action;
         let width = 10 / scale;
-        if (scale > 70) {
+        if (scale > 20) {
           width = 1;
         }
         sourceCtx.fillStyle = colors[currentMode()];
@@ -183,7 +183,7 @@ export function useCanvas() {
   function drawStroke() {
     const { sourceCtx } = getCanvas();
     let width = 10 / scale;
-    if (scale > 70) {
+    if (scale > 20) {
       width = 1;
     }
     sourceCtx.fillStyle = colors[currentMode()];
