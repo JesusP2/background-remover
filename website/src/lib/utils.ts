@@ -30,8 +30,6 @@ export function getCanvas() {
 type ActionType = 'move' | 'draw-green' | 'draw-red' | 'erase';
 type Action = {
   type: ActionType;
-  x: number;
-  y: number;
   oldX: number;
   oldY: number;
   pos: { x: number; y: number };
@@ -89,7 +87,7 @@ export function useCanvas() {
       matrix[5],
     );
     destinationCtx.drawImage(currentImg, 0, 0);
-    redrawActions();
+    redrawActions(sourceCtx);
   }
 
   function update() {
@@ -149,59 +147,43 @@ export function useCanvas() {
     } else if (currentMode() === 'move') {
       pan({ x: mouse.x - mouse.oldX, y: mouse.y - mouse.oldY });
       drawInCanvas();
-    } else if (currentMode() === 'draw-green') {
-      drawStroke();
-      return;
-    } else if (currentMode() === 'draw-red') {
-      drawStroke();
+    } else if (currentMode() === 'draw-green' || currentMode() === 'draw-red') {
+      const { sourceCtx } = getCanvas();
+      const action = {
+        type: currentMode(),
+        oldX: mouse.oldX,
+        oldY: mouse.oldY,
+        pos: { x: pos.x, y: pos.y },
+        scale,
+      };
+      drawStroke(action, sourceCtx);
+      actions.push(action);
       return;
     } else if (currentMode() === 'erase') {
       return;
     }
   }
 
-  function redrawActions() {
-    const { sourceCtx } = getCanvas();
+  function redrawActions(ctx: CanvasRenderingContext2D) {
     for (const action of actions) {
       if (action.type === 'draw-green' || action.type === 'draw-red') {
-        const { oldX, oldY, pos, scale } = action;
-        let width = 10 / scale;
-        if (scale > 20) {
-          width = 1;
-        }
-        sourceCtx.fillStyle = colors[currentMode()];
-        sourceCtx.fillRect(
-          oldX / scale - pos.x / scale - width / 2,
-          oldY / scale - pos.y / scale - width / 2,
-          width,
-          width,
-        );
+        drawStroke(action, ctx);
       }
     }
   }
 
-  function drawStroke() {
-    const { sourceCtx } = getCanvas();
+  function drawStroke(action: Action, ctx: CanvasRenderingContext2D) {
     let width = 10 / scale;
     if (scale > 20) {
       width = 1;
     }
-    sourceCtx.fillStyle = colors[currentMode()];
-    sourceCtx.fillRect(
-      mouse.oldX / scale - pos.x / scale - width / 2,
-      mouse.oldY / scale - pos.y / scale - width / 2,
+    ctx.fillStyle = colors[action.type];
+    ctx.fillRect(
+      action.oldX / action.scale - action.pos.x / action.scale - width / 2,
+      action.oldY / action.scale - action.pos.y / action.scale - width / 2,
       width,
       width,
     );
-    actions.push({
-      type: currentMode(),
-      x: mouse.x,
-      y: mouse.y,
-      oldX: mouse.oldX,
-      oldY: mouse.oldY,
-      pos: { x: pos.x, y: pos.y },
-      scale,
-    });
   }
 
   function mouseWheelEvent(event: WheelEvent, type: 'source' | 'destination') {
