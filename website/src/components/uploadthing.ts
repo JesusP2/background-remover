@@ -1,9 +1,9 @@
 import {
-	generateUploadButton,
-	generateUploadDropzone,
-} from "@uploadthing/solid";
+  generateUploadButton,
+  generateUploadDropzone,
+} from '@uploadthing/solid';
 
-import type { OurFileRouter } from "~/server/uploadthing";
+import type { OurFileRouter } from '~/server/uploadthing';
 
 // URL is only needed for server side rendering, or when your router
 // is deployed on a different path than `/api/uploadthing`

@@ -4,7 +4,8 @@
   "scripts": {
     "dev": "vinxi dev",
     "build": "vinxi build",
-    "start": "vinxi start"
+    "start": "vinxi start",
+    "check": "biome check --apply ./src"
   },
   "dependencies": {
     "@solidjs/router": "^0.13.1",
@@ -21,5 +22,8 @@
   },
   "engines": {
     "node": ">=18"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "1.6.3"
   }
 }
