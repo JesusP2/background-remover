@@ -1,0 +1,4 @@
+- undo/redo functionality
+- stroke shapes ("circles" for scale < 20 and pixel for scale > 20)
+- create design for action menu
+- fix problem where moving the mouse too fast while painting causes inconsistent strokes
