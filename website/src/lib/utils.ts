@@ -6,8 +6,8 @@ function fileToImage(file: File | Blob): Promise<HTMLImageElement> {
 		reader.readAsDataURL(file);
 		reader.onload = () => {
 			const img = new Image();
-      if (typeof reader.result !== "string") return;
-			img.src = reader.result
+			if (typeof reader.result !== "string") return;
+			img.src = reader.result;
 			img.onload = () => {
 				resolve(img);
 			};
@@ -29,19 +29,28 @@ export function getCanvas() {
 
 export function useCanvas() {
 	const [img, setImg] = createSignal<HTMLImageElement | null>(null);
+	const [currentMode, setCurrentMode] = createSignal<
+		"move" | "draw-green" | "draw-red" | "erase"
+	>("move");
 	const matrix = [1, 0, 0, 1, 0, 0];
 	let scale = 1;
 	const pos = { x: 0, y: 0 };
 	let dirty = true;
-	const mouse = { x: 0, y: 0, oldX: 0, oldY: 0, button: false };
+	const mouse = { x: 0, y: 0, oldX: 0, oldY: 0, button: null } as {
+		x: number;
+		y: number;
+		oldX: number;
+		oldY: number;
+		button: null | number;
+	};
 
 	function drawInCanvas() {
 		if (dirty) {
 			update();
 		}
 		const { sourceCtx, destinationCtx } = getCanvas();
-    const currentImg = img();
-    if (!currentImg) return;
+		const currentImg = img();
+		if (!currentImg) return;
 		sourceCtx.translate(0, 0);
 		sourceCtx.clearRect(0, 0, 10000, 10000);
 		sourceCtx.setTransform(
@@ -55,12 +64,7 @@ export function useCanvas() {
 		sourceCtx.drawImage(currentImg, 0, 0);
 
 		destinationCtx.translate(0, 0);
-		destinationCtx.clearRect(
-			0,
-			0,
-      10000,
-      10000,
-		);
+		destinationCtx.clearRect(0, 0, 10000, 10000);
 		destinationCtx.setTransform(
 			matrix[0],
 			matrix[1],
@@ -93,29 +97,61 @@ export function useCanvas() {
 		if (dirty) {
 			update();
 		}
-		scale *= amount;
+		if (scale * amount > 80) {
+			amount = 80 / scale;
+			scale = 80;
+		} else {
+			scale *= amount;
+		}
 		pos.x = at.x - (at.x - pos.x) * amount;
 		pos.y = at.y - (at.y - pos.y) * amount;
 		dirty = true;
 	}
 
-	function mouseEvent(event: MouseEvent) {
+	function mousedown(event: MouseEvent) {
+		event.preventDefault();
+		mouse.button = event.button;
+	}
+
+	function mouseup(event: MouseEvent) {
+		event.preventDefault();
+		mouse.button = null;
+	}
+
+	function mousemove(event: MouseEvent) {
+		event.preventDefault();
 		const { sourceCtx } = getCanvas();
-		if (event.type === "mousedown") {
-			mouse.button = true;
-		}
-		if (event.type === "mouseup" || event.type === "mouseout") {
-			mouse.button = false;
-		}
 		mouse.oldX = mouse.x;
 		mouse.oldY = mouse.y;
 		mouse.x = event.pageX - sourceCtx.canvas.offsetLeft;
 		mouse.y = event.pageY - sourceCtx.canvas.offsetTop;
-		if (mouse.button) {
+		if (mouse.button === null) return;
+		else if (mouse.button === 1) {
 			pan({ x: mouse.x - mouse.oldX, y: mouse.y - mouse.oldY });
 			drawInCanvas();
+		} else if (currentMode() === "move") {
+			pan({ x: mouse.x - mouse.oldX, y: mouse.y - mouse.oldY });
+			drawInCanvas();
+		} else if (currentMode() === "draw-green") {
+			drawStroke();
+			return;
+		} else if (currentMode() === "draw-red") {
+			return;
+		} else if (currentMode() === "erase") {
+			return;
 		}
-		event.preventDefault();
+	}
+
+	function drawStroke() {
+		const { sourceCtx } = getCanvas();
+		sourceCtx.beginPath();
+		sourceCtx.lineWidth = 10;
+		sourceCtx.lineCap = "round";
+		sourceCtx.strokeStyle = "green";
+		sourceCtx.moveTo(mouse.oldX - pos.x, mouse.oldY - pos.y);
+		sourceCtx.lineTo(mouse.x - pos.x, mouse.y - pos.y);
+		sourceCtx.stroke();
+		sourceCtx.closePath();
 	}
 
 	function mouseWheelEvent(event: WheelEvent, type: "source" | "destination") {
@@ -144,7 +180,7 @@ export function useCanvas() {
 		const scale = sourceCtx.canvas.width / img.width;
 		const startingY = (sourceCtx.canvas.height / scale - img.height) / 2;
 		pos.y = startingY;
-		scaleAt({ x: 0, y: 0 }, scale);
+		// scaleAt({ x: 0, y: 0 }, scale);
 		drawInCanvas();
 		sourceCtx.imageSmoothingEnabled = false;
 		destinationCtx.imageSmoothingEnabled = false;
@@ -154,16 +190,16 @@ export function useCanvas() {
 		canvas: HTMLCanvasElement,
 		type: "source" | "destination",
 	) {
-		canvas.addEventListener("mousemove", mouseEvent, {
+		canvas.addEventListener("mousemove", mousemove, {
 			passive: false,
 		});
-		canvas.addEventListener("mousedown", mouseEvent, {
+		canvas.addEventListener("mousedown", mousedown, {
 			passive: false,
 		});
-		canvas.addEventListener("mouseup", mouseEvent, {
+		canvas.addEventListener("mouseup", mouseup, {
 			passive: false,
 		});
-		canvas.addEventListener("mouseout", mouseEvent, {
+		canvas.addEventListener("mouseout", mouseup, {
 			passive: false,
 		});
 		canvas.addEventListener("wheel", (e) => mouseWheelEvent(e, type), {
@@ -181,5 +217,5 @@ export function useCanvas() {
 		setupListeners(destinationCtx.canvas, "destination");
 	});
 
-	return { img, setImg, drawInCanvas, scaleAt, onFileChange };
+	return { img, setImg, drawInCanvas, scaleAt, onFileChange, setCurrentMode };
 }
