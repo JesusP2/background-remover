@@ -27,20 +27,24 @@ export function getCanvas() {
 	return { sourceCtx, destinationCtx };
 }
 
+type ActionType = "move" | "draw-green" | "draw-red" | "erase";
 type Action = {
-  type: "move" | "draw-green" | "draw-red" | "erase";
-  x: number;
-  y: number;
-  oldX: number;
-  oldY: number;
-  pos: { x: number; y: number };
-  scale: number;
-}
+	type: ActionType;
+	x: number;
+	y: number;
+	oldX: number;
+	oldY: number;
+	pos: { x: number; y: number };
+	scale: number;
+};
+
+const colors = {
+	"draw-green": "green",
+	"draw-red": "red",
+} as Record<ActionType, string>;
 export function useCanvas() {
 	const [img, setImg] = createSignal<HTMLImageElement | null>(null);
-	const [currentMode, setCurrentMode] = createSignal<
-		"move" | "draw-green" | "draw-red" | "erase"
-	>("move");
+	const [currentMode, setCurrentMode] = createSignal<ActionType>("move");
 	const matrix = [1, 0, 0, 1, 0, 0];
 	let scale = 1;
 	const pos = { x: 0, y: 0 };
@@ -52,8 +56,8 @@ export function useCanvas() {
 		oldY: number;
 		button: null | number;
 	};
-  const actions: Action[] = [];
-  const redoActions: Action[] = [];
+	const actions: Action[] = [];
+	const redoActions: Action[] = [];
 
 	function drawInCanvas() {
 		if (dirty) {
@@ -85,7 +89,7 @@ export function useCanvas() {
 			matrix[5],
 		);
 		destinationCtx.drawImage(currentImg, 0, 0);
-    redrawStrokes();
+		redrawActions();
 	}
 
 	function update() {
@@ -148,48 +152,55 @@ export function useCanvas() {
 			drawStroke();
 			return;
 		} else if (currentMode() === "draw-red") {
+			drawStroke();
 			return;
 		} else if (currentMode() === "erase") {
 			return;
 		}
 	}
 
-  function redrawStrokes() {
-    const { sourceCtx } = getCanvas();
-    actions.forEach((action) => {
-      if (action.type === "draw-green") {
-        const { x, y, oldX, oldY, pos: { x: posX, y: posY }, scale } = action;
-        sourceCtx.beginPath();
-        sourceCtx.lineWidth = 10;
-        sourceCtx.lineCap = "round";
-        sourceCtx.strokeStyle = "green";
-        sourceCtx.moveTo(oldX / scale - posX / scale, oldY / scale - posY / scale);
-        sourceCtx.lineTo(x / scale - posX / scale, y / scale - posY / scale);
-        sourceCtx.stroke();
-        sourceCtx.closePath();
-      }
-    });
-  }
+	function redrawActions() {
+		const { sourceCtx } = getCanvas();
+		actions.forEach((action) => {
+			if (action.type === "draw-green" || action.type === "draw-red") {
+				const { oldX, oldY, pos, scale } = action;
+				let width = 10 / scale;
+				if (scale > 70) {
+					width = 1;
+				}
+				sourceCtx.fillStyle = colors[currentMode()];
+				sourceCtx.fillRect(
+					oldX / scale - pos.x / scale - width / 2,
+					oldY / scale - pos.y / scale - width / 2,
+					width,
+					width,
+				);
+			}
+		});
+	}
 
 	function drawStroke() {
 		const { sourceCtx } = getCanvas();
-		sourceCtx.beginPath();
-		sourceCtx.lineWidth = 10;
-		sourceCtx.lineCap = "round";
-		sourceCtx.strokeStyle = "green";
-		sourceCtx.moveTo(mouse.oldX / scale - pos.x / scale, mouse.oldY / scale - pos.y / scale);
-		sourceCtx.lineTo(mouse.x / scale - pos.x / scale, mouse.y / scale - pos.y / scale);
-		sourceCtx.stroke();
-		sourceCtx.closePath();
-    actions.push({
-      type: "draw-green",
-      x: mouse.x,
-      y: mouse.y,
-      oldX: mouse.oldX,
-      oldY: mouse.oldY,
-      pos: { x: pos.x, y: pos.y },
-      scale,
-    });
+		let width = 10 / scale;
+		if (scale > 70) {
+			width = 1;
+		}
+		sourceCtx.fillStyle = colors[currentMode()];
+		sourceCtx.fillRect(
+			mouse.oldX / scale - pos.x / scale - width / 2,
+			mouse.oldY / scale - pos.y / scale - width / 2,
+			width,
+			width,
+		);
+		actions.push({
+			type: currentMode(),
+			x: mouse.x,
+			y: mouse.y,
+			oldX: mouse.oldX,
+			oldY: mouse.oldY,
+			pos: { x: pos.x, y: pos.y },
+			scale,
+		});
 	}
 
 	function mouseWheelEvent(event: WheelEvent, type: "source" | "destination") {
