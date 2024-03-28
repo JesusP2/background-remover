@@ -15,6 +15,18 @@ function fileToImage(file: File | Blob): Promise<HTMLImageElement> {
   });
 }
 
+function imageToFile(canvas: HTMLCanvasElement, fileName: string, mimeType: string): Promise<File> {
+  return new Promise((resolve) => {
+    canvas.toBlob((blob) => {
+      if (!blob) {
+        throw new Error('Failed to convert canvas to blob.');
+      }
+      const file = new File([blob], fileName, { type: mimeType });
+      resolve(file);
+    }, mimeType);
+  });
+}
+
 export function getCanvas() {
   const sourceCanvas = document.querySelector<HTMLCanvasElement>('#source');
   const sourceCtx = sourceCanvas?.getContext('2d');
@@ -204,6 +216,21 @@ export function useCanvas() {
     event.preventDefault();
   }
 
+  async function mutate() {
+    const formData = new FormData();
+    const file = await getImageFromSourceCanvas();
+    if (!file) return;
+    formData.append('file', file);
+    const res = await fetch('http://localhost:8000/image', {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!res.ok) {
+      throw new Error('Failed to upload image');
+    }
+  }
+
   async function onFileChange(file?: File | Blob) {
     const { sourceCtx, destinationCtx } = getCanvas();
     if (!file) return;
@@ -218,8 +245,7 @@ export function useCanvas() {
     destinationCtx.imageSmoothingEnabled = false;
   }
 
-  async function sendImage() {
-    const { sourceCtx } = getCanvas();
+  async function getImageFromSourceCanvas() {
     const copy = document.createElement('canvas');
     const copyCtx = copy.getContext('2d');
     const _img = img();
@@ -228,12 +254,7 @@ export function useCanvas() {
     copy.height = _img.height;
     copyCtx.drawImage(_img, 0, 0);
     redrawActions(copyCtx);
-    const data = copy.toDataURL('image/png');
-    const anchor = document.createElement('a');
-    anchor.href = data;
-    anchor.download = 'hello.png';
-    anchor.target = '_self';
-    anchor.click();
+    return imageToFile(copy, 'output.png', 'image/png')
   }
 
   function setupListeners(
@@ -267,5 +288,13 @@ export function useCanvas() {
     setupListeners(destinationCtx.canvas, 'destination');
   });
 
-  return { img, setImg, drawInCanvas, scaleAt, onFileChange, setCurrentMode, sendImage };
+  return {
+    img,
+    setImg,
+    drawInCanvas,
+    scaleAt,
+    onFileChange,
+    setCurrentMode,
+    mutate,
+  };
 }
