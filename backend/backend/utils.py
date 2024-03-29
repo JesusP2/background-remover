@@ -1,28 +1,25 @@
-from matplotlib import pyplot as plt
 import numpy as np
+import io
+import base64
 
-def show_mask(mask, ax, random_color=False):
-    if random_color:
-        color = np.concatenate([np.random.random(3), np.array([0.6])], axis=0)
-    else:
-        color = np.array([30/255, 144/255, 255/255, 0.6])
-    h, w = mask.shape[-2:]
-    mask_image = mask.reshape(h, w, 1) * color.reshape(1, 1, -1)
-    ax.imshow(mask_image)
-
-def show_masks_on_image(raw_image, masks, scores):
+def apply_mask(raw_image, masks):
     if len(masks.shape) == 4:
       masks = masks[0].squeeze()
-    if scores.shape[0] == 1:
-      scores = scores.squeeze()
+    mask = masks[0]
+    h, w = mask.shape[-2:]
+    mask_image = mask.reshape(h, w) * 255
+    raw_image[:, :, 3] = mask_image
+    return raw_image
 
-    nb_predictions = scores.shape[-1]
-    fig, axes = plt.subplots(1, nb_predictions, figsize=(15, 15))
+def createPrompt(positive_points: np.ndarray, negative_points: np.ndarray):
+    prompt = np.zeros((len(positive_points) + len(negative_points), 2), dtype=np.float32)
+    prompt[:len(positive_points)] = positive_points
+    prompt[len(positive_points):] = negative_points
+    return prompt
 
-    for i, (mask, score) in enumerate(zip(masks, scores)):
-      # mask = mask.cpu().detach()
-      axes[i].imshow(np.array(raw_image))
-      show_mask(mask, axes[i])
-      axes[i].title.set_text(f"Mask {i+1}, Score: {score.item():.3f}")
-      axes[i].axis("off")
-    plt.show()
+def ImgToBase64(image):
+    img_buffer = io.BytesIO()
+    image.save(img_buffer, format='PNG')
+    byte_data = img_buffer.getvalue()
+    base64_str = base64.b64encode(byte_data)
+    return base64_str

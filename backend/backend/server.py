@@ -1,9 +1,13 @@
-from fastapi import FastAPI, File
 import io
-import base64
+import json
+
 import numpy as np
-from PIL import Image
+from app2 import predictor
+from fastapi import FastAPI, File, Form, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from PIL import Image
+
+from backend.utils import apply_mask, createPrompt
 
 app = FastAPI()
 
@@ -16,39 +20,29 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 # post endpoint
 @app.post("/image")
-async def remove_background(file: bytes = File()):
-    array = bytesToArray(file)
-    positive_points = np.array([[1653, 586]], dtype=np.float32)
-    negative_points = np.array([[0, 0]], dtype=np.float32)
+async def remove_background(
+    _positive_points: str = Form(...),
+    _negative_points: str = Form(...),
+    file: UploadFile = File(...),
+):
+    stream = io.BytesIO(await file.read())
+    image = Image.open(stream).convert("RGBA")
+    img_array = np.array(image)
+    positive_points = np.array(json.loads(_positive_points), dtype=np.float32)
+    negative_points = np.array(_negative_points, dtype=np.float32)
     prompt = createPrompt(positive_points, negative_points)
-    return { "message": "completed"}
-
-
-def createPrompt(positive_points: np.ndarray, negative_points: np.ndarray):
-    prompt = np.zeros((len(positive_points) + len(negative_points), 2), dtype=np.float32)
-    prompt[:len(positive_points)] = positive_points
-    prompt[len(positive_points):] = negative_points
-    return prompt
-    labels = np.concatenate([np.ones(len(positive_points)), np.zeros(len(negative_points))])
-
-def ImgToBase64(image):
-    img_buffer = io.BytesIO()
-    image.save(img_buffer, format='PNG')
-    byte_data = img_buffer.getvalue()
-    base64_str = base64.b64encode(byte_data)
-    return base64_str
-
-
-def bytesToArray(bytes):
-    stream =io.BytesIO(bytes)
-    array = np.array(Image.open(stream).convert('RGB'))
-    return array
-
-def TensorToImage(tensor, img_size):
-    predict = tensor
-    predict = predict.squeeze()
-    predict_np = predict.cpu().data.numpy()
-    im = Image.fromarray(predict_np*255).convert('RGB')
-    return im.resize((img_size[0], img_size[1]), resample=Image.BILINEAR)
+    labels = np.concatenate(
+        [np.ones(len(positive_points)), np.zeros(len(negative_points))]
+    )
+    predictor.set_image(img_array[:, :, :3])
+    masks = predictor.predict(
+        point_coords=prompt,
+        point_labels=labels,
+        multimask_output=True,
+    )[0]
+    idk = apply_mask(img_array, masks)
+    Image.fromarray(idk).save("output.png")
+    return {"message": "completed"}
