@@ -24,18 +24,18 @@ app.add_middleware(
 # post endpoint
 @app.post("/image")
 async def remove_background(
-    _positive_points: str = Form(...),
-    _negative_points: str = Form(...),
+    positive_points: str = Form(...),
+    negative_points: str = Form(...),
     file: UploadFile = File(...),
 ):
     stream = io.BytesIO(await file.read())
     image = Image.open(stream).convert("RGBA")
     img_array = np.array(image)
-    positive_points = np.array(json.loads(_positive_points), dtype=np.float32)
-    negative_points = np.array(_negative_points, dtype=np.float32)
-    prompt = createPrompt(positive_points, negative_points)
+    _positive_points = np.array(json.loads(positive_points), dtype=np.float32)
+    _negative_points = np.array(json.loads(negative_points), dtype=np.float32)
+    prompt = createPrompt(_positive_points, _negative_points)
     labels = np.concatenate(
-        [np.ones(len(positive_points)), np.zeros(len(negative_points))]
+        [np.ones(len(_positive_points)), np.zeros(len(_negative_points))]
     )
     predictor.set_image(img_array[:, :, :3])
     masks = predictor.predict(

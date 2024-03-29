@@ -15,7 +15,11 @@ function fileToImage(file: File | Blob): Promise<HTMLImageElement> {
   });
 }
 
-function imageToFile(canvas: HTMLCanvasElement, fileName: string, mimeType: string): Promise<File> {
+function imageToFile(
+  canvas: HTMLCanvasElement,
+  fileName: string,
+  mimeType: string,
+): Promise<File> {
   return new Promise((resolve) => {
     canvas.toBlob((blob) => {
       if (!blob) {
@@ -221,6 +225,22 @@ export function useCanvas() {
     const file = await getImageFromSourceCanvas();
     if (!file) return;
     formData.append('file', file);
+    const positive_points = actions
+      .filter((action) => action.type === 'draw-green')
+      .map((action) => {
+        const x = action.oldX / action.scale - action.pos.x / action.scale;
+        const y = action.oldY / action.scale - action.pos.y / action.scale;
+        return [x, y];
+      });
+    const negative_points = actions
+      .filter((action) => action.type === 'draw-red')
+      .map((action) => {
+        const x = action.oldX / action.scale - action.pos.x / action.scale;
+        const y = action.oldY / action.scale - action.pos.y / action.scale;
+        return [x, y];
+      });
+    formData.append('positive_points', JSON.stringify(positive_points));
+    formData.append('negative_points', JSON.stringify(negative_points));
     const res = await fetch('http://localhost:8000/image', {
       method: 'POST',
       body: formData,
@@ -254,7 +274,7 @@ export function useCanvas() {
     copy.height = _img.height;
     copyCtx.drawImage(_img, 0, 0);
     redrawActions(copyCtx);
-    return imageToFile(copy, 'output.png', 'image/png')
+    return imageToFile(copy, 'output.png', 'image/png');
   }
 
   function setupListeners(
