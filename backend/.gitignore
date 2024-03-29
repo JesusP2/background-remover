@@ -1,3 +1,5 @@
 backend/__pycache__/
 backend/sam_vit_b.pth
 backend/sam_vit_h.pth
+backend/*.jpeg
+backend/*.png
