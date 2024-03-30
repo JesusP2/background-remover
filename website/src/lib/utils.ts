@@ -53,11 +53,13 @@ type Action = {
 };
 
 const colors = {
-  'draw-green': 'green',
+  'draw-green': 'white',
   'draw-red': 'red',
 } as Record<ActionType, string>;
 export function useCanvas() {
-  const [img, setImg] = createSignal<HTMLImageElement | null>(null);
+  const [sourceImg, setSourceImg] = createSignal<HTMLImageElement | null>(null);
+  const [destinationImg, setDestinationImg] =
+    createSignal<HTMLImageElement | null>(null);
   const [currentMode, setCurrentMode] = createSignal<ActionType>('move');
   const matrix = [1, 0, 0, 1, 0, 0];
   let scale = 1;
@@ -78,8 +80,9 @@ export function useCanvas() {
       update();
     }
     const { sourceCtx, destinationCtx } = getCanvas();
-    const currentImg = img();
-    if (!currentImg) return;
+    const _sourceImg = sourceImg();
+    const _destinationImg = destinationImg();
+    if (!_sourceImg || !_destinationImg) return;
     sourceCtx.translate(0, 0);
     sourceCtx.clearRect(0, 0, 10000, 10000);
     sourceCtx.setTransform(
@@ -90,7 +93,7 @@ export function useCanvas() {
       matrix[4],
       matrix[5],
     );
-    sourceCtx.drawImage(currentImg, 0, 0);
+    sourceCtx.drawImage(_sourceImg, 0, 0);
 
     destinationCtx.translate(0, 0);
     destinationCtx.clearRect(0, 0, 10000, 10000);
@@ -102,7 +105,7 @@ export function useCanvas() {
       matrix[4],
       matrix[5],
     );
-    destinationCtx.drawImage(currentImg, 0, 0);
+    destinationCtx.drawImage(_destinationImg, 0, 0);
     redrawActions(sourceCtx);
   }
 
@@ -189,7 +192,7 @@ export function useCanvas() {
   }
 
   function drawStroke(action: Action, ctx: CanvasRenderingContext2D) {
-    let width = 10 / scale;
+    let width = 10 / action.scale;
     if (scale > 20) {
       width = 1;
     }
@@ -220,11 +223,7 @@ export function useCanvas() {
     event.preventDefault();
   }
 
-  async function mutate() {
-    const formData = new FormData();
-    const file = await getImageFromSourceCanvas();
-    if (!file) return;
-    formData.append('file', file);
+  function getDataPoints() {
     const positive_points = actions
       .filter((action) => action.type === 'draw-green')
       .map((action) => {
@@ -239,9 +238,16 @@ export function useCanvas() {
         const y = action.oldY / action.scale - action.pos.y / action.scale;
         return [x, y];
       });
-    formData.append('positive_points', JSON.stringify(positive_points));
-    formData.append('negative_points', JSON.stringify(negative_points));
-    const res = await fetch('http://localhost:8000/image', {
+    return { positive_points, negative_points };
+  }
+
+  async function applyMaskToImage(type: 'image' | 'mask') {
+    const formData = new FormData();
+    const file = await getDataFromSourceCanvas(type);
+    if (!file) return;
+    formData.append('file', file);
+    const endpoint = type === 'image' ? 'start' : 'mask';
+    const res = await fetch(`http://localhost:8000/${endpoint}`, {
       method: 'POST',
       body: formData,
     });
@@ -249,13 +255,26 @@ export function useCanvas() {
     if (!res.ok) {
       throw new Error('Failed to upload image');
     }
+
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const img = await new Promise<HTMLImageElement>((resolve) => {
+      const img = new Image();
+      img.src = url;
+      img.onload = () => {
+        resolve(img);
+      };
+    });
+    setDestinationImg(img);
+    drawInCanvas();
   }
 
   async function onFileChange(file?: File | Blob) {
     const { sourceCtx, destinationCtx } = getCanvas();
     if (!file) return;
     const img = await fileToImage(file);
-    setImg(img);
+    setSourceImg(img);
+    setDestinationImg(img);
     const scale = sourceCtx.canvas.width / img.width;
     const startingY = (sourceCtx.canvas.height / scale - img.height) / 2;
     pos.y = startingY;
@@ -263,18 +282,23 @@ export function useCanvas() {
     drawInCanvas();
     sourceCtx.imageSmoothingEnabled = false;
     destinationCtx.imageSmoothingEnabled = false;
+    applyMaskToImage('image');
   }
 
-  async function getImageFromSourceCanvas() {
+  async function getDataFromSourceCanvas(type: 'image' | 'mask' | 'all') {
     const copy = document.createElement('canvas');
     const copyCtx = copy.getContext('2d');
-    const _img = img();
+    const _img = sourceImg();
     if (!copyCtx || !_img) return;
     copy.width = _img.width;
     copy.height = _img.height;
-    copyCtx.drawImage(_img, 0, 0);
-    redrawActions(copyCtx);
-    return imageToFile(copy, 'output.png', 'image/png');
+    if (type === 'image' || type === 'all') {
+      copyCtx.drawImage(_img, 0, 0);
+    }
+    if (type === 'mask' || type === 'all') {
+      redrawActions(copyCtx);
+    }
+    return imageToFile(copy, 'file.png', 'image/png');
   }
 
   function setupListeners(
@@ -309,12 +333,12 @@ export function useCanvas() {
   });
 
   return {
-    img,
-    setImg,
+    sourceImg,
+    setSourceImg,
     drawInCanvas,
     scaleAt,
     onFileChange,
     setCurrentMode,
-    mutate,
+    applyMaskToImage,
   };
 }

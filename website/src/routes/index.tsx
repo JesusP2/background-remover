@@ -2,14 +2,14 @@ import { useCanvas } from '~/lib/utils';
 import { ActionsMenu } from '../components/actions-menu';
 
 export default function Home() {
-  const { onFileChange, setCurrentMode, mutate } = useCanvas();
+  const { onFileChange, setCurrentMode, applyMaskToImage } = useCanvas();
 
   return (
     <>
       <main class="flex">
         <ActionsMenu
           onFileChange={onFileChange}
-          mutate={mutate}
+          applyMaskToImage={applyMaskToImage}
           setCurrentMode={setCurrentMode}
         />
         <canvas class="w-[49.95%] h-screen svg-bg" id="source" />

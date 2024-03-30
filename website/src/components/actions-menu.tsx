@@ -1,11 +1,11 @@
 export function ActionsMenu({
   onFileChange,
   setCurrentMode,
-  mutate,
+  applyMaskToImage,
 }: {
   onFileChange: (file?: File | Blob) => void;
   setCurrentMode: (mode: 'draw-green' | 'draw-red' | 'move' | 'erase') => void;
-  mutate: () => Promise<void>;
+  applyMaskToImage: (type: 'image' | 'mask') => Promise<void>;
 }) {
   return (
     <div class="rounded-sm px-2 py-1 bg-white absolute bottom-2 left-2 flex gap-x-4 items-center">
@@ -25,7 +25,11 @@ export function ActionsMenu({
           onFileChange(file);
         }}
       />
-      <button onClick={mutate} type="button" class="p-2 hover:bg-gray-100">
+      <button
+        onClick={() => applyMaskToImage('mask')}
+        type="button"
+        class="p-2 hover:bg-gray-100"
+      >
         Save
       </button>
       <button
