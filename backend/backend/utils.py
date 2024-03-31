@@ -2,10 +2,7 @@ import numpy as np
 import io
 from PIL import Image
 
-def apply_mask(raw_image, masks):
-    if len(masks.shape) == 4:
-      masks = masks[0].squeeze()
-    mask = masks[0]
+def apply_mask(raw_image, mask):
     h, w = mask.shape[-2:]
     mask_image = mask.reshape(h, w) * 255
     raw_image[:, :, 3] = mask_image
