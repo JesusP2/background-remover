@@ -275,9 +275,15 @@ export function useCanvas() {
     const img = await fileToImage(file);
     setSourceImg(img);
     setDestinationImg(img);
-    const scale = sourceCtx.canvas.width / img.width;
-    const startingY = (sourceCtx.canvas.height / scale - img.height) / 2;
-    pos.y = startingY;
+    let scale = 1;
+    if (img.width > img.height) {
+      scale = sourceCtx.canvas.width / img.width;
+    } else {
+      scale = sourceCtx.canvas.height / img.height;
+    }
+    scale -= scale / 10;
+    pos.x = (sourceCtx.canvas.width / scale - img.width) / 2;
+    pos.y = (sourceCtx.canvas.height / scale - img.height) / 2;
     scaleAt({ x: 0, y: 0 }, scale);
     drawInCanvas();
     sourceCtx.imageSmoothingEnabled = false;
