@@ -3,7 +3,7 @@ import json
 
 import cv2
 import numpy as np
-from app2 import predictor
+from sam_model import predictor
 from fastapi import FastAPI, File, Form, Response, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from PIL import Image
