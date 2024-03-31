@@ -67,27 +67,26 @@ async def apply_mask_endpoint(file: UploadFile = File(...)):
     return Response(content=blob, media_type="image/png")
 
 
-# post endpoint
-@app.post("/image")
-async def remove_background(
-    positive_points: str = Form(...),
-    negative_points: str = Form(...),
-    file: UploadFile = File(...),
-):
-    stream = io.BytesIO(await file.read())
-    image = Image.open(stream).convert("RGBA")
-    img_array = np.array(image)
-    _positive_points = np.array(json.loads(positive_points), dtype=np.float32)
-    _negative_points = np.array(json.loads(negative_points), dtype=np.float32)
-    prompt = create_prompt(_positive_points, _negative_points)
-    labels = np.concatenate(
-        [np.ones(len(_positive_points)), np.zeros(len(_negative_points))]
-    )
-    predictor.set_image(img_array[:, :, :3])
-    masks = predictor.predict(
-        point_coords=prompt,
-        point_labels=labels,
-        multimask_output=True,
-    )[0]
-    blob = array_to_blob(apply_mask(img_array, masks))
-    return Response(content=blob, media_type="image/png")
+# @app.post("/_/image")
+# async def remove_background(
+#     positive_points: str = Form(...),
+#     negative_points: str = Form(...),
+#     file: UploadFile = File(...),
+# ):
+#     stream = io.BytesIO(await file.read())
+#     image = Image.open(stream).convert("RGBA")
+#     img_array = np.array(image)
+#     _positive_points = np.array(json.loads(positive_points), dtype=np.float32)
+#     _negative_points = np.array(json.loads(negative_points), dtype=np.float32)
+#     prompt = create_prompt(_positive_points, _negative_points)
+#     labels = np.concatenate(
+#         [np.ones(len(_positive_points)), np.zeros(len(_negative_points))]
+#     )
+#     predictor.set_image(img_array[:, :, :3])
+#     masks = predictor.predict(
+#         point_coords=prompt,
+#         point_labels=labels,
+#         multimask_output=True,
+#     )[0]
+#     blob = array_to_blob(apply_mask(img_array, masks))
+#     return Response(content=blob, media_type="image/png")
