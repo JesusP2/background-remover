@@ -60,7 +60,8 @@ export function useCanvas() {
   const [sourceImg, setSourceImg] = createSignal<HTMLImageElement | null>(null);
   const [destinationImg, setDestinationImg] =
     createSignal<HTMLImageElement | null>(null);
-  const [currentMode, setCurrentMode] = createSignal<ActionType>('move');
+  const [intermediateImg, setIntermediateImg] = createSignal<HTMLImageElement | HTMLCanvasElement | null>(null);
+  const [currentMode, setCurrentMode] = createSignal<ActionType>('draw-green');
   const matrix = [1, 0, 0, 1, 0, 0];
   let scale = 1;
   const pos = { x: 0, y: 0 };
@@ -81,8 +82,9 @@ export function useCanvas() {
     }
     const { sourceCtx, destinationCtx } = getCanvas();
     const _sourceImg = sourceImg();
+    const _intermediateImg = intermediateImg();
     const _destinationImg = destinationImg();
-    if (!_sourceImg || !_destinationImg) return;
+    if (!_sourceImg || !_intermediateImg || !_destinationImg) return;
     sourceCtx.translate(0, 0);
     sourceCtx.clearRect(0, 0, 10000, 10000);
     sourceCtx.setTransform(
@@ -93,7 +95,7 @@ export function useCanvas() {
       matrix[4],
       matrix[5],
     );
-    sourceCtx.drawImage(_sourceImg, 0, 0);
+    sourceCtx.drawImage(_intermediateImg, 0, 0);
 
     destinationCtx.translate(0, 0);
     destinationCtx.clearRect(0, 0, 10000, 10000);
@@ -106,7 +108,7 @@ export function useCanvas() {
       matrix[5],
     );
     destinationCtx.drawImage(_destinationImg, 0, 0);
-    redrawActions(sourceCtx);
+    // redrawActions(sourceCtx);
   }
 
   function update() {
@@ -147,9 +149,17 @@ export function useCanvas() {
     mouse.button = event.button;
   }
 
-  function mouseup(event: MouseEvent) {
+  async function mouseup(event: MouseEvent) {
     event.preventDefault();
     mouse.button = null;
+    const imgCopied = await getDataFromSourceCanvas('all')
+    if (!imgCopied) return;
+    // const url = imgCopied.toDataURL('image/png')
+    // const anchor = document.createElement('a');
+    // anchor.href = url;
+    // anchor.download = 'mask.png';
+    // anchor.click();
+    setIntermediateImg(imgCopied);
   }
 
   function mousemove(event: MouseEvent) {
@@ -274,8 +284,9 @@ export function useCanvas() {
 
   async function applyMaskToImage(type: 'image' | 'mask') {
     const formData = new FormData();
-    const file = await getDataFromSourceCanvas(type);
-    if (!file) return;
+    const imgCopied = await getDataFromSourceCanvas(type)
+    if (!imgCopied) return;
+    const file = await imageToFile(imgCopied, 'file.png', 'image/png');
     formData.append('file', file);
     const endpoint = type === 'image' ? 'start' : 'mask';
     const res = await fetch(`http://localhost:8000/${endpoint}`, {
@@ -305,6 +316,7 @@ export function useCanvas() {
     if (!file) return;
     const img = await fileToImage(file);
     setSourceImg(img);
+    setIntermediateImg(img);
     setDestinationImg(img);
     let scale = 1;
     if (img.width > img.height) {
@@ -335,7 +347,7 @@ export function useCanvas() {
     if (type === 'mask' || type === 'all') {
       redrawActions(copyCtx);
     }
-    return imageToFile(copy, 'file.png', 'image/png');
+    return copy;
   }
 
   function setupListeners(
