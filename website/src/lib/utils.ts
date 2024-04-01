@@ -100,7 +100,12 @@ export function useCanvas() {
     sourceCtx.drawImage(_intermediateImg, 0, 0);
 
     destinationCtx.setTransform(1, 0, 0, 1, 0, 0);
-    destinationCtx.clearRect(0, 0, destinationCtx.canvas.width, destinationCtx.canvas.height);
+    destinationCtx.clearRect(
+      0,
+      0,
+      destinationCtx.canvas.width,
+      destinationCtx.canvas.height,
+    );
     destinationCtx.setTransform(
       matrix[0],
       matrix[1],
@@ -122,12 +127,26 @@ export function useCanvas() {
   }
 
   function pan(amount: { x: number; y: number }) {
+    const { sourceCtx } = getCanvas();
     if (dirty) {
       update();
     }
-    pos.x += amount.x;
-    pos.y += amount.y;
-    dirty = true;
+    const _img = sourceImg();
+    if (!_img) return;
+    const leftBoundary = sourceCtx.canvas.width / 2 - _img.width * scale;
+    const rightBoundary = sourceCtx.canvas.width / 2;
+    const topBoundary = (sourceCtx.canvas.height / 2 - _img.height * scale);
+    const bottomBoundary = sourceCtx.canvas.height / 2;
+    if (
+      pos.x + amount.x < rightBoundary &&
+      pos.x + amount.x > leftBoundary &&
+      pos.y + amount.y < bottomBoundary &&
+      pos.y + amount.y > topBoundary
+    ) {
+      pos.x += amount.x;
+      pos.y += amount.y;
+      dirty = true;
+    }
   }
 
   function scaleAt(at: { x: number; y: number }, _amount: number) {
@@ -238,13 +257,9 @@ export function useCanvas() {
       const ySize = size[size.length - i - 1];
       const pos = {
         x:
-          strokePos.x - xSize / 2 < 0
-            ? 0
-            : Math.floor(strokePos.x - xSize / 2),
+          strokePos.x - xSize / 2 < 0 ? 0 : Math.floor(strokePos.x - xSize / 2),
         y:
-          strokePos.y - ySize / 2 < 0
-            ? 0
-            : Math.floor(strokePos.y - ySize / 2),
+          strokePos.y - ySize / 2 < 0 ? 0 : Math.floor(strokePos.y - ySize / 2),
       };
       ctx.fillRect(pos.x, pos.y, xSize * 2, ySize * 2);
     }
