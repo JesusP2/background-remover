@@ -60,7 +60,9 @@ export function useCanvas() {
   const [sourceImg, setSourceImg] = createSignal<HTMLImageElement | null>(null);
   const [destinationImg, setDestinationImg] =
     createSignal<HTMLImageElement | null>(null);
-  const [intermediateImg, setIntermediateImg] = createSignal<HTMLImageElement | HTMLCanvasElement | null>(null);
+  const [intermediateImg, setIntermediateImg] = createSignal<
+    HTMLImageElement | HTMLCanvasElement | null
+  >(null);
   const [currentMode, setCurrentMode] = createSignal<ActionType>('draw-green');
   const matrix = [1, 0, 0, 1, 0, 0];
   let scale = 1;
@@ -85,8 +87,8 @@ export function useCanvas() {
     const _intermediateImg = intermediateImg();
     const _destinationImg = destinationImg();
     if (!_sourceImg || !_intermediateImg || !_destinationImg) return;
-    sourceCtx.translate(0, 0);
-    sourceCtx.clearRect(0, 0, 10000, 10000);
+    sourceCtx.setTransform(1, 0, 0, 1, 0, 0);
+    sourceCtx.clearRect(0, 0, sourceCtx.canvas.width, sourceCtx.canvas.height);
     sourceCtx.setTransform(
       matrix[0],
       matrix[1],
@@ -97,8 +99,8 @@ export function useCanvas() {
     );
     sourceCtx.drawImage(_intermediateImg, 0, 0);
 
-    destinationCtx.translate(0, 0);
-    destinationCtx.clearRect(0, 0, 10000, 10000);
+    destinationCtx.setTransform(1, 0, 0, 1, 0, 0);
+    destinationCtx.clearRect(0, 0, destinationCtx.canvas.width, destinationCtx.canvas.height);
     destinationCtx.setTransform(
       matrix[0],
       matrix[1],
@@ -152,13 +154,8 @@ export function useCanvas() {
   async function mouseup(event: MouseEvent) {
     event.preventDefault();
     mouse.button = null;
-    const imgCopied = await getDataFromSourceCanvas('all')
+    const imgCopied = await getDataFromSourceCanvas('all');
     if (!imgCopied) return;
-    // const url = imgCopied.toDataURL('image/png')
-    // const anchor = document.createElement('a');
-    // anchor.href = url;
-    // anchor.download = 'mask.png';
-    // anchor.click();
     setIntermediateImg(imgCopied);
   }
 
@@ -188,10 +185,12 @@ export function useCanvas() {
       const _img = sourceImg();
       if (
         _img &&
-        action.oldX / action.scale - action.pos.x / action.scale > 0 &&
-        action.oldX / action.scale - action.pos.x / action.scale < _img.width &&
-        action.oldY / action.scale - action.pos.y / action.scale > 0 &&
-        action.oldY / action.scale - action.pos.y / action.scale < _img.height
+        action.oldX / action.scale - action.pos.x / action.scale > -10 &&
+        action.oldX / action.scale - action.pos.x / action.scale <
+          _img.width + 2 &&
+        action.oldY / action.scale - action.pos.y / action.scale > -10 &&
+        action.oldY / action.scale - action.pos.y / action.scale <
+          _img.height + 2
       ) {
         drawStroke(action, sourceCtx);
         actions.push(action);
@@ -237,12 +236,17 @@ export function useCanvas() {
     for (let i = 0; i < size.length; i++) {
       const xSize = size[i];
       const ySize = size[size.length - i - 1];
-      ctx.fillRect(
-        Math.floor(strokePos.x - xSize / 2),
-        Math.floor(strokePos.y - ySize / 2),
-        xSize * 2,
-        ySize * 2,
-      );
+      const pos = {
+        x:
+          strokePos.x - xSize / 2 < 0
+            ? 0
+            : Math.floor(strokePos.x - xSize / 2),
+        y:
+          strokePos.y - ySize / 2 < 0
+            ? 0
+            : Math.floor(strokePos.y - ySize / 2),
+      };
+      ctx.fillRect(pos.x, pos.y, xSize * 2, ySize * 2);
     }
   }
 
@@ -284,7 +288,7 @@ export function useCanvas() {
 
   async function applyMaskToImage(type: 'image' | 'mask') {
     const formData = new FormData();
-    const imgCopied = await getDataFromSourceCanvas(type)
+    const imgCopied = await getDataFromSourceCanvas(type);
     if (!imgCopied) return;
     const file = await imageToFile(imgCopied, 'file.png', 'image/png');
     formData.append('file', file);
