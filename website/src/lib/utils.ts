@@ -175,8 +175,17 @@ export function useCanvas() {
         pos: { x: pos.x, y: pos.y },
         scale,
       };
-      drawStroke(action, sourceCtx);
-      actions.push(action);
+      const _img = sourceImg();
+      if (
+        _img &&
+        action.oldX / action.scale - action.pos.x / action.scale > 0 &&
+        action.oldX / action.scale - action.pos.x / action.scale < _img.width &&
+        action.oldY / action.scale - action.pos.y / action.scale > 0 &&
+        action.oldY / action.scale - action.pos.y / action.scale < _img.height
+      ) {
+        drawStroke(action, sourceCtx);
+        actions.push(action);
+      }
       return;
     } else if (currentMode() === 'erase') {
       return;
@@ -191,18 +200,46 @@ export function useCanvas() {
     }
   }
 
+  function strokeSize(
+    type: number,
+    strokePos: { x: number; y: number },
+    ctx: CanvasRenderingContext2D,
+  ) {}
+
   function drawStroke(action: Action, ctx: CanvasRenderingContext2D) {
-    let width = 10 / action.scale;
-    if (scale > 20) {
-      width = 1;
-    }
+    const strokePos = {
+      x: action.oldX / action.scale - action.pos.x / action.scale,
+      y: action.oldY / action.scale - action.pos.y / action.scale,
+    };
     ctx.fillStyle = colors[action.type];
-    ctx.fillRect(
-      action.oldX / action.scale - action.pos.x / action.scale - width / 2,
-      action.oldY / action.scale - action.pos.y / action.scale - width / 2,
-      width,
-      width,
-    );
+    let size: number[] = [];
+    if (scale < 0.3) {
+      size = [
+        5, 9, 12, 14, 16, 17, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30,
+      ];
+    } else if (scale < 1) {
+      size = [4, 7, 8, 10, 11, 12, 13, 14, 15];
+    } else if (scale < 2) {
+      size = [3, 5, 6, 7, 8];
+    } else if (scale < 4) {
+      size = [2, 3];
+    } else if (scale < 8) {
+      size = [2];
+    } else if (scale < 12) {
+      size = [1];
+    } else if (scale < 80) {
+      size = [0.5];
+    }
+    for (let i = 0; i < size.length; i++) {
+      const xSize = size[i];
+      const ySize = size[size.length - i - 1];
+      ctx.fillRect(
+        strokePos.x - xSize,
+        strokePos.y - ySize,
+        xSize * 2,
+        ySize * 2,
+      );
+    }
   }
 
   function mouseWheelEvent(event: WheelEvent, type: 'source' | 'destination') {
