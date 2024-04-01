@@ -200,12 +200,6 @@ export function useCanvas() {
     }
   }
 
-  function strokeSize(
-    type: number,
-    strokePos: { x: number; y: number },
-    ctx: CanvasRenderingContext2D,
-  ) {}
-
   function drawStroke(action: Action, ctx: CanvasRenderingContext2D) {
     const strokePos = {
       x: action.oldX / action.scale - action.pos.x / action.scale,
@@ -213,29 +207,29 @@ export function useCanvas() {
     };
     ctx.fillStyle = colors[action.type];
     let size: number[] = [];
-    if (scale < 0.3) {
+    if (action.scale < 0.3) {
       size = [
         5, 9, 12, 14, 16, 17, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30,
       ];
-    } else if (scale < 1) {
+    } else if (action.scale < 1) {
       size = [4, 7, 8, 10, 11, 12, 13, 14, 15];
-    } else if (scale < 2) {
+    } else if (action.scale < 2) {
       size = [3, 5, 6, 7, 8];
-    } else if (scale < 4) {
+    } else if (action.scale < 4) {
       size = [2, 3];
-    } else if (scale < 8) {
+    } else if (action.scale < 8) {
       size = [2];
-    } else if (scale < 12) {
+    } else if (action.scale < 12) {
       size = [1];
-    } else if (scale < 80) {
+    } else if (action.scale <= 80) {
       size = [0.5];
     }
     for (let i = 0; i < size.length; i++) {
       const xSize = size[i];
       const ySize = size[size.length - i - 1];
       ctx.fillRect(
-        strokePos.x - xSize,
-        strokePos.y - ySize,
+        Math.floor(strokePos.x - xSize / 2),
+        Math.floor(strokePos.y - ySize / 2),
         xSize * 2,
         ySize * 2,
       );
