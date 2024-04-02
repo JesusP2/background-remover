@@ -61,12 +61,9 @@ const colors = {
 
 export function useCanvas() {
   let currentId = createId();
-  const [sourceImg, setSourceImg] = createSignal<HTMLImageElement | null>(null);
-  const [destinationImg, setDestinationImg] =
-    createSignal<HTMLImageElement | null>(null);
-  const [intermediateImg, setIntermediateImg] = createSignal<
-    HTMLImageElement | HTMLCanvasElement | null
-  >(null);
+  let sourceImg: HTMLImageElement | null = null;
+  let destinationImg: HTMLImageElement | null = null;
+  let intermediateImg: HTMLImageElement | HTMLCanvasElement | null = null;
   const [currentMode, setCurrentMode] = createSignal<ActionType>('draw-green');
   const matrix = [1, 0, 0, 1, 0, 0];
   let scale = 1;
@@ -87,10 +84,7 @@ export function useCanvas() {
       update();
     }
     const { sourceCtx, destinationCtx } = getCanvas();
-    const _sourceImg = sourceImg();
-    const _intermediateImg = intermediateImg();
-    const _destinationImg = destinationImg();
-    if (!_sourceImg || !_intermediateImg || !_destinationImg) return;
+    if (!sourceImg || !intermediateImg || !destinationImg) return;
     sourceCtx.setTransform(1, 0, 0, 1, 0, 0);
     sourceCtx.clearRect(0, 0, sourceCtx.canvas.width, sourceCtx.canvas.height);
     sourceCtx.setTransform(
@@ -101,7 +95,7 @@ export function useCanvas() {
       matrix[4],
       matrix[5],
     );
-    sourceCtx.drawImage(_intermediateImg, 0, 0);
+    sourceCtx.drawImage(intermediateImg, 0, 0);
 
     destinationCtx.setTransform(1, 0, 0, 1, 0, 0);
     destinationCtx.clearRect(
@@ -118,8 +112,7 @@ export function useCanvas() {
       matrix[4],
       matrix[5],
     );
-    destinationCtx.drawImage(_destinationImg, 0, 0);
-    // redrawActions(sourceCtx);
+    destinationCtx.drawImage(destinationImg, 0, 0);
   }
 
   function update() {
@@ -135,11 +128,10 @@ export function useCanvas() {
     if (dirty) {
       update();
     }
-    const _img = sourceImg();
-    if (!_img) return;
-    const leftBoundary = sourceCtx.canvas.width / 2 - _img.width * scale;
+    if (!sourceImg) return;
+    const leftBoundary = sourceCtx.canvas.width / 2 - sourceImg.width * scale;
     const rightBoundary = sourceCtx.canvas.width / 2;
-    const topBoundary = sourceCtx.canvas.height / 2 - _img.height * scale;
+    const topBoundary = sourceCtx.canvas.height / 2 - sourceImg.height * scale;
     const bottomBoundary = sourceCtx.canvas.height / 2;
     if (
       pos.x + amount.x < rightBoundary &&
@@ -171,7 +163,7 @@ export function useCanvas() {
 
   function undo() {
     const lastAction = actions[actions.length - 1];
-    const lastStroke: Action[] = []
+    const lastStroke: Action[] = [];
     actions = actions.filter((a) => {
       if (a.id === lastAction.id) {
         lastStroke.push(a);
@@ -179,14 +171,14 @@ export function useCanvas() {
       }
       return true;
     });
-    redoActions = redoActions.concat(lastStroke)
+    redoActions = redoActions.concat(lastStroke);
     saveSnapshot();
     drawInCanvas();
   }
 
   function redo() {
     const lastAction = redoActions[redoActions.length - 1];
-    const lastStroke: Action[] = []
+    const lastStroke: Action[] = [];
     redoActions = redoActions.filter((a) => {
       if (a.id === lastAction.id) {
         lastStroke.push(a);
@@ -208,7 +200,7 @@ export function useCanvas() {
   function saveSnapshot() {
     const imgCopied = getDataFromSourceCanvas('all');
     if (!imgCopied) return;
-    setIntermediateImg(imgCopied);
+    intermediateImg = imgCopied;
   }
 
   function mouseup(event: MouseEvent) {
@@ -241,15 +233,15 @@ export function useCanvas() {
         pos: { x: pos.x, y: pos.y },
         scale,
       };
-      const _img = sourceImg();
+      if (!sourceImg) return;
       if (
-        _img &&
+        sourceImg &&
         action.oldX / action.scale - action.pos.x / action.scale > -10 &&
         action.oldX / action.scale - action.pos.x / action.scale <
-          _img.width + 2 &&
+          sourceImg.width + 2 &&
         action.oldY / action.scale - action.pos.y / action.scale > -10 &&
         action.oldY / action.scale - action.pos.y / action.scale <
-          _img.height + 2
+          sourceImg.height + 2
       ) {
         drawStroke(action, sourceCtx);
         actions.push(action);
@@ -346,7 +338,7 @@ export function useCanvas() {
 
   async function applyMaskToImage(type: 'image' | 'mask') {
     const formData = new FormData();
-    const imgCopied = await getDataFromSourceCanvas(type);
+    const imgCopied = getDataFromSourceCanvas(type);
     if (!imgCopied) return;
     const file = await imageToFile(imgCopied, 'file.png', 'image/png');
     formData.append('file', file);
@@ -369,7 +361,7 @@ export function useCanvas() {
         resolve(img);
       };
     });
-    setDestinationImg(img);
+    destinationImg = img;
     drawInCanvas();
   }
 
@@ -377,9 +369,9 @@ export function useCanvas() {
     const { sourceCtx, destinationCtx } = getCanvas();
     if (!file) return;
     const img = await fileToImage(file);
-    setSourceImg(img);
-    setIntermediateImg(img);
-    setDestinationImg(img);
+    sourceImg = img;
+    intermediateImg = img;
+    destinationImg = img;
     let scale = 1;
     if (img.width > img.height) {
       scale = sourceCtx.canvas.width / img.width;
@@ -399,12 +391,11 @@ export function useCanvas() {
   function getDataFromSourceCanvas(type: 'image' | 'mask' | 'all') {
     const copy = document.createElement('canvas');
     const copyCtx = copy.getContext('2d');
-    const _img = sourceImg();
-    if (!copyCtx || !_img) return;
-    copy.width = _img.width;
-    copy.height = _img.height;
+    if (!copyCtx || !sourceImg) return;
+    copy.width = sourceImg.width;
+    copy.height = sourceImg.height;
     if (type === 'image' || type === 'all') {
-      copyCtx.drawImage(_img, 0, 0);
+      copyCtx.drawImage(sourceImg, 0, 0);
     }
     if (type === 'mask' || type === 'all') {
       redrawActions(copyCtx);
@@ -445,7 +436,6 @@ export function useCanvas() {
 
   return {
     sourceImg,
-    setSourceImg,
     drawInCanvas,
     scaleAt,
     onFileChange,
@@ -454,6 +444,6 @@ export function useCanvas() {
     undo,
     redo,
     actions,
-    redoActions
+    redoActions,
   };
 }
