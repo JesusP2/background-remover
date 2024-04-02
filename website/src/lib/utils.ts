@@ -1,4 +1,5 @@
 import { createSignal, onMount } from 'solid-js';
+import { createId } from '@paralleldrive/cuid2';
 
 function fileToImage(file: File | Blob): Promise<HTMLImageElement> {
   return new Promise((resolve) => {
@@ -45,6 +46,7 @@ export function getCanvas() {
 
 type ActionType = 'move' | 'draw-green' | 'draw-red' | 'erase';
 type Action = {
+  id: string;
   type: ActionType;
   oldX: number;
   oldY: number;
@@ -56,7 +58,9 @@ const colors = {
   'draw-green': 'white',
   'draw-red': 'red',
 } as Record<ActionType, string>;
+
 export function useCanvas() {
+  let currentId = createId();
   const [sourceImg, setSourceImg] = createSignal<HTMLImageElement | null>(null);
   const [destinationImg, setDestinationImg] =
     createSignal<HTMLImageElement | null>(null);
@@ -75,8 +79,8 @@ export function useCanvas() {
     oldY: number;
     button: null | number;
   };
-  const actions: Action[] = [];
-  const redoActions: Action[] = [];
+  let actions: Action[] = [];
+  let redoActions: Action[] = [];
 
   function drawInCanvas() {
     if (dirty) {
@@ -135,7 +139,7 @@ export function useCanvas() {
     if (!_img) return;
     const leftBoundary = sourceCtx.canvas.width / 2 - _img.width * scale;
     const rightBoundary = sourceCtx.canvas.width / 2;
-    const topBoundary = (sourceCtx.canvas.height / 2 - _img.height * scale);
+    const topBoundary = sourceCtx.canvas.height / 2 - _img.height * scale;
     const bottomBoundary = sourceCtx.canvas.height / 2;
     if (
       pos.x + amount.x < rightBoundary &&
@@ -165,17 +169,52 @@ export function useCanvas() {
     dirty = true;
   }
 
+  function undo() {
+    const lastAction = actions[actions.length - 1];
+    const lastStroke: Action[] = []
+    actions = actions.filter((a) => {
+      if (a.id === lastAction.id) {
+        lastStroke.push(a);
+        return false;
+      }
+      return true;
+    });
+    redoActions = redoActions.concat(lastStroke)
+    saveSnapshot();
+    drawInCanvas();
+  }
+
+  function redo() {
+    const lastAction = redoActions[redoActions.length - 1];
+    const lastStroke: Action[] = []
+    redoActions = redoActions.filter((a) => {
+      if (a.id === lastAction.id) {
+        lastStroke.push(a);
+        return false;
+      }
+      return true;
+    });
+    actions = actions.concat(lastStroke);
+    saveSnapshot();
+    drawInCanvas();
+  }
+
   function mousedown(event: MouseEvent) {
     event.preventDefault();
     mouse.button = event.button;
+    currentId = createId();
   }
 
-  async function mouseup(event: MouseEvent) {
-    event.preventDefault();
-    mouse.button = null;
-    const imgCopied = await getDataFromSourceCanvas('all');
+  function saveSnapshot() {
+    const imgCopied = getDataFromSourceCanvas('all');
     if (!imgCopied) return;
     setIntermediateImg(imgCopied);
+  }
+
+  function mouseup(event: MouseEvent) {
+    event.preventDefault();
+    mouse.button = null;
+    saveSnapshot();
   }
 
   function mousemove(event: MouseEvent) {
@@ -195,6 +234,7 @@ export function useCanvas() {
     } else if (currentMode() === 'draw-green' || currentMode() === 'draw-red') {
       const { sourceCtx } = getCanvas();
       const action = {
+        id: currentId,
         type: currentMode(),
         oldX: mouse.oldX,
         oldY: mouse.oldY,
@@ -213,6 +253,9 @@ export function useCanvas() {
       ) {
         drawStroke(action, sourceCtx);
         actions.push(action);
+        if (redoActions.length > 0) {
+          redoActions = [];
+        }
       }
       return;
     } else if (currentMode() === 'erase') {
@@ -353,7 +396,7 @@ export function useCanvas() {
     applyMaskToImage('image');
   }
 
-  async function getDataFromSourceCanvas(type: 'image' | 'mask' | 'all') {
+  function getDataFromSourceCanvas(type: 'image' | 'mask' | 'all') {
     const copy = document.createElement('canvas');
     const copyCtx = copy.getContext('2d');
     const _img = sourceImg();
@@ -408,5 +451,9 @@ export function useCanvas() {
     onFileChange,
     setCurrentMode,
     applyMaskToImage,
+    undo,
+    redo,
+    actions,
+    redoActions
   };
 }

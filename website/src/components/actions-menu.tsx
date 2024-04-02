@@ -2,10 +2,18 @@ export function ActionsMenu({
   onFileChange,
   setCurrentMode,
   applyMaskToImage,
+  undo,
+  redo,
+  actions,
+  redoActions,
 }: {
   onFileChange: (file?: File | Blob) => void;
   setCurrentMode: (mode: 'draw-green' | 'draw-red' | 'move' | 'erase') => void;
   applyMaskToImage: (type: 'image' | 'mask') => Promise<void>;
+  undo: () => void;
+  redo: () => void;
+    actions: any[];
+    redoActions: any[];
 }) {
   return (
     <div class="rounded-sm px-2 py-1 bg-white absolute bottom-2 left-2 flex gap-x-4 items-center">
@@ -32,6 +40,8 @@ export function ActionsMenu({
       >
         Save
       </button>
+      <button disabled={!!actions.length} onClick={undo}>undo</button>
+      <button onClick={redo}>redo</button>
       <button
         type="button"
         onClick={() => setCurrentMode('move')}
