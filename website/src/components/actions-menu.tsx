@@ -1,3 +1,5 @@
+import { Accessor } from "solid-js";
+
 export function ActionsMenu({
   onFileChange,
   setCurrentMode,
@@ -12,8 +14,8 @@ export function ActionsMenu({
   applyMaskToImage: (type: 'image' | 'mask') => Promise<void>;
   undo: () => void;
   redo: () => void;
-    actions: any[];
-    redoActions: any[];
+  actions: Accessor<any[]>;
+  redoActions: Accessor<any[]>;
 }) {
   return (
     <div class="rounded-sm px-2 py-1 bg-white absolute bottom-2 left-2 flex gap-x-4 items-center">
@@ -40,8 +42,10 @@ export function ActionsMenu({
       >
         Save
       </button>
-      <button disabled={!!actions.length} onClick={undo}>undo</button>
-      <button onClick={redo}>redo</button>
+      <button disabled={!actions().length} onClick={undo}>
+        undo
+      </button>
+      <button disabled={!redoActions().length} onClick={redo}>redo</button>
       <button
         type="button"
         onClick={() => setCurrentMode('move')}

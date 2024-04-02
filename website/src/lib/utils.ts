@@ -76,8 +76,8 @@ export function useCanvas() {
     oldY: number;
     button: null | number;
   };
-  let actions: Action[] = [];
-  let redoActions: Action[] = [];
+  const [actions, setActions] = createSignal<Action[]>([]);
+  const [redoActions, setRedoActions] = createSignal<Action[]>([]);
 
   function drawInCanvas() {
     if (dirty) {
@@ -162,31 +162,35 @@ export function useCanvas() {
   }
 
   function undo() {
-    const lastAction = actions[actions.length - 1];
+    const lastAction = actions()[actions().length - 1];
     const lastStroke: Action[] = [];
-    actions = actions.filter((a) => {
-      if (a.id === lastAction.id) {
-        lastStroke.push(a);
-        return false;
-      }
-      return true;
-    });
-    redoActions = redoActions.concat(lastStroke);
+    setActions((prev) =>
+      prev.filter((a) => {
+        if (a.id === lastAction.id) {
+          lastStroke.push(a);
+          return false;
+        }
+        return true;
+      }),
+    );
+    setRedoActions((prev) => prev.concat(lastStroke));
     saveSnapshot();
     drawInCanvas();
   }
 
   function redo() {
-    const lastAction = redoActions[redoActions.length - 1];
+    const lastAction = redoActions()[redoActions().length - 1];
     const lastStroke: Action[] = [];
-    redoActions = redoActions.filter((a) => {
-      if (a.id === lastAction.id) {
-        lastStroke.push(a);
-        return false;
-      }
-      return true;
-    });
-    actions = actions.concat(lastStroke);
+    setRedoActions((prev) =>
+      prev.filter((a) => {
+        if (a.id === lastAction.id) {
+          lastStroke.push(a);
+          return false;
+        }
+        return true;
+      }),
+    );
+    setActions((prev) => prev.concat(lastStroke));
     saveSnapshot();
     drawInCanvas();
   }
@@ -244,9 +248,9 @@ export function useCanvas() {
           sourceImg.height + 2
       ) {
         drawStroke(action, sourceCtx);
-        actions.push(action);
-        if (redoActions.length > 0) {
-          redoActions = [];
+        setActions(prev => [...prev, action])
+        if (redoActions().length > 0) {
+          setRedoActions([]);
         }
       }
       return;
@@ -256,7 +260,7 @@ export function useCanvas() {
   }
 
   function redrawActions(ctx: CanvasRenderingContext2D) {
-    for (const action of actions) {
+    for (const action of actions()) {
       if (action.type === 'draw-green' || action.type === 'draw-red') {
         drawStroke(action, ctx);
       }
@@ -319,14 +323,14 @@ export function useCanvas() {
   }
 
   function getDataPoints() {
-    const positive_points = actions
+    const positive_points = actions()
       .filter((action) => action.type === 'draw-green')
       .map((action) => {
         const x = action.oldX / action.scale - action.pos.x / action.scale;
         const y = action.oldY / action.scale - action.pos.y / action.scale;
         return [x, y];
       });
-    const negative_points = actions
+    const negative_points = actions()
       .filter((action) => action.type === 'draw-red')
       .map((action) => {
         const x = action.oldX / action.scale - action.pos.x / action.scale;
