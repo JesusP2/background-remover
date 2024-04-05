@@ -20,6 +20,7 @@ export default createMiddleware({
       }
     }
     const sessionId = getCookie(nativeEvent, lucia.sessionCookieName) ?? null;
+    console.log('session:', sessionId)
     if (!sessionId) {
       event.locals.session = null;
       event.locals.user = null;

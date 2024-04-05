@@ -8,6 +8,13 @@
       "when": 1712290429563,
       "tag": "0000_omniscient_saracen",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1712294422136,
+      "tag": "0001_right_silver_sable",
+      "breakpoints": true
     }
   ]
 }
