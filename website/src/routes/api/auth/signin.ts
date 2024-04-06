@@ -1,7 +1,7 @@
 import { APIEvent } from '@solidjs/start/server';
 import { eq } from 'drizzle-orm';
 import { Argon2id } from 'oslo/password';
-import { appendHeader, createError } from 'vinxi/http';
+import { appendResponseHeader, createError } from 'vinxi/http';
 import { lucia } from '~/lib/auth';
 import { db } from '~/lib/db';
 import { userTable } from '~/lib/db/schema';
@@ -55,9 +55,15 @@ export async function POST(event: APIEvent) {
   }
 
   const session = await lucia.createSession(existingUser[0].id, {});
-  appendHeader(
-    event.nativeEvent,
+  appendResponseHeader(
     'Set-Cookie',
     lucia.createSessionCookie(session.id).serialize(),
   );
+
+  return new Response(null, {
+    status: 302,
+    headers: {
+      Location: '/',
+    },
+  });
 }
