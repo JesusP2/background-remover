@@ -1,5 +1,12 @@
+import type { ClassValue } from "clsx"
+import { clsx } from "clsx"
+import { twMerge } from "tailwind-merge"
 import { createSignal, onMount } from 'solid-js';
 import { createId } from '@paralleldrive/cuid2';
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs))
+}
 
 function fileToImage(file: File | Blob): Promise<HTMLImageElement> {
   return new Promise((resolve) => {
