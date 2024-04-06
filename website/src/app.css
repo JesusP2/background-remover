@@ -97,7 +97,7 @@
 
 @layer base {
   * {
-    @apply border-border;
+    @apply border-border font-geist;
   }
   body {
     @apply bg-background text-foreground;

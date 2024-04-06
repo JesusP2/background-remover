@@ -1,7 +1,8 @@
 import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
+import { Button } from '~/components/ui/button';
 
-export default function SignIn() {
+export default function Signin() {
   return (
     <div class="font-geist rounded-lg border bg-card text-card-foreground shadow-sm mx-auto max-w-sm">
       <div class="lex flex-col space-y-1.5 p-6">
@@ -11,9 +12,29 @@ export default function SignIn() {
         </p>
       </div>
       <div class="p-6 pt-0">
-        <div class="grid w-full max-w-sm items-center gap-1.5">
-          <Label for="email">Email</Label>
-          <Input type="email" id="email" placeholder="Email" />
+        <form class="grid gap-4" method="post" action="/api/auth/signin">
+          <div class="grid gap-2">
+            <Label class="h-4" for="username">
+              Username
+            </Label>
+            <Input name="username" id="username" placeholder="username" />
+          </div>
+          <div class="grid gap-2">
+            <div class="flex items-center">
+              <Label for="password">Password</Label>
+              <a href="auth/reset-password" class="ml-auto inline-block text-sm underline">
+                Forgot your password?
+              </a>
+            </div>
+            <Input name="password" type="password" id="password" />
+          </div>
+          <Button class="w-full">Login</Button>
+        </form>
+        <div class="mt-4 text-center text-sm">
+          Don't have an account?{' '}
+          <a class="underline" href="/auth/signup">
+            Sign up
+          </a>
         </div>
       </div>
     </div>

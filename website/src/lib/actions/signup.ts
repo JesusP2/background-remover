@@ -1,4 +1,3 @@
-import { APIEvent } from '@solidjs/start/server';
 import { lucia } from '~/lib/auth';
 import { generateId } from 'lucia';
 import { Argon2id } from 'oslo/password';
@@ -6,9 +5,10 @@ import { db } from '~/lib/db';
 import { userTable } from '~/lib/db/schema';
 import { setCookie } from 'vinxi/http';
 import { eq } from 'drizzle-orm';
+import { redirect } from '@solidjs/router';
 
-export async function POST(event: APIEvent) {
-  const formData = await event.request.formData();
+export async function signupAction(formData: FormData) {
+  'use server';
   const username = formData.get('username');
   if (
     typeof username !== 'string' ||
@@ -16,9 +16,9 @@ export async function POST(event: APIEvent) {
     username.length > 31 ||
     !/^[a-z0-9_-]+$/.test(username)
   ) {
-    return new Response('Invalid username', {
-      status: 400,
-    });
+    return {
+      username: 'Invalid username',
+    };
   }
   const password = formData.get('password');
   if (
@@ -26,25 +26,25 @@ export async function POST(event: APIEvent) {
     password.length < 6 ||
     password.length > 255
   ) {
-    return new Response('Invalid password', {
-      status: 400,
-    });
+    return {
+      password: 'Invalid password',
+    };
   }
 
   const userId = generateId(15);
   const hashedPassword = await new Argon2id().hash(password);
 
-  // TODO: check if username is already used
   const user = await db
     .select({
       id: userTable.id,
     })
     .from(userTable)
-    .where(eq(userTable.username, username)).limit(1);
+    .where(eq(userTable.username, username))
+    .limit(1);
   if (user.length > 0) {
-    return new Response('Username already taken', {
-      status: 400,
-    });
+    return {
+      username: 'Username already taken',
+    };
   }
   await db.insert(userTable).values({
     id: userId,
@@ -56,10 +56,5 @@ export async function POST(event: APIEvent) {
   const sessionCookie = lucia.createSessionCookie(session.id);
   setCookie(sessionCookie.name, sessionCookie.value, sessionCookie.attributes);
 
-  return new Response(null, {
-    status: 302,
-    headers: {
-      Location: '/',
-    },
-  });
+  throw redirect('/');
 }
