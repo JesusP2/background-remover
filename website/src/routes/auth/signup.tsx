@@ -2,6 +2,7 @@ import { Button } from '~/components/ui/button';
 import { action, useSubmission } from '@solidjs/router';
 import { signupAction } from '~/lib/actions/signup';
 import { FormInput, FormLabel, FormMessage } from '~/components/form';
+import { AiOutlineLoading } from 'solid-icons/ai';
 
 const _signup = action(signupAction);
 
@@ -22,6 +23,7 @@ export default function Signup() {
               Username
             </FormLabel>
             <FormInput
+              disabled={signupState.pending}
               error={!!signupState.result?.username}
               name="username"
               id="username"
@@ -35,6 +37,7 @@ export default function Signup() {
               Password
             </FormLabel>
             <FormInput
+              disabled={signupState.pending}
               error={!!signupState.result?.password}
               name="password"
               type="password"
@@ -44,7 +47,17 @@ export default function Signup() {
               {signupState.result?.password}
             </FormMessage>
           </div>
-          <Button class="w-full">Login</Button>
+          <Button disabled={signupState.pending} class="w-full">
+            {signupState.pending ? (
+              <AiOutlineLoading
+                class={
+                  signupState.pending ? 'animate-spin w-5 h-5 ml-4' : 'hidden'
+                }
+              />
+            ) : (
+              'Sign up'
+            )}
+          </Button>
         </form>
         <div class="mt-4 text-center text-sm">
           Don you have an account?{' '}
