@@ -112,3 +112,21 @@
     @apply px-4;
   }
 }
+.svg-bg {
+    background-image: url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNiIgaGVpZ2h0PSIxNiI+PHBhdGggZmlsbD0iI2RlZGVkZSIgZD0iTTAgMGg4djhIMHpNOCA4aDh2OEg4eiIvPjwvc3ZnPg==);
+    background-repeat: repeat;
+}
+
+body {
+   user-select: none;    
+   -moz-user-select: none;    
+}
+.zoomables {
+    pointer-events: none;
+    border: 1px solid black;
+}
+#zoomMe {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+}

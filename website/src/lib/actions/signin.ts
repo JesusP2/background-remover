@@ -7,6 +7,7 @@ import { lucia } from "../auth";
 import { redirect } from "@solidjs/router";
 
 export async function SigninAction(formData: FormData) {
+  "use server"
   const username = formData.get('username');
   if (
     typeof username !== 'string' ||
