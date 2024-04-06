@@ -1,7 +1,7 @@
 import { ComponentProps, splitProps } from 'solid-js';
 import { Label } from './ui/label';
-import clsx from 'clsx';
 import { Input } from './ui/input';
+import { cn } from '~/lib/utils';
 
 interface FormLabelProps extends ComponentProps<'label'> {
   error?: boolean;
@@ -10,7 +10,7 @@ export function FormLabel(props: FormLabelProps) {
   const [, rest] = splitProps(props, ['class']);
   return (
     <Label
-      class={clsx(props.error ? 'text-destructive' : '', props.class)}
+      class={cn(props.error ? 'text-destructive' : '', props.class)}
       {...rest}
     />
   );
@@ -23,7 +23,7 @@ export function FormInput(props: FormInputProps) {
   const [, rest] = splitProps(props, ['class']);
   return (
     <Input
-      class={clsx(
+      class={cn(
         props.error ? 'border-destructive focus-visible:ring-destructive' : '',
         props.class,
       )}
@@ -39,7 +39,7 @@ export function FormMessage(props: FormMessageProps) {
   const [, rest] = splitProps(props, ['class']);
   return (
     <span
-      class={clsx(props.error ? 'text-destructive' : '', props.class, 'text-sm')}
+      class={cn(props.error ? 'text-destructive' : '', props.class, 'text-sm')}
       {...rest}
     />
   );

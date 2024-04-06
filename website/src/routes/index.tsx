@@ -1,4 +1,4 @@
-import { useCanvas } from '~/lib/utils';
+import { useCanvas } from '~/lib/canvas';
 import { ActionsMenu } from '../components/actions-menu';
 
 export default function Home() {
