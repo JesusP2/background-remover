@@ -224,6 +224,7 @@ export function useCanvas() {
     event.preventDefault();
     mouse.button = null;
     saveSnapshot();
+    console.log(actions())
   }
 
   function mousedown(event: MouseEvent) {

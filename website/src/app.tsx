@@ -1,6 +1,5 @@
 import { Router } from '@solidjs/router';
 import { FileRoutes } from '@solidjs/start/router';
-import '@uploadthing/solid/styles.css';
 import { Suspense } from 'solid-js';
 import './app.css';
 
