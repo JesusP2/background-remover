@@ -4,15 +4,22 @@ import { userTable } from './user';
 
 export const imageTable = sqliteTable('image', {
   id: text('id').notNull().primaryKey(),
-  userId: text('user_id').notNull().references(() => userTable.id),
+  userId: text('user_id')
+    .notNull()
+    .references(() => userTable.id),
+  name: text('name').notNull(),
   source: text('source').notNull(),
-  mask: text('mask').notNull(),
-  result: text('result').notNull(),
-  createdAt: integer('created_at').notNull(),
-  updatedAt: integer('updated_at').notNull(),
-})
+  mask: text('mask'),
+  result: text('result'),
+  createdAt: integer('created_at')
+    .notNull()
+    .$defaultFn(() => Date.now()),
+  updatedAt: integer('updated_at')
+    .notNull()
+    .$defaultFn(() => Date.now()),
+});
 
-// export const 
+// export const
 //
 // img, mask, result
 //

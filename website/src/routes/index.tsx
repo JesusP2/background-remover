@@ -1,8 +1,12 @@
 import { UploadFile, createDropzone } from '@solid-primitives/upload';
-import { action, useAction, useSubmission } from '@solidjs/router';
+import { action, redirect, useAction, useSubmission } from '@solidjs/router';
 import { BsCloudDownload, BsFolder } from 'solid-icons/bs';
 import { AiOutlinePicture } from 'solid-icons/ai';
 import { uploadFile } from '~/lib/r2';
+import { db } from '~/lib/db';
+import { imageTable } from '~/lib/db/schema';
+import { createId } from '@paralleldrive/cuid2';
+import { getRequestEvent } from 'solid-js/web';
 
 function DropZone(props: { onFileChange: (file: File) => void }) {
   const { setRef: dropzoneRef } = createDropzone({
@@ -38,8 +42,23 @@ function DropZone(props: { onFileChange: (file: File) => void }) {
 
 const uploadImageAction = action(async (file: File) => {
   'use server';
-  const url = await uploadFile(file, file.name);
-  return { url };
+  const session = getRequestEvent()?.locals.session;
+  if (!session) return new Error('Unauthorized');
+  try {
+    const id = createId();
+    const url = await uploadFile(file, file.name);
+    await db.insert(imageTable).values({
+      id,
+      userId: session.userId,
+      name: file.name,
+      source: url,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    });
+    return redirect(`/canvas/${id}`)
+  } catch (error) {
+    console.error(error);
+  }
 });
 
 export default function Index() {

@@ -1,7 +1,5 @@
 import {
   S3Client,
-  ListBucketsCommand,
-  ListObjectsV2Command,
   GetObjectCommand,
   PutObjectCommand,
 } from '@aws-sdk/client-s3';
@@ -24,17 +22,13 @@ export async function uploadFile(file: File, name: string) {
     Body: Buffer.from(await file.arrayBuffer()),
   });
 
-  try {
-    await client.send(command);
-    const url = await getSignedUrl(
-      client,
-      new GetObjectCommand({
-        Bucket: 'erased',
-        Key: file.name,
-      }),
-    );
-    return url
-  } catch (err) {
-    console.error(err);
-  }
+  await client.send(command);
+  const url = await getSignedUrl(
+    client,
+    new GetObjectCommand({
+      Bucket: 'erased',
+      Key: file.name,
+    }),
+  );
+  return url
 }

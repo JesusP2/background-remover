@@ -1,8 +1,8 @@
 {
   "version": "5",
   "dialect": "sqlite",
-  "id": "a0f05ea6-4e45-4547-8cc9-af9fb0680b84",
-  "prevId": "a459fff0-7608-4172-a891-6a01645e6fe7",
+  "id": "fdedd69a-ec0f-4082-9c82-c1b33d12590a",
+  "prevId": "ba6ec6cf-70e8-45c0-867d-59b53ea0d4e5",
   "tables": {
     "image": {
       "name": "image",
@@ -21,6 +21,13 @@
           "notNull": true,
           "autoincrement": false
         },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
         "source": {
           "name": "source",
           "type": "text",
@@ -32,14 +39,14 @@
           "name": "mask",
           "type": "text",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "autoincrement": false
         },
         "result": {
           "name": "result",
           "type": "text",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "autoincrement": false
         },
         "created_at": {
@@ -163,6 +170,8 @@
   "_meta": {
     "schemas": {},
     "tables": {},
-    "columns": {}
+    "columns": {
+      "\"image\".\"image_name\"": "\"image\".\"name\""
+    }
   }
 }
