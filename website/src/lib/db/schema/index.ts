@@ -9,8 +9,9 @@ export const imageTable = sqliteTable('image', {
     .references(() => userTable.id),
   name: text('name').notNull(),
   source: text('source').notNull(),
+  base_mask: text('base_mask').notNull(),
   mask: text('mask'),
-  result: text('result'),
+  result: text('result').notNull(),
   createdAt: integer('created_at')
     .notNull()
     .$defaultFn(() => Date.now()),

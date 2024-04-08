@@ -15,11 +15,11 @@ export const client = new S3Client({
   },
 });
 
-export async function uploadFile(file: File, name: string) {
+export async function uploadFile(buffer: Buffer, name: string) {
   const command = new PutObjectCommand({
     Bucket: 'erased',
     Key: name,
-    Body: Buffer.from(await file.arrayBuffer()),
+    Body: buffer,
   });
 
   await client.send(command);
@@ -27,7 +27,7 @@ export async function uploadFile(file: File, name: string) {
     client,
     new GetObjectCommand({
       Bucket: 'erased',
-      Key: file.name,
+      Key: name,
     }),
     { expiresIn: 60 * 60 * 24 * 7 },
   );

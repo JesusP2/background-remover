@@ -1,3 +1,4 @@
+import base64
 import numpy as np
 import io
 from PIL import Image
@@ -18,3 +19,6 @@ def array_to_blob(image):
     img_buffer = io.BytesIO()
     Image.fromarray(image).save(img_buffer, format='PNG')
     return img_buffer.getvalue()
+
+def array_to_base64(image):
+    return f"data:image/png;base64,{base64.b64encode(array_to_blob(image)).decode()}"

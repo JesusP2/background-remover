@@ -35,7 +35,7 @@ export default function Home() {
   const img = image();
   if (img === null) return <Navigate href="/" />;
   if (!img) return <div>Loading...</div>;
-  const { source, mask, result } = img;
+  const { source, mask, result, base_mask } = img;
   const {
     setCurrentMode,
     applyMaskToImage,
@@ -47,6 +47,7 @@ export default function Home() {
     sourceUrl: source,
     maskUrl: mask,
     resultUrl: result,
+    baseMaskUrl: base_mask,
   });
   return (
     <>

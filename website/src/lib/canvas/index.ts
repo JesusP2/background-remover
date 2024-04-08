@@ -7,16 +7,19 @@ export function useCanvas({
   sourceUrl,
   maskUrl,
   resultUrl,
+  baseMaskUrl,
 }: {
   sourceUrl: string;
   maskUrl: string | null;
-  resultUrl: string | null;
+  resultUrl: string;
+  baseMaskUrl: string;
 }) {
   let currentId = createId();
   let sourceImg: HTMLImageElement | null = null;
   let destinationImg: HTMLImageElement | null = null;
   let intermediateImg: HTMLImageElement | HTMLCanvasElement | null = null;
   let storedMask: HTMLImageElement | null = null;
+  let baseMask: HTMLImageElement | null = null;
   const [currentMode, setCurrentMode] = createSignal<ActionType>('draw-green');
   const matrix = [1, 0, 0, 1, 0, 0];
   let scale = 1;
@@ -49,6 +52,9 @@ export function useCanvas({
       matrix[5],
     );
     sourceCtx.drawImage(intermediateImg, 0, 0);
+    if (storedMask) {
+      sourceCtx.drawImage(storedMask, 0, 0);
+    }
 
     destinationCtx.setTransform(1, 0, 0, 1, 0, 0);
     destinationCtx.clearRect(
@@ -162,26 +168,19 @@ export function useCanvas({
     }
   }
 
-  async function applyMaskToImage(type: 'image' | 'mask') {
+  async function createMask() {
     const formData = new FormData();
-    if (type === 'image') {
-      const imgCopied = getDataFromSourceCanvas('image');
-      if (!imgCopied) return;
-      const file = await canvasToFile(imgCopied, 'file.png', 'image/png');
-      formData.append('image_file', file);
-    } else {
-      const imgCopied = getDataFromSourceCanvas('image');
-      const maskCopied = getDataFromSourceCanvas('mask');
-      if (!imgCopied || !maskCopied) return;
-      const image = await canvasToFile(imgCopied, 'file.png', 'image/png');
-      const mask = await canvasToFile(maskCopied, 'mask.png', 'image/png');
-      // const baseMask = await canvasToFile(imageToCanvas(storedMask), 'base_mask.png', 'image/png');
-      formData.append('image_file', image);
-      formData.append('mask_file', mask)
-      // formData.append('base_mask_file', baseMask)
-    }
-    const endpoint = type === 'image' ? 'start' : 'mask';
-    const res = await fetch(`http://localhost:8000/${endpoint}`, {
+    const imgCopied = getDataFromSourceCanvas('image');
+    const maskCopied = getDataFromSourceCanvas('mask');
+    if (!imgCopied || !maskCopied || !baseMask) return;
+    const baseMaskCopied = imageToCanvas(baseMask);
+    const image = await canvasToFile(imgCopied, 'file.png', 'image/png');
+    const mask = await canvasToFile(maskCopied, 'mask.png', 'image/png');
+    const baseMaskImg = await canvasToFile(baseMaskCopied, 'base_mask.png', 'image/png');
+    formData.append('image_file', image);
+    formData.append('mask_file', mask);
+    formData.append('base_mask_file', baseMaskImg);
+    const res = await fetch(`http://localhost:8000/mask`, {
       method: 'POST',
       body: formData,
       headers: {
@@ -194,23 +193,22 @@ export function useCanvas({
     }
 
     const payload = await res.json();
-    if (payload.base_mask) {
-      storedMask = await base64ToImage(payload.base_mask);
-    }
-    const { image } = payload;
-    destinationImg = await base64ToImage(image);
+    return payload;
+  }
+
+  async function applyMaskToImage() {
+    const payload = await createMask();
+    const { result } = payload;
+    destinationImg = await base64ToImage(result);
     drawInCanvas();
   }
 
-  async function loadImage(
-    sourceUrl: string,
-    maskUrl: string | null,
-    resultUrl: string | null,
-  ) {
+  async function loadImage() {
     const { sourceCtx, destinationCtx } = getCanvas();
     sourceImg = await urlToImage(sourceUrl);
-    destinationImg = resultUrl ? await urlToImage(resultUrl) : sourceImg;
+    destinationImg = await urlToImage(resultUrl);
     storedMask = maskUrl ? await urlToImage(maskUrl) : null;
+    baseMask = await urlToImage(baseMaskUrl);
     saveSnapshot();
     let scale = 1;
     if (sourceImg.width > sourceImg.height) {
@@ -225,7 +223,6 @@ export function useCanvas({
     drawInCanvas();
     sourceCtx.imageSmoothingEnabled = false;
     destinationCtx.imageSmoothingEnabled = false;
-    // applyMaskToImage('image');
   }
 
   function getDataFromSourceCanvas(type: 'image' | 'mask' | 'all') {
@@ -238,6 +235,9 @@ export function useCanvas({
       copyCtx.drawImage(sourceImg, 0, 0);
     }
     if (type === 'mask' || type === 'all') {
+      if (storedMask) {
+        copyCtx.drawImage(storedMask, 0, 0);
+      }
       redrawActions(copyCtx);
     }
     return copy;
@@ -348,7 +348,7 @@ export function useCanvas({
     destinationCtx.canvas.height = innerHeight;
     setupListeners(sourceCtx.canvas, 'source');
     setupListeners(destinationCtx.canvas, 'destination');
-    loadImage(sourceUrl, maskUrl, resultUrl);
+    loadImage();
   });
 
   return {
