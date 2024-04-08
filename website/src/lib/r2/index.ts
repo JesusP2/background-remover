@@ -29,6 +29,7 @@ export async function uploadFile(file: File, name: string) {
       Bucket: 'erased',
       Key: file.name,
     }),
+    { expiresIn: 60 * 60 * 24 * 7 },
   );
-  return url
+  return url;
 }

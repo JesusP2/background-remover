@@ -1,13 +1,22 @@
 import { createSignal, onMount } from 'solid-js';
-import { fileToImage, getCanvas, imageToFile } from './utils';
+import { base64ToImage, getCanvas, canvasToFile, urlToImage, imageToCanvas } from './utils';
 import { createId } from '@paralleldrive/cuid2';
 import { drawStroke, type ActionType, type Action } from './utils';
 
-export function useCanvas() {
+export function useCanvas({
+  sourceUrl,
+  maskUrl,
+  resultUrl,
+}: {
+  sourceUrl: string;
+  maskUrl: string | null;
+  resultUrl: string | null;
+}) {
   let currentId = createId();
   let sourceImg: HTMLImageElement | null = null;
   let destinationImg: HTMLImageElement | null = null;
   let intermediateImg: HTMLImageElement | HTMLCanvasElement | null = null;
+  let storedMask: HTMLImageElement | null = null;
   const [currentMode, setCurrentMode] = createSignal<ActionType>('draw-green');
   const matrix = [1, 0, 0, 1, 0, 0];
   let scale = 1;
@@ -155,54 +164,68 @@ export function useCanvas() {
 
   async function applyMaskToImage(type: 'image' | 'mask') {
     const formData = new FormData();
-    const imgCopied = getDataFromSourceCanvas(type);
-    if (!imgCopied) return;
-    const file = await imageToFile(imgCopied, 'file.png', 'image/png');
-    formData.append('file', file);
+    if (type === 'image') {
+      const imgCopied = getDataFromSourceCanvas('image');
+      if (!imgCopied) return;
+      const file = await canvasToFile(imgCopied, 'file.png', 'image/png');
+      formData.append('image_file', file);
+    } else {
+      const imgCopied = getDataFromSourceCanvas('image');
+      const maskCopied = getDataFromSourceCanvas('mask');
+      if (!imgCopied || !maskCopied) return;
+      const image = await canvasToFile(imgCopied, 'file.png', 'image/png');
+      const mask = await canvasToFile(maskCopied, 'mask.png', 'image/png');
+      // const baseMask = await canvasToFile(imageToCanvas(storedMask), 'base_mask.png', 'image/png');
+      formData.append('image_file', image);
+      formData.append('mask_file', mask)
+      // formData.append('base_mask_file', baseMask)
+    }
     const endpoint = type === 'image' ? 'start' : 'mask';
     const res = await fetch(`http://localhost:8000/${endpoint}`, {
       method: 'POST',
       body: formData,
+      headers: {
+        Accept: 'application/json',
+      },
     });
 
     if (!res.ok) {
       throw new Error('Failed to upload image');
     }
 
-    const blob = await res.blob();
-    const url = URL.createObjectURL(blob);
-    const img = await new Promise<HTMLImageElement>((resolve) => {
-      const img = new Image();
-      img.src = url;
-      img.onload = () => {
-        resolve(img);
-      };
-    });
-    destinationImg = img;
+    const payload = await res.json();
+    if (payload.base_mask) {
+      storedMask = await base64ToImage(payload.base_mask);
+    }
+    const { image } = payload;
+    destinationImg = await base64ToImage(image);
     drawInCanvas();
   }
 
-  async function onFileChange(file?: File | Blob) {
+  async function loadImage(
+    sourceUrl: string,
+    maskUrl: string | null,
+    resultUrl: string | null,
+  ) {
     const { sourceCtx, destinationCtx } = getCanvas();
-    if (!file) return;
-    const img = await fileToImage(file);
-    sourceImg = img;
-    intermediateImg = img;
-    destinationImg = img;
+    sourceImg = await urlToImage(sourceUrl);
+    destinationImg = resultUrl ? await urlToImage(resultUrl) : sourceImg;
+    storedMask = maskUrl ? await urlToImage(maskUrl) : null;
+    saveSnapshot();
     let scale = 1;
-    if (img.width > img.height) {
-      scale = sourceCtx.canvas.width / img.width;
+    if (sourceImg.width > sourceImg.height) {
+      scale = sourceCtx.canvas.width / sourceImg.width;
     } else {
-      scale = sourceCtx.canvas.height / img.height;
+      scale = sourceCtx.canvas.height / sourceImg.height;
     }
     scale -= scale / 10;
-    pos.x = (sourceCtx.canvas.width / scale - img.width) / 2;
-    pos.y = (sourceCtx.canvas.height / scale - img.height) / 2;
+    pos.x = (sourceCtx.canvas.width / scale - sourceImg.width) / 2;
+    pos.y = (sourceCtx.canvas.height / scale - sourceImg.height) / 2;
     scaleAt({ x: 0, y: 0 }, scale);
     drawInCanvas();
     sourceCtx.imageSmoothingEnabled = false;
     destinationCtx.imageSmoothingEnabled = false;
-    applyMaskToImage('image');
+    // applyMaskToImage('image');
   }
 
   function getDataFromSourceCanvas(type: 'image' | 'mask' | 'all') {
@@ -224,7 +247,6 @@ export function useCanvas() {
     event.preventDefault();
     mouse.button = null;
     saveSnapshot();
-    console.log(actions())
   }
 
   function mousedown(event: MouseEvent) {
@@ -326,13 +348,14 @@ export function useCanvas() {
     destinationCtx.canvas.height = innerHeight;
     setupListeners(sourceCtx.canvas, 'source');
     setupListeners(destinationCtx.canvas, 'destination');
+    loadImage(sourceUrl, maskUrl, resultUrl);
   });
 
   return {
     sourceImg,
     drawInCanvas,
     scaleAt,
-    onFileChange,
+    loadImage,
     setCurrentMode,
     applyMaskToImage,
     undo,

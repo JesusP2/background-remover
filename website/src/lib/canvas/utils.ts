@@ -13,6 +13,32 @@ export const colors = {
   'draw-red': 'red',
 } as Record<ActionType, string>;
 
+export function urlToImage(url: string): Promise<HTMLImageElement> {
+  return new Promise(async (resolve) => {
+    const res = await fetch(url);
+    const blob = await res.blob();
+    const base64 = await new Promise<string | ArrayBuffer | null>((resolve) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(blob);
+      reader.onload = () => {
+        resolve(reader.result);
+      };
+    });
+    if (typeof base64 !== 'string') throw new Error('Failed to convert blob to base64.');
+    resolve(await base64ToImage(base64));
+  });
+}
+
+export function base64ToImage(base64: string): Promise<HTMLImageElement> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.src = base64;
+    img.onload = () => {
+      resolve(img);
+    };
+  });
+}
+
 export function fileToImage(file: File | Blob): Promise<HTMLImageElement> {
   return new Promise((resolve) => {
     const reader = new FileReader();
@@ -28,7 +54,17 @@ export function fileToImage(file: File | Blob): Promise<HTMLImageElement> {
   });
 }
 
-export function imageToFile(
+export function imageToCanvas(img: HTMLImageElement): HTMLCanvasElement {
+  const canvas = document.createElement('canvas');
+  canvas.width = img.width;
+  canvas.height = img.height;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('Failed to get 2d context.');
+  ctx.drawImage(img, 0, 0);
+  return canvas;
+}
+
+export function canvasToFile(
   canvas: HTMLCanvasElement,
   fileName: string,
   mimeType: string,

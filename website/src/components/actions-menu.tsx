@@ -1,7 +1,6 @@
 import { Accessor } from "solid-js";
 
 export function ActionsMenu({
-  onFileChange,
   setCurrentMode,
   applyMaskToImage,
   undo,
@@ -9,7 +8,6 @@ export function ActionsMenu({
   actions,
   redoActions,
 }: {
-  onFileChange: (file?: File | Blob) => void;
   setCurrentMode: (mode: 'draw-green' | 'draw-red' | 'move' | 'erase') => void;
   applyMaskToImage: (type: 'image' | 'mask') => Promise<void>;
   undo: () => void;
@@ -19,22 +17,6 @@ export function ActionsMenu({
 }) {
   return (
     <div class="rounded-sm px-2 py-1 bg-white absolute bottom-2 left-2 flex gap-x-4 items-center">
-      <label
-        aria-label="button to open file dialog"
-        for="file"
-        class="rounded-sm px-2 py-1 hover:bg-zinc-100 grid place-items-center"
-      >
-        Open
-      </label>
-      <input
-        id="file"
-        type="file"
-        hidden
-        onChange={(e) => {
-          const file = e.target.files?.[0];
-          onFileChange(file);
-        }}
-      />
       <button
         onClick={() => applyMaskToImage('mask')}
         type="button"
