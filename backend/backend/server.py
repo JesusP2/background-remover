@@ -66,10 +66,12 @@ async def apply_mask_endpoint(
     # base_mask_array = cv2.cvtColor(base_mask, cv2.COLOR_RGB2GRAY)
     base_mask = Image.open(io.BytesIO(await base_mask_file.read())).convert("RGB")
     base_mask_array = cv2.cvtColor(np.array(base_mask), cv2.COLOR_RGB2GRAY)
-    base_mask_array[base_mask_array == 0] = cv2.GC_PR_BGD
-    base_mask_array[base_mask_array == 255] = cv2.GC_PR_FGD
+    base_mask_array_copy = cv2.cvtColor(np.array(base_mask), cv2.COLOR_RGB2GRAY)
+    base_mask_array[:] = cv2.GC_PR_BGD
+    base_mask_array[base_mask_array_copy == 0] = cv2.GC_PR_BGD
+    base_mask_array[base_mask_array_copy == 255] = cv2.GC_PR_FGD
     base_mask_array[mask_array == 76] = cv2.GC_BGD
-    base_mask_array[mask_array == 255] = cv2.GC_PR_FGD
+    base_mask_array[mask_array == 255] = cv2.GC_FGD
 
     cv2.grabCut(image, base_mask_array, None, bgdModel, fgdModel, 1, cv2.GC_INIT_WITH_MASK)
     new_mask = np.where((base_mask_array == 2) | (base_mask_array == 0), 0, 1).astype("uint8")

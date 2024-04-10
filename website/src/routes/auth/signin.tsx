@@ -1,5 +1,3 @@
-import { Input } from '~/components/ui/input';
-import { Label } from '~/components/ui/label';
 import { Button } from '~/components/ui/button';
 import { SigninAction } from '~/lib/actions/signin';
 import { action, useSubmission } from '@solidjs/router';
@@ -18,7 +16,7 @@ export default function Signin() {
         </p>
       </div>
       <div class="p-6 pt-0">
-        <form class="grid gap-4" method="post" action="/api/auth/signin">
+        <form class="grid gap-4" method="post" action={signin}>
           <div class="grid gap-2">
             <FormLabel for="username" error={!!signinState.result?.username}>
               Username

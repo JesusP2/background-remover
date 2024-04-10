@@ -1,8 +1,17 @@
 import { createSignal, onMount } from 'solid-js';
-import { base64ToImage, getCanvas, canvasToFile, urlToImage, imageToCanvas } from './utils';
+import {
+  base64ToImage,
+  getCanvas,
+  canvasToFile,
+  urlToImage,
+  imageToCanvas,
+} from './utils';
 import { createId } from '@paralleldrive/cuid2';
 import { drawStroke, type ActionType, type Action } from './utils';
+import { action, useAction, useParams } from '@solidjs/router';
+import { storeStep } from '../actions/store-step';
 
+const _storeStepAction = action(storeStep);
 export function useCanvas({
   sourceUrl,
   maskUrl,
@@ -20,6 +29,16 @@ export function useCanvas({
   let intermediateImg: HTMLImageElement | HTMLCanvasElement | null = null;
   let storedMask: HTMLImageElement | null = null;
   let baseMask: HTMLImageElement | null = null;
+  const storeStepAction = useAction(_storeStepAction);
+  const { id } = useParams();
+
+  // let debounceId: NodeJS.Timeout | null = null;
+  // function debounceFn(fn: (...args: any[]) => void, ms: number) {
+  //   if (debounceId) {
+  //     clearTimeout(debounceId)
+  //   }
+  //   debounceId = setTimeout(fn, ms)
+  // }
   const [currentMode, setCurrentMode] = createSignal<ActionType>('draw-green');
   const matrix = [1, 0, 0, 1, 0, 0];
   let scale = 1;
@@ -52,9 +71,9 @@ export function useCanvas({
       matrix[5],
     );
     sourceCtx.drawImage(intermediateImg, 0, 0);
-    if (storedMask) {
-      sourceCtx.drawImage(storedMask, 0, 0);
-    }
+    // if (storedMask) {
+    //   sourceCtx.drawImage(storedMask, 0, 0);
+    // }
 
     destinationCtx.setTransform(1, 0, 0, 1, 0, 0);
     destinationCtx.clearRect(
@@ -176,10 +195,20 @@ export function useCanvas({
     const baseMaskCopied = imageToCanvas(baseMask);
     const image = await canvasToFile(imgCopied, 'file.png', 'image/png');
     const mask = await canvasToFile(maskCopied, 'mask.png', 'image/png');
-    const baseMaskImg = await canvasToFile(baseMaskCopied, 'base_mask.png', 'image/png');
+    const baseMaskImg = await canvasToFile(
+      baseMaskCopied,
+      'base_mask.png',
+      'image/png',
+    );
     formData.append('image_file', image);
     formData.append('mask_file', mask);
     formData.append('base_mask_file', baseMaskImg);
+    // const url = baseMaskCopied.toDataURL()
+    // const anchor = document.createElement('a')
+    // anchor.href = url
+    // anchor.download = 'idk.png'
+    // anchor.click()
+    // return
     const res = await fetch(`http://localhost:8000/mask`, {
       method: 'POST',
       body: formData,
@@ -193,12 +222,26 @@ export function useCanvas({
     }
 
     const payload = await res.json();
-    return payload;
+    return { result: payload.result, mask: maskCopied };
   }
 
-  async function applyMaskToImage() {
+  async function applyMaskToImage(idk: boolean) {
     const payload = await createMask();
-    const { result } = payload;
+    if (!payload) return;
+    const { result, mask } = payload;
+    const resultFile = await canvasToFile(
+      imageToCanvas(await base64ToImage(result)),
+      'result.png',
+      'image/png',
+    );
+    const maskFile = await canvasToFile(
+      mask,
+      'mask.png',
+      'image/png',
+    );
+    if (idk) {
+      await storeStepAction(resultFile, maskFile, id);
+    }
     destinationImg = await base64ToImage(result);
     drawInCanvas();
   }

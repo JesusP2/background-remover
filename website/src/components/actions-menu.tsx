@@ -9,7 +9,7 @@ export function ActionsMenu({
   redoActions,
 }: {
   setCurrentMode: (mode: 'draw-green' | 'draw-red' | 'move' | 'erase') => void;
-  applyMaskToImage: () => Promise<void>;
+  applyMaskToImage: (idk: boolean) => Promise<void>;
   undo: () => void;
   redo: () => void;
   actions: Accessor<any[]>;
@@ -18,11 +18,18 @@ export function ActionsMenu({
   return (
     <div class="rounded-sm px-2 py-1 bg-white absolute bottom-2 left-2 flex gap-x-4 items-center">
       <button
-        onClick={applyMaskToImage}
+        onClick={() => applyMaskToImage(true)}
         type="button"
         class="p-2 hover:bg-gray-100"
       >
         Save
+      </button>
+      <button
+        onClick={() => applyMaskToImage(false)}
+        type="button"
+        class="p-2 hover:bg-gray-100"
+      >
+        apply
       </button>
       <button disabled={!actions().length} onClick={undo}>
         undo

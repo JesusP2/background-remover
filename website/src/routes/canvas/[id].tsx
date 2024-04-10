@@ -1,12 +1,8 @@
 import { useCanvas } from '~/lib/canvas';
 import { ActionsMenu } from '~/components/actions-menu';
 import {
-  A,
   Navigate,
-  cache,
   createAsync,
-  redirect,
-  useParams,
 } from '@solidjs/router';
 import { getRequestEvent } from 'solid-js/web';
 import { db } from '~/lib/db';
