@@ -71,9 +71,6 @@ export function useCanvas({
       matrix[5],
     );
     sourceCtx.drawImage(intermediateImg, 0, 0);
-    // if (storedMask) {
-    //   sourceCtx.drawImage(storedMask, 0, 0);
-    // }
 
     destinationCtx.setTransform(1, 0, 0, 1, 0, 0);
     destinationCtx.clearRect(

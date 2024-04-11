@@ -50,7 +50,6 @@ export async function uploadImage(file: File) {
       createdAt: Date.now(),
       updatedAt: Date.now(),
     });
-    await new Promise((resolve) => setTimeout(resolve, 1000));
     return redirect(`/canvas/${id}`);
   } catch (error) {
     console.error(error);
