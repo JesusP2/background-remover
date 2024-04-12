@@ -22,6 +22,10 @@ const getImages = async (id: string) => {
   return images[0];
 };
 
+export const route = {
+  load: (event: any) => getImages(event.params.id),
+}
+
 export default function Home() {
   const { id } = useParams();
   const image = createAsync(() => getImages(id))

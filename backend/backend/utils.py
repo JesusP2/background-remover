@@ -5,7 +5,7 @@ from PIL import Image
 
 def apply_mask(raw_image, mask):
     h, w = mask.shape[-2:]
-    mask_image = mask.reshape(h, w) * 255
+    mask_image = mask.reshape(h, w)
     raw_image[:, :, 3] = mask_image
     return raw_image
 

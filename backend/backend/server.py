@@ -22,7 +22,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# base_mask_array = np.zeros((1, 1), np.uint8)
 bgdModel = np.zeros((1, 65), np.float64)
 fgdModel = np.zeros((1, 65), np.float64)
 
@@ -38,9 +37,10 @@ async def start(image_file: UploadFile = File(...)):
     rect = (1, 1, image.shape[1], image.shape[0])
     cv2.grabCut(image, base_mask_array, rect, bgdModel, fgdModel, 1, cv2.GC_INIT_WITH_RECT)
     new_mask = np.where((base_mask_array == 2) | (base_mask_array == 0), 0, 1).astype("uint8")
+    new_mask = np.array(cv2.blur(new_mask * 255, (1, 2)), dtype=np.uint8)
     rgba_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGBA)
     img_base64 = array_to_base64(apply_mask(rgba_image, new_mask))
-    new_mask = apply_mask(cv2.cvtColor(new_mask * 255, cv2.COLOR_GRAY2RGBA), new_mask)
+    new_mask = apply_mask(cv2.cvtColor(new_mask, cv2.COLOR_GRAY2RGBA), new_mask)
     new_mask_base64 = array_to_base64(new_mask)
     return {"result": img_base64, "base_mask": new_mask_base64}
     # return Response(content=blob, media_type="image/png")
@@ -73,11 +73,12 @@ async def apply_mask_endpoint(
     base_mask_array[mask_array == 76] = cv2.GC_BGD
     base_mask_array[mask_array == 255] = cv2.GC_FGD
 
-    cv2.grabCut(image, base_mask_array, None, bgdModel, fgdModel, 1, cv2.GC_INIT_WITH_MASK)
+    cv2.grabCut(image, base_mask_array, None, bgdModel, fgdModel, 10, cv2.GC_INIT_WITH_MASK)
     new_mask = np.where((base_mask_array == 2) | (base_mask_array == 0), 0, 1).astype("uint8")
+    new_mask = np.array(cv2.blur(new_mask * 255, (2, 2)), dtype=np.uint8)
     rgba_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGBA)
     img_base64 = array_to_base64(apply_mask(rgba_image, new_mask))
-    new_mask_base64 = array_to_base64(new_mask * 255)
+    new_mask_base64 = array_to_base64(new_mask)
     return {"result": img_base64, "mask": new_mask_base64}
     # return Response(content=blob, media_type="image/png")
 
