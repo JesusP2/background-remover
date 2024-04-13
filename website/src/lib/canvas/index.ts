@@ -147,7 +147,9 @@ export function useCanvas({
         return true;
       }),
     );
-    actionsMap = new Map(actions().map(action => ([`${action.pos.x}-${action.pos.y}`, action])));
+    actionsMap = new Map(
+      actions().map((action) => [`${action.pos.x}-${action.pos.y}`, action]),
+    );
     setRedoActions((prev) => prev.concat(lastStroke));
     saveSnapshot();
     redrawEverything();
@@ -167,7 +169,7 @@ export function useCanvas({
     );
     actionsMap.set(`${lastAction.pos.x}-${lastAction.pos.y}`, lastAction);
     setActions((prev) => {
-      prev.push(lastAction)
+      prev.push(lastAction);
       return prev;
     });
     saveSnapshot();
@@ -175,14 +177,26 @@ export function useCanvas({
   }
 
   function saveSnapshot() {
-    const maskCopied = getDataFromSourceCanvas('mask');
+    const maskCopied = getDataFromSourceCanvas('mask & trimap');
     if (!maskCopied) return;
     intermediateMask = maskCopied;
   }
 
-  function redrawActions(ctx: CanvasRenderingContext2D) {
+  function redrawActions(
+    ctx: CanvasRenderingContext2D,
+    actionsType: 'all' | 'mask' | 'trimap' | 'mask & trimap',
+  ) {
     for (const action of actions()) {
-      if (action.type !== 'erase' && action.type !== 'move') {
+      if (
+        actionsType === 'all' ||
+        (actionsType === 'mask' &&
+          (action.type === 'draw-red' || action.type === 'draw-green')) ||
+        (actionsType === 'trimap' && action.type === 'draw-yellow') ||
+        (actionsType === 'mask & trimap' &&
+          (action.type === 'draw-red' ||
+            action.type === 'draw-green' ||
+            action.type === 'draw-yellow'))
+      ) {
         drawStroke(action, ctx);
       }
     }
@@ -191,7 +205,7 @@ export function useCanvas({
   async function createMask() {
     const formData = new FormData();
     const imgCopied = getDataFromSourceCanvas('image');
-    const maskCopied = getDataFromSourceCanvas('mask');
+    const maskCopied = getDataFromSourceCanvas('mask & trimap');
     if (!imgCopied || !maskCopied || !baseMask) return;
     const baseMaskCopied = imageToCanvas(baseMask);
     const image = await canvasToFile(imgCopied, 'file.png', 'image/png');
@@ -229,11 +243,7 @@ export function useCanvas({
       'result.png',
       'image/png',
     );
-    const maskFile = await canvasToFile(
-      mask,
-      'mask.png',
-      'image/png',
-    );
+    const maskFile = await canvasToFile(mask, 'mask.png', 'image/png');
     if (store) {
       await storeStepAction(resultFile, maskFile, id);
     }
@@ -263,7 +273,7 @@ export function useCanvas({
     destinationCtx.imageSmoothingEnabled = false;
   }
 
-  function getDataFromSourceCanvas(type: 'image' | 'mask' | 'all') {
+  function getDataFromSourceCanvas(type: 'image' | 'mask' | 'trimap' | 'all' | 'mask & trimap') {
     const copy = document.createElement('canvas');
     const copyCtx = copy.getContext('2d');
     if (!copyCtx || !sourceImg) return;
@@ -272,11 +282,20 @@ export function useCanvas({
     if (type === 'image' || type === 'all') {
       copyCtx.drawImage(sourceImg, 0, 0);
     }
-    if (type === 'mask' || type === 'all') {
+    if (type === 'mask & trimap' || type === 'all') {
       if (storedMask) {
         copyCtx.drawImage(storedMask, 0, 0);
       }
-      redrawActions(copyCtx);
+      redrawActions(copyCtx, 'mask & trimap');
+    }
+    if (type === 'mask') {
+      if (storedMask) {
+        copyCtx.drawImage(storedMask, 0, 0);
+      }
+      redrawActions(copyCtx, 'mask');
+    }
+    if (type === 'trimap') {
+      redrawActions(copyCtx, 'trimap');
     }
     return copy;
   }
@@ -328,14 +347,19 @@ export function useCanvas({
           sourceImg.height + 2
       ) {
         drawStroke(action, intermediateMask.getContext('2d')!);
-        sourceCtx.clearRect(0, 0, sourceCtx.canvas.width, sourceCtx.canvas.height);
+        sourceCtx.clearRect(
+          0,
+          0,
+          sourceCtx.canvas.width,
+          sourceCtx.canvas.height,
+        );
         sourceCtx.drawImage(sourceImg, 0, 0);
         sourceCtx.globalAlpha = 0.5;
         sourceCtx.drawImage(intermediateMask, 0, 0);
         sourceCtx.globalAlpha = 1.0;
         actionsMap.set(`${action.pos.x}-${action.pos.y}`, action);
         setActions((prev) => {
-          prev.push(action)
+          prev.push(action);
           return prev;
         });
         if (redoActions().length > 0) {

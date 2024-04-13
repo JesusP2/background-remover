@@ -7,6 +7,7 @@ from fastapi import FastAPI, File, Form, Response, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from PIL import Image
 from sam_model import predictor
+import pymatting
 
 from backend.utils import (apply_mask, array_to_base64, array_to_blob,
                            create_prompt)
@@ -65,6 +66,7 @@ async def apply_mask_endpoint(
     base_mask = Image.open(io.BytesIO(await base_mask_file.read())).convert("RGB")
     base_mask_array = cv2.cvtColor(np.array(base_mask), cv2.COLOR_RGB2GRAY)
     base_mask_array_copy = cv2.cvtColor(np.array(base_mask), cv2.COLOR_RGB2GRAY)
+    # 229 = yellow, 177 = green, 122 = red, 128 = gray
     base_mask_array[:] = cv2.GC_PR_BGD
     base_mask_array[base_mask_array_copy == 0] = cv2.GC_PR_BGD
     base_mask_array[base_mask_array_copy == 255] = cv2.GC_PR_FGD
@@ -74,9 +76,21 @@ async def apply_mask_endpoint(
     cv2.grabCut(image, base_mask_array, None, bgdModel, fgdModel, 1, cv2.GC_INIT_WITH_MASK)
     new_mask = np.where((base_mask_array == 2) | (base_mask_array == 0), 0, 1).astype("uint8")
     new_mask = np.array(cv2.blur(new_mask * 255, (2, 2)), dtype=np.uint8)
+
+    # alpha matting
+    trimap = new_mask.copy().astype('float32')
+    trimap[mask_array == 229] = 128
+    trimap = trimap / 255
     rgba_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGBA)
-    img_base64 = array_to_base64(apply_mask(rgba_image, new_mask))
-    new_mask_base64 = array_to_base64(new_mask)
+    rgb_image = np.array(cv2.cvtColor(image, cv2.COLOR_BGR2RGB)).astype('float64') / 255
+    alpha = pymatting.estimate_alpha_cf(rgb_image, trimap) * 255
+    alpha = alpha.astype('uint8')
+    rgba_image[:, :, 3] = alpha
+
+    # send response
+    cv2.imwrite("cutout.png", rgba_image)
+    img_base64 = array_to_base64(rgba_image)
+    new_mask_base64 = array_to_base64(alpha)
     return {"result": img_base64, "mask": new_mask_base64}
     # return Response(content=blob, media_type="image/png")
 
