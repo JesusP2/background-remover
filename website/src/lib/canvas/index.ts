@@ -26,7 +26,7 @@ export function useCanvas({
   let currentId = createId();
   let sourceImg: HTMLImageElement | null = null;
   let destinationImg: HTMLImageElement | null = null;
-  let intermediateImg: HTMLImageElement | HTMLCanvasElement | null = null;
+  let intermediateMask: HTMLCanvasElement | null = null;
   let storedMask: HTMLImageElement | null = null;
   let baseMask: HTMLImageElement | null = null;
   const storeStepAction = useAction(_storeStepAction);
@@ -55,7 +55,7 @@ export function useCanvas({
       update();
     }
     const { sourceCtx, destinationCtx } = getCanvas();
-    if (!sourceImg || !intermediateImg || !destinationImg) return;
+    if (!sourceImg || !intermediateMask || !destinationImg) return;
     sourceCtx.setTransform(1, 0, 0, 1, 0, 0);
     sourceCtx.clearRect(0, 0, sourceCtx.canvas.width, sourceCtx.canvas.height);
     sourceCtx.setTransform(
@@ -66,8 +66,10 @@ export function useCanvas({
       matrix[4],
       matrix[5],
     );
+    sourceCtx.drawImage(sourceImg, 0, 0);
+    sourceCtx.globalAlpha = 0.5;
+    sourceCtx.drawImage(intermediateMask, 0, 0);
     sourceCtx.globalAlpha = 1.0;
-    sourceCtx.drawImage(intermediateImg, 0, 0);
 
     destinationCtx.setTransform(1, 0, 0, 1, 0, 0);
     destinationCtx.clearRect(
@@ -173,9 +175,9 @@ export function useCanvas({
   }
 
   function saveSnapshot() {
-    const imgCopied = getDataFromSourceCanvas('all');
-    if (!imgCopied) return;
-    intermediateImg = imgCopied;
+    const maskCopied = getDataFromSourceCanvas('mask');
+    if (!maskCopied) return;
+    intermediateMask = maskCopied;
   }
 
   function redrawActions(ctx: CanvasRenderingContext2D) {
@@ -267,8 +269,6 @@ export function useCanvas({
     if (!copyCtx || !sourceImg) return;
     copy.width = sourceImg.width;
     copy.height = sourceImg.height;
-    // copyCtx.fillStyle = 'black';
-    // copyCtx.fillRect(0, 0, copy.width, copy.height)
     if (type === 'image' || type === 'all') {
       copyCtx.drawImage(sourceImg, 0, 0);
     }

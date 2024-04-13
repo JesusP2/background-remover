@@ -106,7 +106,6 @@ export function drawStroke(action: Action, ctx: CanvasRenderingContext2D) {
     y: action.oldY / action.scale - action.pos.y / action.scale,
   };
   ctx.fillStyle = colors[action.type];
-  ctx.globalAlpha = 0.5;
   let size: number[] = [];
   if (action.scale < 0.3) {
     size = [
