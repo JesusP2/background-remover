@@ -32,13 +32,6 @@ export function useCanvas({
   const storeStepAction = useAction(_storeStepAction);
   const { id } = useParams();
 
-  // let debounceId: NodeJS.Timeout | null = null;
-  // function debounceFn(fn: (...args: any[]) => void, ms: number) {
-  //   if (debounceId) {
-  //     clearTimeout(debounceId)
-  //   }
-  //   debounceId = setTimeout(fn, ms)
-  // }
   const [currentMode, setCurrentMode] = createSignal<ActionType>('draw-green');
   const matrix = [1, 0, 0, 1, 0, 0];
   let scale = 1;
@@ -51,7 +44,10 @@ export function useCanvas({
     oldY: number;
     button: null | number;
   };
-  const [actions, setActions] = createSignal<Action[]>([]);
+  let actionsMap = new Map<string, Action>();
+  const [actions, setActions] = createSignal<Action[]>([], {
+    equals: false,
+  });
   const [redoActions, setRedoActions] = createSignal<Action[]>([]);
 
   function drawInCanvas() {
@@ -149,6 +145,7 @@ export function useCanvas({
         return true;
       }),
     );
+    actionsMap = new Map(actions().map(action => ([`${action.pos.x}-${action.pos.y}`, action])));
     setRedoActions((prev) => prev.concat(lastStroke));
     saveSnapshot();
     drawInCanvas();
@@ -166,7 +163,11 @@ export function useCanvas({
         return true;
       }),
     );
-    setActions((prev) => prev.concat(lastStroke));
+    actionsMap.set(`${lastAction.pos.x}-${lastAction.pos.y}`, lastAction);
+    setActions((prev) => {
+      prev.push(lastAction)
+      return prev;
+    });
     saveSnapshot();
     drawInCanvas();
   }
@@ -327,7 +328,11 @@ export function useCanvas({
           sourceImg.height + 2
       ) {
         drawStroke(action, sourceCtx);
-        setActions((prev) => [...prev, action]);
+        actionsMap.set(`${action.pos.x}-${action.pos.y}`, action);
+        setActions((prev) => {
+          prev.push(action)
+          return prev;
+        });
         if (redoActions().length > 0) {
           setRedoActions([]);
         }

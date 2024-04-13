@@ -1,4 +1,9 @@
-export type ActionType = 'move' | 'draw-green' | 'draw-red' | 'draw-yellow' | 'erase';
+export type ActionType =
+  | 'move'
+  | 'draw-green'
+  | 'draw-red'
+  | 'draw-yellow'
+  | 'erase';
 export type Action = {
   id: string;
   type: ActionType;
@@ -26,7 +31,8 @@ export function urlToImage(url: string): Promise<HTMLImageElement> {
         resolve(reader.result);
       };
     });
-    if (typeof base64 !== 'string') throw new Error('Failed to convert blob to base64.');
+    if (typeof base64 !== 'string')
+      throw new Error('Failed to convert blob to base64.');
     resolve(await base64ToImage(base64));
   });
 }
@@ -122,11 +128,9 @@ export function drawStroke(action: Action, ctx: CanvasRenderingContext2D) {
   for (let i = 0; i < size.length; i++) {
     const xSize = size[i];
     const ySize = size[size.length - i - 1];
-    const pos = {
-      x: strokePos.x - xSize / 2 < 0 ? 0 : Math.floor(strokePos.x - xSize / 2),
-      y: strokePos.y - ySize / 2 < 0 ? 0 : Math.floor(strokePos.y - ySize / 2),
-    };
-    ctx.fillRect(pos.x, pos.y, xSize * 2, ySize * 2);
+    const xPos = strokePos.x - xSize / 2 < 0 ? 0 : Math.floor(strokePos.x - xSize / 2);
+    const yPos = strokePos.y - ySize / 2 < 0 ? 0 : Math.floor(strokePos.y - ySize / 2);
+    ctx.fillRect(xPos, yPos, xSize * 2, ySize * 2);
   }
 }
 
