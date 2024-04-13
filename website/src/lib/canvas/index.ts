@@ -50,7 +50,7 @@ export function useCanvas({
   });
   const [redoActions, setRedoActions] = createSignal<Action[]>([]);
 
-  function drawInCanvas() {
+  function redrawEverything() {
     if (dirty) {
       update();
     }
@@ -150,7 +150,7 @@ export function useCanvas({
     actionsMap = new Map(actions().map(action => ([`${action.pos.x}-${action.pos.y}`, action])));
     setRedoActions((prev) => prev.concat(lastStroke));
     saveSnapshot();
-    drawInCanvas();
+    redrawEverything();
   }
 
   function redo() {
@@ -171,7 +171,7 @@ export function useCanvas({
       return prev;
     });
     saveSnapshot();
-    drawInCanvas();
+    redrawEverything();
   }
 
   function saveSnapshot() {
@@ -238,7 +238,7 @@ export function useCanvas({
       await storeStepAction(resultFile, maskFile, id);
     }
     destinationImg = await base64ToImage(result);
-    drawInCanvas();
+    redrawEverything();
   }
 
   async function loadImage() {
@@ -258,7 +258,7 @@ export function useCanvas({
     pos.x = (sourceCtx.canvas.width / scale - sourceImg.width) / 2;
     pos.y = (sourceCtx.canvas.height / scale - sourceImg.height) / 2;
     scaleAt({ x: 0, y: 0 }, scale);
-    drawInCanvas();
+    redrawEverything();
     sourceCtx.imageSmoothingEnabled = false;
     destinationCtx.imageSmoothingEnabled = false;
   }
@@ -303,10 +303,10 @@ export function useCanvas({
     if (mouse.button === null) return;
     if (mouse.button === 1) {
       pan({ x: mouse.x - mouse.oldX, y: mouse.y - mouse.oldY });
-      drawInCanvas();
+      redrawEverything();
     } else if (currentMode() === 'move') {
       pan({ x: mouse.x - mouse.oldX, y: mouse.y - mouse.oldY });
-      drawInCanvas();
+      redrawEverything();
     } else if (currentMode() !== 'move' && currentMode() !== 'erase') {
       const { sourceCtx } = getCanvas();
       const action = {
@@ -317,7 +317,7 @@ export function useCanvas({
         pos: { x: pos.x, y: pos.y },
         scale,
       };
-      if (!sourceImg) return;
+      if (!sourceImg || !intermediateMask) return;
       if (
         sourceImg &&
         action.oldX / action.scale - action.pos.x / action.scale > -10 &&
@@ -327,7 +327,12 @@ export function useCanvas({
         action.oldY / action.scale - action.pos.y / action.scale <
           sourceImg.height + 2
       ) {
-        drawStroke(action, sourceCtx);
+        drawStroke(action, intermediateMask.getContext('2d')!);
+        sourceCtx.clearRect(0, 0, sourceCtx.canvas.width, sourceCtx.canvas.height);
+        sourceCtx.drawImage(sourceImg, 0, 0);
+        sourceCtx.globalAlpha = 0.5;
+        sourceCtx.drawImage(intermediateMask, 0, 0);
+        sourceCtx.globalAlpha = 1.0;
         actionsMap.set(`${action.pos.x}-${action.pos.y}`, action);
         setActions((prev) => {
           prev.push(action)
@@ -353,10 +358,10 @@ export function useCanvas({
     const y = event.pageY - canvas.offsetTop;
     if (event.deltaY < 0) {
       scaleAt({ x, y }, 1.1);
-      drawInCanvas();
+      redrawEverything();
     } else {
       scaleAt({ x, y }, 1 / 1.1);
-      drawInCanvas();
+      redrawEverything();
     }
     event.preventDefault();
   }
@@ -395,7 +400,7 @@ export function useCanvas({
 
   return {
     sourceImg,
-    drawInCanvas,
+    drawInCanvas: redrawEverything,
     scaleAt,
     loadImage,
     setCurrentMode,
