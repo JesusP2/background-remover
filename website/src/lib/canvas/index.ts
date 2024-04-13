@@ -70,6 +70,7 @@ export function useCanvas({
       matrix[4],
       matrix[5],
     );
+    sourceCtx.globalAlpha = 1.0;
     sourceCtx.drawImage(intermediateImg, 0, 0);
 
     destinationCtx.setTransform(1, 0, 0, 1, 0, 0);
@@ -178,7 +179,7 @@ export function useCanvas({
 
   function redrawActions(ctx: CanvasRenderingContext2D) {
     for (const action of actions()) {
-      if (action.type === 'draw-green' || action.type === 'draw-red') {
+      if (action.type !== 'erase' && action.type !== 'move') {
         drawStroke(action, ctx);
       }
     }
@@ -200,12 +201,6 @@ export function useCanvas({
     formData.append('image_file', image);
     formData.append('mask_file', mask);
     formData.append('base_mask_file', baseMaskImg);
-    // const url = baseMaskCopied.toDataURL()
-    // const anchor = document.createElement('a')
-    // anchor.href = url
-    // anchor.download = 'idk.png'
-    // anchor.click()
-    // return
     const res = await fetch(`http://localhost:8000/mask`, {
       method: 'POST',
       body: formData,
@@ -222,7 +217,7 @@ export function useCanvas({
     return { result: payload.result, mask: maskCopied };
   }
 
-  async function applyMaskToImage(idk: boolean) {
+  async function applyMaskToImage(store: boolean) {
     const payload = await createMask();
     if (!payload) return;
     const { result, mask } = payload;
@@ -236,7 +231,7 @@ export function useCanvas({
       'mask.png',
       'image/png',
     );
-    if (idk) {
+    if (store) {
       await storeStepAction(resultFile, maskFile, id);
     }
     destinationImg = await base64ToImage(result);
@@ -271,6 +266,8 @@ export function useCanvas({
     if (!copyCtx || !sourceImg) return;
     copy.width = sourceImg.width;
     copy.height = sourceImg.height;
+    // copyCtx.fillStyle = 'black';
+    // copyCtx.fillRect(0, 0, copy.width, copy.height)
     if (type === 'image' || type === 'all') {
       copyCtx.drawImage(sourceImg, 0, 0);
     }
@@ -309,7 +306,7 @@ export function useCanvas({
     } else if (currentMode() === 'move') {
       pan({ x: mouse.x - mouse.oldX, y: mouse.y - mouse.oldY });
       drawInCanvas();
-    } else if (currentMode() === 'draw-green' || currentMode() === 'draw-red') {
+    } else if (currentMode() !== 'move' && currentMode() !== 'erase') {
       const { sourceCtx } = getCanvas();
       const action = {
         id: currentId,

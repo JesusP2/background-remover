@@ -1,4 +1,4 @@
-export type ActionType = 'move' | 'draw-green' | 'draw-red' | 'erase';
+export type ActionType = 'move' | 'draw-green' | 'draw-red' | 'draw-yellow' | 'erase';
 export type Action = {
   id: string;
   type: ActionType;
@@ -9,8 +9,10 @@ export type Action = {
 };
 
 export const colors = {
-  'draw-green': 'white',
-  'draw-red': 'red',
+  'draw-green': '#41fa5d',
+  'draw-red': '#fa4150',
+  'draw-yellow': '#fafa41',
+  // 'draw-red': '#808080',
 } as Record<ActionType, string>;
 
 export function urlToImage(url: string): Promise<HTMLImageElement> {
@@ -98,6 +100,7 @@ export function drawStroke(action: Action, ctx: CanvasRenderingContext2D) {
     y: action.oldY / action.scale - action.pos.y / action.scale,
   };
   ctx.fillStyle = colors[action.type];
+  ctx.globalAlpha = 0.5;
   let size: number[] = [];
   if (action.scale < 0.3) {
     size = [

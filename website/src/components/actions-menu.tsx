@@ -1,4 +1,5 @@
 import { Accessor } from "solid-js";
+import { ActionType } from "~/lib/canvas/utils";
 
 export function ActionsMenu({
   setCurrentMode,
@@ -8,7 +9,7 @@ export function ActionsMenu({
   actions,
   redoActions,
 }: {
-  setCurrentMode: (mode: 'draw-green' | 'draw-red' | 'move' | 'erase') => void;
+  setCurrentMode: (mode: ActionType) => void;
   applyMaskToImage: (idk: boolean) => Promise<void>;
   undo: () => void;
   redo: () => void;
@@ -49,6 +50,11 @@ export function ActionsMenu({
         type="button"
         onClick={() => setCurrentMode('draw-red')}
         class="rounded-full h-4 w-4 bg-red-500"
+      />
+      <button
+        type="button"
+        onClick={() => setCurrentMode('draw-yellow')}
+        class="rounded-full h-4 w-4 bg-yellow-500"
       />
     </div>
   );

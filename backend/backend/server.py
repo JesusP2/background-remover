@@ -62,18 +62,16 @@ async def apply_mask_endpoint(
     mask = Image.open(io.BytesIO(await mask_file.read())).convert("RGB")
     mask_array = cv2.cvtColor(np.array(mask), cv2.COLOR_RGB2GRAY)
 
-    # base_mask = np.zeros(image.shape, np.uint8)
-    # base_mask_array = cv2.cvtColor(base_mask, cv2.COLOR_RGB2GRAY)
     base_mask = Image.open(io.BytesIO(await base_mask_file.read())).convert("RGB")
     base_mask_array = cv2.cvtColor(np.array(base_mask), cv2.COLOR_RGB2GRAY)
     base_mask_array_copy = cv2.cvtColor(np.array(base_mask), cv2.COLOR_RGB2GRAY)
     base_mask_array[:] = cv2.GC_PR_BGD
     base_mask_array[base_mask_array_copy == 0] = cv2.GC_PR_BGD
     base_mask_array[base_mask_array_copy == 255] = cv2.GC_PR_FGD
-    base_mask_array[mask_array == 76] = cv2.GC_BGD
-    base_mask_array[mask_array == 255] = cv2.GC_FGD
+    base_mask_array[mask_array == 122] = cv2.GC_BGD
+    base_mask_array[mask_array == 177] = cv2.GC_FGD
 
-    cv2.grabCut(image, base_mask_array, None, bgdModel, fgdModel, 10, cv2.GC_INIT_WITH_MASK)
+    cv2.grabCut(image, base_mask_array, None, bgdModel, fgdModel, 1, cv2.GC_INIT_WITH_MASK)
     new_mask = np.where((base_mask_array == 2) | (base_mask_array == 0), 0, 1).astype("uint8")
     new_mask = np.array(cv2.blur(new_mask * 255, (2, 2)), dtype=np.uint8)
     rgba_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGBA)
