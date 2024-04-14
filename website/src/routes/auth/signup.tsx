@@ -39,7 +39,7 @@ export default function Signup() {
             </FormMessage>
           </div>
           <div class="grid gap-2 relative">
-            <div class="flex gap-x-2">
+            <div class="flex gap-x-2 items-center">
               <FormLabel for="password" error={!!signupState.result?.password}>
                 Password
               </FormLabel>

@@ -2,11 +2,17 @@ import { Button } from '~/components/ui/button';
 import { SigninAction } from '~/lib/actions/signin';
 import { action, useSubmission } from '@solidjs/router';
 import { FormInput, FormLabel, FormMessage } from '~/components/form';
-import { AiOutlineLoading } from 'solid-icons/ai';
+import {
+  AiOutlineLoading,
+  AiOutlineEye,
+  AiOutlineEyeInvisible,
+} from 'solid-icons/ai';
+import { Match, Switch, createSignal } from 'solid-js';
 
 const signin = action(SigninAction);
 export default function Signin() {
   const signinState = useSubmission(signin);
+  const [showPassword, setShowPassword] = createSignal(false);
   return (
     <div class="font-geist rounded-lg border bg-card text-card-foreground shadow-sm mx-auto max-w-sm">
       <div class="lex flex-col space-y-1.5 p-6">
@@ -32,10 +38,22 @@ export default function Signin() {
             </FormMessage>
           </div>
           <div class="grid gap-2">
-            <div class="flex items-center">
+            <div class="flex items-center gap-x-2">
               <FormLabel for="password" error={!!signinState.result?.password}>
                 Password
               </FormLabel>
+              <Switch>
+                <Match when={showPassword()}>
+                  <button onClick={() => setShowPassword(false)}>
+                    <AiOutlineEyeInvisible />
+                  </button>
+                </Match>
+                <Match when={!showPassword()}>
+                  <button onClick={() => setShowPassword(true)}>
+                    <AiOutlineEye />
+                  </button>
+                </Match>
+              </Switch>
               <a
                 href="auth/reset-password"
                 class="ml-auto inline-block text-sm underline"
