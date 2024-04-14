@@ -234,7 +234,7 @@ export function useCanvas({
     return { result: payload.result, mask: maskCopied };
   }
 
-  async function applyMaskToImage(store: boolean) {
+  async function applyMaskToImage() {
     const payload = await createMask();
     if (!payload) return;
     const { result, mask } = payload;
@@ -244,9 +244,7 @@ export function useCanvas({
       'image/png',
     );
     const maskFile = await canvasToFile(mask, 'mask.png', 'image/png');
-    if (store) {
-      await storeStepAction(resultFile, maskFile, id);
-    }
+    await storeStepAction(resultFile, maskFile, id);
     destinationImg = await base64ToImage(result);
     redrawEverything();
   }

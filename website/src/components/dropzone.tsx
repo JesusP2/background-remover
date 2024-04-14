@@ -13,7 +13,7 @@ export function DropZone(props: { onFileChange: (file: File) => void }) {
   return (
     <label
       ref={dropzoneRef}
-      class="grid place-items-center gap-2 p-8 border-2 border-dashed rounded-lg cursor-pointer border-gray-200 text-zinc-400 mb-10"
+      class="grid place-items-center gap-2 p-8 border-2 border-dashed rounded-lg cursor-pointer border-gray-200 hover:border-gray-400 text-zinc-400 hover:text-zinc-500 mb-10"
     >
       <div class="flex gap-x-1">
         <AiOutlinePicture size={40} />

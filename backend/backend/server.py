@@ -1,16 +1,13 @@
 import io
-import json
 
 import cv2
 import numpy as np
-from fastapi import FastAPI, File, Form, Response, UploadFile
+from fastapi import FastAPI, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from PIL import Image
-from sam_model import predictor
 import pymatting
 
-from backend.utils import (apply_mask, array_to_base64, array_to_blob,
-                           create_prompt)
+from backend.utils import apply_mask, array_to_base64
 
 app = FastAPI()
 
@@ -95,26 +92,26 @@ async def apply_mask_endpoint(
     # return Response(content=blob, media_type="image/png")
 
 
-@app.post("/image")
-async def remove_background(
-    positive_points: str = Form(...),
-    negative_points: str = Form(...),
-    file: UploadFile = File(...),
-):
-    stream = io.BytesIO(await file.read())
-    image = Image.open(stream).convert("RGBA")
-    img_array = np.array(image)
-    _positive_points = np.array(json.loads(positive_points), dtype=np.float32)
-    _negative_points = np.array(json.loads(negative_points), dtype=np.float32)
-    prompt = create_prompt(_positive_points, _negative_points)
-    labels = np.concatenate(
-        [np.ones(len(_positive_points)), np.zeros(len(_negative_points))]
-    )
-    predictor.set_image(img_array[:, :, :3])
-    masks = predictor.predict(
-        point_coords=prompt,
-        point_labels=labels,
-        multimask_output=True,
-    )[0]
-    blob = array_to_blob(apply_mask(img_array, masks[0]))
-    return Response(content=blob, media_type="image/png")
+# @app.post("/image")
+# async def remove_background(
+#     positive_points: str = Form(...),
+#     negative_points: str = Form(...),
+#     file: UploadFile = File(...),
+# ):
+#     stream = io.BytesIO(await file.read())
+#     image = Image.open(stream).convert("RGBA")
+#     img_array = np.array(image)
+#     _positive_points = np.array(json.loads(positive_points), dtype=np.float32)
+#     _negative_points = np.array(json.loads(negative_points), dtype=np.float32)
+#     prompt = create_prompt(_positive_points, _negative_points)
+#     labels = np.concatenate(
+#         [np.ones(len(_positive_points)), np.zeros(len(_negative_points))]
+#     )
+#     predictor.set_image(img_array[:, :, :3])
+#     masks = predictor.predict(
+#         point_coords=prompt,
+#         point_labels=labels,
+#         multimask_output=True,
+#     )[0]
+#     blob = array_to_blob(apply_mask(img_array, masks[0]))
+#     return Response(content=blob, media_type="image/png")

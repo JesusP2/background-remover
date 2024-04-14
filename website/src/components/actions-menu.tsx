@@ -25,13 +25,6 @@ export function ActionsMenu({
       >
         Save
       </button>
-      <button
-        onClick={() => applyMaskToImage(false)}
-        type="button"
-        class="p-2 hover:bg-gray-100"
-      >
-        apply
-      </button>
       <button disabled={!actions().length} onClick={undo}>
         undo
       </button>
