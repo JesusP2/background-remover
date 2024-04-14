@@ -2,12 +2,18 @@ import { Button } from '~/components/ui/button';
 import { action, useSubmission } from '@solidjs/router';
 import { signupAction } from '~/lib/actions/signup';
 import { FormInput, FormLabel, FormMessage } from '~/components/form';
-import { AiOutlineLoading } from 'solid-icons/ai';
+import {
+  AiOutlineLoading,
+  AiOutlineEye,
+  AiOutlineEyeInvisible,
+} from 'solid-icons/ai';
+import { Match, Switch, createSignal } from 'solid-js';
 
 const _signup = action(signupAction);
 
 export default function Signup() {
   const signupState = useSubmission(_signup);
+  const [showPassword, setShowPassword] = createSignal(false);
   return (
     <div class="font-geist rounded-lg border bg-card text-card-foreground shadow-sm mx-auto max-w-sm">
       <div class="lex flex-col space-y-1.5 p-6">
@@ -32,15 +38,29 @@ export default function Signup() {
               {signupState.result?.username}
             </FormMessage>
           </div>
-          <div class="grid gap-2">
-            <FormLabel for="password" error={!!signupState.result?.password}>
-              Password
-            </FormLabel>
+          <div class="grid gap-2 relative">
+            <div class="flex gap-x-2">
+              <FormLabel for="password" error={!!signupState.result?.password}>
+                Password
+              </FormLabel>
+              <Switch>
+                <Match when={showPassword()}>
+                  <button onClick={() => setShowPassword(false)}>
+                    <AiOutlineEyeInvisible />
+                  </button>
+                </Match>
+                <Match when={!showPassword()}>
+                  <button onClick={() => setShowPassword(true)}>
+                    <AiOutlineEye />
+                  </button>
+                </Match>
+              </Switch>
+            </div>
             <FormInput
               disabled={signupState.pending}
               error={!!signupState.result?.password}
               name="password"
-              type="password"
+              type={showPassword() ? 'text' : 'password'}
               id="password"
             />
             <FormMessage error={!!signupState.result?.password}>
