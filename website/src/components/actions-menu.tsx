@@ -1,5 +1,12 @@
-import { Accessor } from "solid-js";
-import { ActionType } from "~/lib/canvas/utils";
+import { Accessor } from 'solid-js';
+import { ActionType } from '~/lib/canvas/utils';
+import {
+  AiOutlineUndo,
+  AiOutlineRedo,
+  AiOutlineZoomIn,
+  AiOutlineZoomOut,
+} from 'solid-icons/ai';
+import { TbFocusCentered } from 'solid-icons/tb'
 
 export function ActionsMenu({
   setCurrentMode,
@@ -8,6 +15,10 @@ export function ActionsMenu({
   redo,
   actions,
   redoActions,
+  zoomIn,
+  zoomOut,
+  isZooming,
+  resetToOriginal
 }: {
   setCurrentMode: (mode: ActionType) => void;
   applyMaskToImage: (idk: boolean) => Promise<void>;
@@ -15,9 +26,13 @@ export function ActionsMenu({
   redo: () => void;
   actions: Accessor<any[]>;
   redoActions: Accessor<any[]>;
+  zoomIn: (pos: { x: number; y: number }) => void;
+  zoomOut: (pos: { x: number; y: number }) => void;
+  isZooming: { value: boolean };
+    resetToOriginal: () => void;
 }) {
   return (
-    <div class="rounded-sm px-2 py-1 bg-white absolute bottom-2 left-2 flex gap-x-4 items-center">
+    <div class="rounded-sm px-2 py-1 bg-white absolute bottom-0 left-0 flex gap-x-4 items-center">
       <button
         onClick={() => applyMaskToImage(true)}
         type="button"
@@ -25,10 +40,33 @@ export function ActionsMenu({
       >
         Save
       </button>
-      <button disabled={!actions().length} onClick={undo}>
-        undo
+      <button title="undo" disabled={!actions().length} onClick={undo}>
+        <AiOutlineUndo class="h-5 w-5" />
       </button>
-      <button disabled={!redoActions().length} onClick={redo}>redo</button>
+      <button title="redo" disabled={!redoActions().length} onClick={redo}>
+        <AiOutlineRedo class="h-5 w-5" />
+      </button>
+      <button
+        title="zoom in"
+        onMouseDown={() => zoomIn({ x: 417, y: 494 })}
+        onMouseUp={() => {
+          isZooming.value = false;
+        }}
+      >
+        <AiOutlineZoomIn class="h-5 w-5" />
+      </button>
+      <button
+        title="zoom out"
+        onMouseDown={() => zoomOut({ x: 417, y: 494 })}
+        onMouseUp={() => {
+          isZooming.value = false;
+        }}
+      >
+        <AiOutlineZoomOut class="h-5 w-5" />
+      </button>
+      <button onClick={resetToOriginal}>
+        <TbFocusCentered class="h-5 w-5" />
+      </button>
       <button
         type="button"
         onClick={() => setCurrentMode('move')}

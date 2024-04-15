@@ -29,6 +29,9 @@ export function useCanvas({
   let intermediateMask: HTMLCanvasElement | null = null;
   let storedMask: HTMLImageElement | null = null;
   let baseMask: HTMLImageElement | null = null;
+  const isZooming = {
+    value: false,
+  }
   const storeStepAction = useAction(_storeStepAction);
   const { id } = useParams();
 
@@ -249,6 +252,29 @@ export function useCanvas({
     redrawEverything();
   }
 
+  function calculateBaseScale(sourceCtx: CanvasRenderingContext2D) {
+    if (!sourceImg) return 1;
+    let scale = 1;
+    if (sourceImg?.width > sourceImg?.height) {
+      scale = sourceCtx.canvas.width / sourceImg.width;
+    } else {
+      scale = sourceCtx.canvas.height / sourceImg.height;
+    }
+    scale -= scale / 10;
+    return scale;
+  }
+
+  function resetToOriginal() {
+    const { sourceCtx } = getCanvas();
+    if (!sourceImg) return;
+    scale = 1;
+    let _scale = calculateBaseScale(sourceCtx);
+    pos.x = (sourceCtx.canvas.width / _scale - sourceImg.width) / 2;
+    pos.y = (sourceCtx.canvas.height / _scale - sourceImg.height) / 2;
+    scaleAt({ x: 0, y: 0 }, _scale);
+    redrawEverything();
+  }
+
   async function loadImage() {
     const { sourceCtx, destinationCtx } = getCanvas();
     sourceImg = await urlToImage(sourceUrl);
@@ -256,13 +282,7 @@ export function useCanvas({
     storedMask = maskUrl ? await urlToImage(maskUrl) : null;
     baseMask = await urlToImage(baseMaskUrl);
     saveSnapshot();
-    let scale = 1;
-    if (sourceImg.width > sourceImg.height) {
-      scale = sourceCtx.canvas.width / sourceImg.width;
-    } else {
-      scale = sourceCtx.canvas.height / sourceImg.height;
-    }
-    scale -= scale / 10;
+    let scale = calculateBaseScale(sourceCtx);
     pos.x = (sourceCtx.canvas.width / scale - sourceImg.width) / 2;
     pos.y = (sourceCtx.canvas.height / scale - sourceImg.height) / 2;
     scaleAt({ x: 0, y: 0 }, scale);
@@ -271,7 +291,9 @@ export function useCanvas({
     destinationCtx.imageSmoothingEnabled = false;
   }
 
-  function getDataFromSourceCanvas(type: 'image' | 'mask' | 'trimap' | 'all' | 'mask & trimap') {
+  function getDataFromSourceCanvas(
+    type: 'image' | 'mask' | 'trimap' | 'all' | 'mask & trimap',
+  ) {
     const copy = document.createElement('canvas');
     const copyCtx = copy.getContext('2d');
     if (!copyCtx || !sourceImg) return;
@@ -370,6 +392,24 @@ export function useCanvas({
     }
   }
 
+  async function zoomOut(pos: { x: number; y: number }) {
+    isZooming.value = true;
+    while (isZooming.value) {
+      await new Promise((resolve) => setTimeout(resolve, 1));
+      scaleAt(pos, 1 / 1.01);
+      redrawEverything();
+    }
+  }
+
+  async function zoomIn(pos: { x: number; y: number }) {
+    isZooming.value = true;
+    while (isZooming.value) {
+      await new Promise((resolve) => setTimeout(resolve, 1));
+      scaleAt(pos, 1.01);
+      redrawEverything();
+    }
+  }
+
   function mouseWheelEvent(event: WheelEvent, type: 'source' | 'destination') {
     const { sourceCtx, destinationCtx } = getCanvas();
     let canvas = sourceCtx.canvas;
@@ -431,5 +471,9 @@ export function useCanvas({
     redo,
     actions,
     redoActions,
+    zoomIn,
+    zoomOut,
+    isZooming,
+    resetToOriginal,
   };
 }

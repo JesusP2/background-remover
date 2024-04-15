@@ -3,7 +3,7 @@ import { useCanvas } from '~/lib/canvas';
 
 export function Canvases(props: { img: any }) {
   const { source, mask, result, base_mask } = props.img;
-  const { setCurrentMode, applyMaskToImage, undo, redo, actions, redoActions } =
+  const { setCurrentMode, applyMaskToImage, undo, redo, actions, redoActions, zoomIn, zoomOut, isZooming, resetToOriginal } =
     useCanvas({
       sourceUrl: source,
       maskUrl: mask,
@@ -18,7 +18,11 @@ export function Canvases(props: { img: any }) {
         undo={undo}
         redo={redo}
         actions={actions}
+        zoomIn={zoomIn}
+        zoomOut={zoomOut}
+        isZooming={isZooming}
         redoActions={redoActions}
+        resetToOriginal={resetToOriginal}
       />
       <canvas class="w-[49.95%] h-screen svg-bg" id="source" />
       <div class="h-screen w-[0.1%] bg-zinc-400" />
