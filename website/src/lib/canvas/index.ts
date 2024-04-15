@@ -5,6 +5,7 @@ import {
   canvasToFile,
   urlToImage,
   imageToCanvas,
+  eraseStroke,
 } from './utils';
 import { createId } from '@paralleldrive/cuid2';
 import { drawStroke, type ActionType, type Action } from './utils';
@@ -31,7 +32,7 @@ export function useCanvas({
   let baseMask: HTMLImageElement | null = null;
   const isZooming = {
     value: false,
-  }
+  };
   const storeStepAction = useAction(_storeStepAction);
   const { id } = useParams();
 
@@ -47,7 +48,6 @@ export function useCanvas({
     oldY: number;
     button: null | number;
   };
-  let actionsMap = new Map<string, Action>();
   const [actions, setActions] = createSignal<Action[]>([], {
     equals: false,
   });
@@ -150,9 +150,6 @@ export function useCanvas({
         return true;
       }),
     );
-    actionsMap = new Map(
-      actions().map((action) => [`${action.pos.x}-${action.pos.y}`, action]),
-    );
     setRedoActions((prev) => prev.concat(lastStroke));
     saveSnapshot();
     redrawEverything();
@@ -170,7 +167,6 @@ export function useCanvas({
         return true;
       }),
     );
-    actionsMap.set(`${lastAction.pos.x}-${lastAction.pos.y}`, lastAction);
     setActions((prev) => {
       prev.push(lastAction);
       return prev;
@@ -201,6 +197,8 @@ export function useCanvas({
             action.type === 'draw-yellow'))
       ) {
         drawStroke(action, ctx);
+      } else if (action.type === 'erase' && sourceImg) {
+        eraseStroke(sourceImg, action, ctx);
       }
     }
   }
@@ -366,7 +364,10 @@ export function useCanvas({
         action.oldY / action.scale - action.pos.y / action.scale <
           sourceImg.height + 2
       ) {
-        drawStroke(action, intermediateMask.getContext('2d')!);
+        const ctx = intermediateMask.getContext('2d');
+        if (!ctx) return;
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        drawStroke(action, ctx);
         sourceCtx.clearRect(
           0,
           0,
@@ -377,7 +378,6 @@ export function useCanvas({
         sourceCtx.globalAlpha = 0.5;
         sourceCtx.drawImage(intermediateMask, 0, 0);
         sourceCtx.globalAlpha = 1.0;
-        actionsMap.set(`${action.pos.x}-${action.pos.y}`, action);
         setActions((prev) => {
           prev.push(action);
           return prev;
@@ -388,7 +388,23 @@ export function useCanvas({
       }
       return;
     } else if (currentMode() === 'erase') {
-      return;
+      if (!sourceImg) return;
+      const action = {
+        id: currentId,
+        type: currentMode(),
+        oldX: mouse.oldX,
+        oldY: mouse.oldY,
+        pos: { x: pos.x, y: pos.y },
+        scale,
+      };
+      eraseStroke(sourceImg, action, sourceCtx);
+      setActions((prev) => {
+        prev.push(action);
+        return prev;
+      });
+      if (redoActions().length > 0) {
+        setRedoActions([]);
+      }
     }
   }
 

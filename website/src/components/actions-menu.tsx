@@ -64,7 +64,7 @@ export function ActionsMenu({
       >
         <AiOutlineZoomOut class="h-5 w-5" />
       </button>
-      <button onClick={resetToOriginal}>
+      <button onClick={resetToOriginal} title="Fit and Center">
         <TbFocusCentered class="h-5 w-5" />
       </button>
       <button
@@ -86,6 +86,11 @@ export function ActionsMenu({
         type="button"
         onClick={() => setCurrentMode('draw-yellow')}
         class="rounded-full h-4 w-4 bg-yellow-500"
+      />
+      <button
+        type="button"
+        onClick={() => setCurrentMode('erase')}
+        class="rounded-full h-4 w-4 bg-lime-500"
       />
     </div>
   );

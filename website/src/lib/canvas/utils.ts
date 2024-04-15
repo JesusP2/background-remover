@@ -17,7 +17,6 @@ export const colors = {
   'draw-green': '#41fa5d',
   'draw-red': '#fa4150',
   'draw-yellow': '#fafa41',
-  // 'draw-red': '#808080',
 } as Record<ActionType, string>;
 
 export function urlToImage(url: string): Promise<HTMLImageElement> {
@@ -100,6 +99,38 @@ export function getCanvas() {
   return { sourceCtx, destinationCtx };
 }
 
+export function eraseStroke(
+  sourceImg: HTMLImageElement,
+  action: Action,
+  ctx: CanvasRenderingContext2D,
+) {
+  let size = 0;
+  if (action.scale < 0.3) {
+    size = 60;
+  } else if (action.scale < 1) {
+    size = 30;
+  } else if (action.scale < 2) {
+    size = 16;
+  } else if (action.scale < 4) {
+    size = 6;
+  } else if (action.scale < 8) {
+    size = 4;
+  } else if (action.scale < 12) {
+    size = 2;
+  } else if (action.scale <= 80) {
+    size = 1;
+  }
+  const strokePos = {
+    x: action.oldX / action.scale - action.pos.x / action.scale,
+    y: action.oldY / action.scale - action.pos.y / action.scale,
+  };
+  const xPos =
+    strokePos.x - size / 2 < 0 ? 0 : Math.floor(strokePos.x) - Math.floor(size / 2);
+  const yPos =
+    strokePos.y - size / 2 < 0 ? 0 : Math.floor(strokePos.y) - Math.floor(size / 2);
+  ctx.drawImage(sourceImg, xPos, yPos, size, size, xPos, yPos, size, size);
+}
+
 export function drawStroke(action: Action, ctx: CanvasRenderingContext2D) {
   const strokePos = {
     x: action.oldX / action.scale - action.pos.x / action.scale,
@@ -127,8 +158,10 @@ export function drawStroke(action: Action, ctx: CanvasRenderingContext2D) {
   for (let i = 0; i < size.length; i++) {
     const xSize = size[i];
     const ySize = size[size.length - i - 1];
-    const xPos = strokePos.x - xSize / 2 < 0 ? 0 : Math.floor(strokePos.x - xSize / 2);
-    const yPos = strokePos.y - ySize / 2 < 0 ? 0 : Math.floor(strokePos.y - ySize / 2);
+    const xPos =
+      strokePos.x - xSize / 2 < 0 ? 0 : Math.floor(strokePos.x) - Math.floor(xSize / 2);
+    const yPos =
+      strokePos.y - ySize / 2 < 0 ? 0 : Math.floor(strokePos.y) - Math.floor(ySize / 2);
     ctx.fillRect(xPos, yPos, xSize * 2, ySize * 2);
   }
 }
