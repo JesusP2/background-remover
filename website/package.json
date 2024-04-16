@@ -13,6 +13,7 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.550.0",
     "@aws-sdk/s3-request-presigner": "^3.550.0",
+    "@fontsource-variable/gabarito": "^5.0.4",
     "@fontsource/geist-sans": "^5.0.2",
     "@kobalte/core": "^0.12.6",
     "@libsql/client": "^0.6.0",
@@ -26,6 +27,7 @@
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
     "drizzle-orm": "^0.30.7",
+    "drizzle-valibot": "^0.2.0",
     "lucia": "^3.1.1",
     "oslo": "^1.2.0",
     "postcss": "^8.4.26",
