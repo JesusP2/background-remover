@@ -176,22 +176,19 @@ export function useCanvas({
   }
 
   function saveSnapshot() {
-    const maskCopied = getDataFromSourceCanvas('mask & trimap');
+    const maskCopied = getDataFromSourceCanvas('mask');
     if (!maskCopied) return;
     intermediateMask = maskCopied;
   }
 
   function redrawActions(
     ctx: CanvasRenderingContext2D,
-    actionsType: 'all' | 'mask' | 'trimap' | 'mask & trimap',
+    actionsType: 'all' | 'mask',
   ) {
     for (const action of actions()) {
       if (
         actionsType === 'all' ||
         (actionsType === 'mask' &&
-          (action.type === 'draw-red' || action.type === 'draw-green')) ||
-        (actionsType === 'trimap' && action.type === 'draw-yellow') ||
-        (actionsType === 'mask & trimap' &&
           (action.type === 'draw-red' ||
             action.type === 'draw-green' ||
             action.type === 'draw-yellow'))
@@ -206,7 +203,7 @@ export function useCanvas({
   async function createMask() {
     const formData = new FormData();
     const imgCopied = getDataFromSourceCanvas('image');
-    const maskCopied = getDataFromSourceCanvas('mask & trimap');
+    const maskCopied = getDataFromSourceCanvas('mask');
     if (!imgCopied || !maskCopied || !baseMask) return;
     const baseMaskCopied = imageToCanvas(baseMask);
     const image = await canvasToFile(imgCopied, 'file.png', 'image/png');
@@ -290,7 +287,7 @@ export function useCanvas({
   }
 
   function getDataFromSourceCanvas(
-    type: 'image' | 'mask' | 'trimap' | 'all' | 'mask & trimap',
+    type: 'image' | 'mask' | 'all',
   ) {
     const copy = document.createElement('canvas');
     const copyCtx = copy.getContext('2d');
@@ -300,20 +297,11 @@ export function useCanvas({
     if (type === 'image' || type === 'all') {
       copyCtx.drawImage(sourceImg, 0, 0);
     }
-    if (type === 'mask & trimap' || type === 'all') {
-      if (storedMask) {
-        copyCtx.drawImage(storedMask, 0, 0);
-      }
-      redrawActions(copyCtx, 'mask & trimap');
-    }
-    if (type === 'mask') {
+    if (type === 'mask' || type === 'all') {
       if (storedMask) {
         copyCtx.drawImage(storedMask, 0, 0);
       }
       redrawActions(copyCtx, 'mask');
-    }
-    if (type === 'trimap') {
-      redrawActions(copyCtx, 'trimap');
     }
     return copy;
   }
