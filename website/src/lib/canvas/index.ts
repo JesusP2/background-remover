@@ -491,5 +491,6 @@ export function useCanvas({
     zoomOut,
     isZooming,
     resetToOriginal,
+    currentMode,
   };
 }
