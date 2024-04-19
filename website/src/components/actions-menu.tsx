@@ -6,7 +6,7 @@ import {
   AiOutlineZoomIn,
   AiOutlineZoomOut,
 } from 'solid-icons/ai';
-import { VsRemove, VsEdit, VsDash } from 'solid-icons/vs';
+import { VsEdit } from 'solid-icons/vs';
 import { BiRegularEraser } from 'solid-icons/bi';
 import { TbFocusCentered } from 'solid-icons/tb';
 import { RiSystemAddFill } from 'solid-icons/ri'
@@ -28,7 +28,7 @@ export function ActionsMenu({
   resetToOriginal,
 }: {
   setCurrentMode: (mode: ActionType) => void;
-  applyMaskToImage: (idk: boolean) => Promise<void>;
+  applyMaskToImage: () => Promise<void>;
   undo: () => void;
   redo: () => void;
   actions: Accessor<any[]>;
@@ -42,7 +42,7 @@ export function ActionsMenu({
   return (
     <div class="rounded-sm px-2 py-1 bg-white absolute bottom-0 left-0 flex gap-x-4 items-center">
       <button
-        onClick={() => applyMaskToImage(true)}
+        onClick={() => applyMaskToImage()}
         type="button"
         class="p-2 hover:bg-gray-100"
       >

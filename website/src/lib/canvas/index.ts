@@ -233,6 +233,7 @@ export function useCanvas({
   }
 
   async function applyMaskToImage() {
+    console.log('applying mask!')
     const payload = await createMask();
     if (!payload) return;
     const { result, mask } = payload;
@@ -286,9 +287,7 @@ export function useCanvas({
     destinationCtx.imageSmoothingEnabled = false;
   }
 
-  function getDataFromSourceCanvas(
-    type: 'image' | 'mask' | 'all',
-  ) {
+  function getDataFromSourceCanvas(type: 'image' | 'mask' | 'all') {
     const copy = document.createElement('canvas');
     const copyCtx = copy.getContext('2d');
     if (!copyCtx || !sourceImg) return;
@@ -329,70 +328,54 @@ export function useCanvas({
     if (mouse.button === 1) {
       pan({ x: mouse.x - mouse.oldX, y: mouse.y - mouse.oldY });
       redrawEverything();
+      return;
     } else if (currentMode() === 'move') {
       pan({ x: mouse.x - mouse.oldX, y: mouse.y - mouse.oldY });
       redrawEverything();
-    } else if (currentMode() !== 'move' && currentMode() !== 'erase') {
-      const { sourceCtx } = getCanvas();
-      const action = {
-        id: currentId,
-        type: currentMode(),
-        oldX: mouse.oldX,
-        oldY: mouse.oldY,
-        pos: { x: pos.x, y: pos.y },
-        scale,
-      };
-      if (!sourceImg || !intermediateMask) return;
-      if (
-        sourceImg &&
-        action.oldX / action.scale - action.pos.x / action.scale > -10 &&
-        action.oldX / action.scale - action.pos.x / action.scale <
-          sourceImg.width + 2 &&
-        action.oldY / action.scale - action.pos.y / action.scale > -10 &&
-        action.oldY / action.scale - action.pos.y / action.scale <
-          sourceImg.height + 2
-      ) {
-        const ctx = intermediateMask.getContext('2d');
-        if (!ctx) return;
-        ctx.setTransform(1, 0, 0, 1, 0, 0);
-        drawStroke(action, ctx);
-        sourceCtx.clearRect(
-          0,
-          0,
-          sourceCtx.canvas.width,
-          sourceCtx.canvas.height,
-        );
-        sourceCtx.drawImage(sourceImg, 0, 0);
-        sourceCtx.globalAlpha = 0.5;
-        sourceCtx.drawImage(intermediateMask, 0, 0);
-        sourceCtx.globalAlpha = 1.0;
-        setActions((prev) => {
-          prev.push(action);
-          return prev;
-        });
-        if (redoActions().length > 0) {
-          setRedoActions([]);
-        }
-      }
       return;
+    }
+
+    const intermediateMaskCtx = intermediateMask?.getContext('2d');
+    if (!sourceImg || !intermediateMask || !intermediateMaskCtx) return;
+    const action = {
+      id: currentId,
+      type: currentMode(),
+      oldX: mouse.oldX,
+      oldY: mouse.oldY,
+      pos: { x: pos.x, y: pos.y },
+      scale,
+    };
+    setActions((prev) => {
+      prev.push(action);
+      return prev;
+    });
+    if (redoActions().length > 0) {
+      setRedoActions([]);
+    }
+    if (
+      currentMode() !== 'erase' &&
+      sourceImg &&
+      action.oldX / action.scale - action.pos.x / action.scale > -10 &&
+      action.oldX / action.scale - action.pos.x / action.scale <
+        sourceImg.width + 2 &&
+      action.oldY / action.scale - action.pos.y / action.scale > -10 &&
+      action.oldY / action.scale - action.pos.y / action.scale <
+        sourceImg.height + 2
+    ) {
+      intermediateMaskCtx.setTransform(1, 0, 0, 1, 0, 0);
+      drawStroke(action, intermediateMaskCtx);
+      sourceCtx.clearRect(
+        0,
+        0,
+        sourceCtx.canvas.width,
+        sourceCtx.canvas.height,
+      );
+      sourceCtx.drawImage(sourceImg, 0, 0);
+      sourceCtx.globalAlpha = 0.5;
+      sourceCtx.drawImage(intermediateMask, 0, 0);
+      sourceCtx.globalAlpha = 1.0;
     } else if (currentMode() === 'erase') {
-      if (!sourceImg) return;
-      const action = {
-        id: currentId,
-        type: currentMode(),
-        oldX: mouse.oldX,
-        oldY: mouse.oldY,
-        pos: { x: pos.x, y: pos.y },
-        scale,
-      };
       eraseStroke(sourceImg, action, sourceCtx);
-      setActions((prev) => {
-        prev.push(action);
-        return prev;
-      });
-      if (redoActions().length > 0) {
-        setRedoActions([]);
-      }
     }
   }
 
