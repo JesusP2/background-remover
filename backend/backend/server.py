@@ -1,4 +1,5 @@
 import io
+import time
 
 import cv2
 import numpy as np
@@ -50,6 +51,7 @@ async def apply_mask_endpoint(
     image_file: UploadFile = File(...),
     base_mask_file: UploadFile = File(...),
 ):
+    start = time.time()
     global bgdModel
     global fgdModel
     image_file_stream = io.BytesIO(await image_file.read())
@@ -88,6 +90,7 @@ async def apply_mask_endpoint(
     cv2.imwrite("cutout.png", rgba_image)
     img_base64 = array_to_base64(rgba_image)
     new_mask_base64 = array_to_base64(alpha)
+    print("Time taken:", time.time() - start)
     return {"result": img_base64, "mask": new_mask_base64}
     # return Response(content=blob, media_type="image/png")
 

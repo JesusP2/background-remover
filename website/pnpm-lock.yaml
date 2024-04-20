@@ -35,6 +35,9 @@ dependencies:
   '@solidjs/start':
     specifier: ^1.0.0-rc.0
     version: 1.0.0-rc.0(solid-js@1.8.16)(vinxi@0.3.10)(vite@5.2.3)
+  '@techstark/opencv-js':
+    specifier: 4.9.0-release.3
+    version: 4.9.0-release.3
   attr-accept:
     specifier: ^2.2.2
     version: 2.2.2
@@ -59,9 +62,6 @@ dependencies:
   postcss:
     specifier: ^8.4.26
     version: 8.4.38
-  solid-dzone:
-    specifier: ^1.0.0
-    version: 1.0.0(solid-js@1.8.16)
   solid-icons:
     specifier: ^1.1.0
     version: 1.1.0(solid-js@1.8.16)
@@ -3633,6 +3633,10 @@ packages:
       tslib: 2.6.2
     dev: false
 
+  /@techstark/opencv-js@4.9.0-release.3:
+    resolution: {integrity: sha512-y+KoLLlkXVUHWozYlN1vmMD9TQMPJObqml5nPA5vPWgHtOgm8q5O74UtzM23eayidvmeFX6tF5e2gDdyxcpy3Q==}
+    dev: false
+
   /@tybys/wasm-util@0.8.1:
     resolution: {integrity: sha512-GSsTwyBl4pIzsxAY5wroZdyQKyhXk0d8PCRZtrSZ2WEB1cBdrp2EgGBwHOGCZtIIPun/DL3+AykCv+J6fyRH4Q==}
     requiresBuild: true
@@ -6709,14 +6713,6 @@ packages:
 
   /smob@1.4.1:
     resolution: {integrity: sha512-9LK+E7Hv5R9u4g4C3p+jjLstaLe11MDsL21UpYaCNmapvMkYhqCV4A/f/3gyH8QjMyh6l68q9xC85vihY9ahMQ==}
-    dev: false
-
-  /solid-dzone@1.0.0(solid-js@1.8.16):
-    resolution: {integrity: sha512-kN2c4XaPZFmJxsyiwJLxH3nNXMOx7+G7bguzv/SrYvZGGr2vfOvWBZ2s26D8lqx6rPr5UsMDOF5/gqb0iGp+hA==}
-    peerDependencies:
-      solid-js: ^1.6.0
-    dependencies:
-      solid-js: 1.8.16
     dev: false
 
   /solid-icons@1.1.0(solid-js@1.8.16):

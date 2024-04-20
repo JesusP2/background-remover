@@ -1,3 +1,4 @@
+import cv from '@techstark/opencv-js';
 import { createSignal, onMount } from 'solid-js';
 import {
   base64ToImage,
@@ -6,6 +7,8 @@ import {
   urlToImage,
   imageToCanvas,
   eraseStroke,
+  matToCanvas,
+  downloadCanvas,
 } from './utils';
 import { createId } from '@paralleldrive/cuid2';
 import { drawStroke, type ActionType, type Action } from './utils';
@@ -53,7 +56,7 @@ export function useCanvas({
   });
   const [redoActions, setRedoActions] = createSignal<Action[]>([]);
 
-  function redrawEverything() {
+  async function redrawEverything() {
     if (dirty) {
       update();
     }
@@ -138,7 +141,7 @@ export function useCanvas({
     dirty = true;
   }
 
-  function undo() {
+  async function undo() {
     const lastAction = actions()[actions().length - 1];
     const lastStroke: Action[] = [];
     setActions((prev) =>
@@ -152,10 +155,10 @@ export function useCanvas({
     );
     setRedoActions((prev) => prev.concat(lastStroke));
     saveSnapshot();
-    redrawEverything();
+    await redrawEverything();
   }
 
-  function redo() {
+  async function redo() {
     const lastAction = redoActions()[redoActions().length - 1];
     const lastStroke: Action[] = [];
     setRedoActions((prev) =>
@@ -172,7 +175,7 @@ export function useCanvas({
       return prev;
     });
     saveSnapshot();
-    redrawEverything();
+    await redrawEverything();
   }
 
   function saveSnapshot() {
@@ -200,7 +203,93 @@ export function useCanvas({
     }
   }
 
+  async function log(mat: cv.Mat) {
+    console.log('image width: ' + mat.cols + '\n' +
+     'image height: ' + mat.rows + '\n' +
+     'image size: ' + mat.size().width + '*' + mat.size().height + '\n' +
+     'image depth: ' + mat.depth() + '\n' +
+     'image channels ' + mat.channels() + '\n' +
+     'image type: ' + mat.type() + '\n');
+  }
+
+  async function createMask2() {
+    const imgCopied = getDataFromSourceCanvas('image');
+    const maskCopied = getDataFromSourceCanvas('mask');
+    if (!imgCopied || !maskCopied || !baseMask) return;
+    const imgMat = cv.imread(imgCopied)
+    const maskMat = cv.imread(maskCopied)
+    const baseMaskMat = cv.imread(baseMask)
+    cv.cvtColor(imgMat, imgMat, cv.COLOR_RGBA2BGR, 0)
+    cv.cvtColor(maskMat, maskMat, cv.COLOR_RGBA2GRAY, 0)
+    cv.cvtColor(baseMaskMat, baseMaskMat, cv.COLOR_RGBA2GRAY, 0)
+    const t0 = performance.now()
+    const baseMaskMatCopy = baseMaskMat.clone()
+    for (let i = 0; i < maskMat.rows; i++) {
+      for (let j = 0; j < maskMat.cols; j++) {
+        baseMaskMat.ucharPtr(i, j)[0] = cv.GC_PR_BGD
+        if (baseMaskMatCopy.ucharPtr(i, j)[0] === 0) {
+          baseMaskMat.ucharPtr(i, j)[0] = cv.GC_PR_BGD
+        }
+        if (baseMaskMatCopy.ucharPtr(i, j)[0] === 255) {
+          baseMaskMat.ucharPtr(i, j)[0] = cv.GC_PR_FGD
+        }
+        if (maskMat.ucharPtr(i, j)[0] === 122) {
+          baseMaskMat.ucharPtr(i, j)[0] = cv.GC_BGD
+        }
+        if (maskMat.ucharPtr(i, j)[0] === 177) {
+          baseMaskMat.ucharPtr(i, j)[0] = cv.GC_FGD
+        }
+      }
+    }
+
+
+    // set all pixels to GC_PR_BGD
+    // baseMaskMat.setTo(new cv.Scalar(cv.GC_PR_BGD), cv.Mat.ones(baseMaskMat.rows, baseMaskMat.cols, cv.CV_8U))
+    // baseMaskMat.setTo(new cv.Scalar(cv.GC_PR_FGD), baseMaskMatCopy)
+    // baseMaskMat.setTo(new cv.Scalar(cv.GC_FGD), maskMat)
+    const t1 = performance.now()
+
+
+    cv.grabCut(imgMat, baseMaskMat, new cv.Rect(0, 0, 1, 1), new cv.Mat(), new cv.Mat(), 1, cv.GC_INIT_WITH_MASK)
+    const t2 = performance.now()
+    for (let i = 0; i < maskMat.rows; i++) {
+      for (let j = 0; j < maskMat.cols; j++) {
+        if (baseMaskMat.ucharPtr(i, j)[0] === 0 || baseMaskMat.ucharPtr(i, j)[0] === 2) {
+          imgMat.ucharPtr(i, j)[0] = 0
+          imgMat.ucharPtr(i, j)[1] = 0
+          imgMat.ucharPtr(i, j)[2] = 0
+          imgMat.ucharPtr(i, j)[3] = 0
+        }
+      }
+    }
+    const t3 = performance.now()
+    console.log('t0:', t0)
+    console.log('t1:', t1 - t0)
+    console.log('t2:', t2 - t1)
+    console.log('t3:', t3 - t2)
+
+
+    const yo = matToCanvas(imgMat)
+    console.log('adsklsdjksa')
+    downloadCanvas(yo, 'yo.png')
+    
+
+    // 0 cv.GC_BGD
+    // 1 cv.GC_FGD
+    // 2 cv.GC_PR_BGD
+    // 3 cv.GC_PR_FGD
+
+
+    // base_mask_array[:] = cv2.GC_PR_BGD
+    // base_mask_array[base_mask_array_copy == 0] = cv2.GC_PR_BGD
+    // base_mask_array[base_mask_array_copy == 255] = cv2.GC_PR_FGD
+    // base_mask_array[mask_array == 122] = cv2.GC_BGD
+    // base_mask_array[mask_array == 177] = cv2.GC_FGD
+   
+  }
+
   async function createMask() {
+    createMask2()
     const formData = new FormData();
     const imgCopied = getDataFromSourceCanvas('image');
     const maskCopied = getDataFromSourceCanvas('mask');
@@ -233,7 +322,6 @@ export function useCanvas({
   }
 
   async function applyMaskToImage() {
-    console.log('applying mask!')
     const payload = await createMask();
     if (!payload) return;
     const { result, mask } = payload;
@@ -245,7 +333,7 @@ export function useCanvas({
     const maskFile = await canvasToFile(mask, 'mask.png', 'image/png');
     await storeStepAction(resultFile, maskFile, id);
     destinationImg = await base64ToImage(result);
-    redrawEverything();
+    await redrawEverything();
   }
 
   function calculateBaseScale(sourceCtx: CanvasRenderingContext2D) {
@@ -260,7 +348,7 @@ export function useCanvas({
     return scale;
   }
 
-  function resetToOriginal() {
+  async function resetToOriginal() {
     const { sourceCtx } = getCanvas();
     if (!sourceImg) return;
     scale = 1;
@@ -268,7 +356,7 @@ export function useCanvas({
     pos.x = (sourceCtx.canvas.width / _scale - sourceImg.width) / 2;
     pos.y = (sourceCtx.canvas.height / _scale - sourceImg.height) / 2;
     scaleAt({ x: 0, y: 0 }, _scale);
-    redrawEverything();
+    await redrawEverything();
   }
 
   async function loadImage() {
@@ -282,12 +370,12 @@ export function useCanvas({
     pos.x = (sourceCtx.canvas.width / scale - sourceImg.width) / 2;
     pos.y = (sourceCtx.canvas.height / scale - sourceImg.height) / 2;
     scaleAt({ x: 0, y: 0 }, scale);
-    redrawEverything();
+    await redrawEverything();
     sourceCtx.imageSmoothingEnabled = false;
     destinationCtx.imageSmoothingEnabled = false;
   }
 
-  function getDataFromSourceCanvas(type: 'image' | 'mask' | 'all') {
+  function getDataFromSourceCanvas(type: 'image' | 'mask' | 'all' | 'green' | 'red') {
     const copy = document.createElement('canvas');
     const copyCtx = copy.getContext('2d');
     if (!copyCtx || !sourceImg) return;
@@ -317,7 +405,7 @@ export function useCanvas({
     currentId = createId();
   }
 
-  function mousemove(event: MouseEvent) {
+  async function mousemove(event: MouseEvent) {
     event.preventDefault();
     const { sourceCtx } = getCanvas();
     mouse.oldX = mouse.x;
@@ -327,11 +415,11 @@ export function useCanvas({
     if (mouse.button === null) return;
     if (mouse.button === 1) {
       pan({ x: mouse.x - mouse.oldX, y: mouse.y - mouse.oldY });
-      redrawEverything();
+      await redrawEverything();
       return;
     } else if (currentMode() === 'move') {
       pan({ x: mouse.x - mouse.oldX, y: mouse.y - mouse.oldY });
-      redrawEverything();
+      await redrawEverything();
       return;
     }
 
@@ -384,7 +472,7 @@ export function useCanvas({
     while (isZooming.value) {
       await new Promise((resolve) => setTimeout(resolve, 1));
       scaleAt(pos, 1 / 1.01);
-      redrawEverything();
+      await redrawEverything();
     }
   }
 
@@ -393,11 +481,11 @@ export function useCanvas({
     while (isZooming.value) {
       await new Promise((resolve) => setTimeout(resolve, 1));
       scaleAt(pos, 1.01);
-      redrawEverything();
+      await redrawEverything();
     }
   }
 
-  function mouseWheelEvent(event: WheelEvent, type: 'source' | 'destination') {
+  async function mouseWheelEvent(event: WheelEvent, type: 'source' | 'destination') {
     const { sourceCtx, destinationCtx } = getCanvas();
     let canvas = sourceCtx.canvas;
     if (type === 'destination') {
@@ -407,10 +495,10 @@ export function useCanvas({
     const y = event.pageY - canvas.offsetTop;
     if (event.deltaY < 0) {
       scaleAt({ x, y }, 1.1);
-      redrawEverything();
+      await redrawEverything();
     } else {
       scaleAt({ x, y }, 1 / 1.1);
-      redrawEverything();
+      await redrawEverything();
     }
     event.preventDefault();
   }

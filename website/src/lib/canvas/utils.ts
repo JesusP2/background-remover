@@ -1,3 +1,4 @@
+import cv from '@techstark/opencv-js';
 export type ActionType =
   | 'move'
   | 'draw-green'
@@ -182,4 +183,17 @@ export function getDataPoints(actions: Action[]) {
       return [x, y];
     });
   return { positive_points, negative_points };
+}
+
+export function matToCanvas(mat: cv.Mat) {
+  const canvas = document.createElement('canvas');
+  cv.imshow(canvas, mat);
+  return canvas;
+}
+
+export function downloadCanvas(canvas: HTMLCanvasElement, fileName: string) {
+  const a = document.createElement('a');
+  a.href = canvas.toDataURL('image/png');
+  a.download = fileName;
+  a.click();
 }
