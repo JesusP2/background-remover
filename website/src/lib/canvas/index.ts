@@ -216,7 +216,7 @@ export function useCanvas({
     formData.append('image_file', image);
     formData.append('mask_file', mask);
     formData.append('base_mask_file', baseMaskImg);
-    const res = await fetch(`http://localhost:8000/mask`, {
+    const res = await fetch('http://localhost:8000/mask', {
       method: 'POST',
       body: formData,
       headers: {
@@ -233,7 +233,6 @@ export function useCanvas({
   }
 
   async function applyMaskToImage() {
-    console.log('applying mask!')
     const payload = await createMask();
     if (!payload) return;
     const { result, mask } = payload;
@@ -264,7 +263,7 @@ export function useCanvas({
     const { sourceCtx } = getCanvas();
     if (!sourceImg) return;
     scale = 1;
-    let _scale = calculateBaseScale(sourceCtx);
+    const _scale = calculateBaseScale(sourceCtx);
     pos.x = (sourceCtx.canvas.width / _scale - sourceImg.width) / 2;
     pos.y = (sourceCtx.canvas.height / _scale - sourceImg.height) / 2;
     scaleAt({ x: 0, y: 0 }, _scale);
@@ -278,7 +277,7 @@ export function useCanvas({
     storedMask = maskUrl ? await urlToImage(maskUrl) : null;
     baseMask = await urlToImage(baseMaskUrl);
     saveSnapshot();
-    let scale = calculateBaseScale(sourceCtx);
+    const scale = calculateBaseScale(sourceCtx);
     pos.x = (sourceCtx.canvas.width / scale - sourceImg.width) / 2;
     pos.y = (sourceCtx.canvas.height / scale - sourceImg.height) / 2;
     scaleAt({ x: 0, y: 0 }, scale);

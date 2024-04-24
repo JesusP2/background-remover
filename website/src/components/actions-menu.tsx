@@ -1,5 +1,5 @@
-import { Accessor } from 'solid-js';
-import { ActionType } from '~/lib/canvas/utils';
+import type { Accessor } from 'solid-js';
+import type { Action, ActionType } from '~/lib/canvas/utils';
 import {
   AiOutlineUndo,
   AiOutlineRedo,
@@ -7,6 +7,7 @@ import {
   AiOutlineZoomOut,
 } from 'solid-icons/ai';
 import { VsEdit } from 'solid-icons/vs';
+import { IoCutOutline } from 'solid-icons/io';
 import { BiRegularEraser } from 'solid-icons/bi';
 import { TbFocusCentered } from 'solid-icons/tb';
 import { RiSystemAddFill } from 'solid-icons/ri'
@@ -31,8 +32,8 @@ export function ActionsMenu({
   applyMaskToImage: () => Promise<void>;
   undo: () => void;
   redo: () => void;
-  actions: Accessor<any[]>;
-  redoActions: Accessor<any[]>;
+  actions: Accessor<Action[]>;
+  redoActions: Accessor<Action[]>;
   zoomIn: (pos: { x: number; y: number }) => void;
   zoomOut: (pos: { x: number; y: number }) => void;
   isZooming: { value: boolean };
@@ -46,9 +47,10 @@ export function ActionsMenu({
         type="button"
         class="p-2 hover:bg-gray-100"
       >
-        Save
+        <IoCutOutline size={20} />
       </button>
       <button
+        type="button"
         title="undo"
         disabled={!actions().length}
         onClick={undo}
@@ -57,6 +59,7 @@ export function ActionsMenu({
         <AiOutlineUndo size={20} />
       </button>
       <button
+        type="button"
         title="redo"
         disabled={!redoActions().length}
         onClick={redo}
@@ -65,6 +68,7 @@ export function ActionsMenu({
         <AiOutlineRedo size={20} />
       </button>
       <button
+        type="button"
         class="hover:bg-gray-100 rounded-full h-7 w-7 grid place-items-center"
         title="zoom in"
         onMouseDown={() => zoomIn({ x: 417, y: 494 })}
@@ -75,6 +79,7 @@ export function ActionsMenu({
         <AiOutlineZoomIn size={20} />
       </button>
       <button
+        type="button"
         class="hover:bg-gray-100 rounded-full h-7 w-7 grid place-items-center"
         title="zoom out"
         onMouseDown={() => zoomOut({ x: 417, y: 494 })}
@@ -85,6 +90,7 @@ export function ActionsMenu({
         <AiOutlineZoomOut size={20} />
       </button>
       <button
+        type="button"
         onClick={resetToOriginal}
         title="Fit and Center"
         class="hover:bg-gray-100 rounded-full h-7 w-7 grid place-items-center"
