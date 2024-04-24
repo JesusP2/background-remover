@@ -73,6 +73,7 @@ module.exports = {
       fontFamily: {
         sans: ['Inter', ...fontFamily.sans],
         geist: ['Geist Sans', 'sans-serif'],
+        gabarito: ['Gabarito Variable', 'sans-serif'],
       },
       keyframes: {
         'accordion-down': {

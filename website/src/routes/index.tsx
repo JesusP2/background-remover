@@ -1,18 +1,88 @@
-import { action, useAction } from '@solidjs/router';
+import { A, action, useAction } from '@solidjs/router';
 import { uploadImage } from '~/lib/actions/init-image-process';
 import { DropZone } from '~/components/dropzone';
+import { buttonVariants } from '~/components/ui/button';
+import { cn } from '~/lib/utils';
 
 const uploadImageAction = action(uploadImage);
 export default function Index() {
   const uploadImage = useAction(uploadImageAction);
   return (
-    <div>
-      <div class="grid place-items-center h-screen text-center">
+    <div class="h-[3000px]">
+      <header class="sticky top-0 bg-white h-16 border-b border-zinc-200 items-center flex px-4 justify-between">
+        <A href="/" class="w-[210px]">
+          <img src="/logo.png" alt="logo" width="40" />
+        </A>
         <div>
-          <h1>Erased</h1>
-          <p>Remoove background / Edit images</p>
+          <A
+            href="/pricing"
+            class={cn(
+              buttonVariants({ variant: 'ghost' }),
+              'font-gabarito text-md text-zinc-600',
+            )}
+          >
+            Pricing
+          </A>
+          <A
+            href="/releases"
+            class={cn(
+              buttonVariants({ variant: 'ghost' }),
+              'font-gabarito text-md text-zinc-600',
+            )}
+          >
+            Releases
+          </A>
+          <A
+            href="/github"
+            class={cn(
+              buttonVariants({ variant: 'ghost' }),
+              'font-gabarito text-md text-zinc-600',
+            )}
+          >
+            Github
+          </A>
+        </div>
+        <div class="space-x-4">
+          <A
+            href="/auth/signin"
+            class={cn(
+              buttonVariants({ variant: 'ghost' }),
+              'font-gabarito text-md text-zinc-600',
+            )}
+          >
+            Sign in
+          </A>
+          <A
+            href="/auth/signup"
+            class={cn(
+              buttonVariants({ variant: 'default' }),
+              'font-gabarito text-md',
+            )}
+          >
+            Get Started
+          </A>
+        </div>
+      </header>
+      <main class="grid place-items-center gap-y-10 mt-20">
+        <h1 class="font-gabarito text-6xl font-semibold">
+          Background Removal App
+        </h1>
+        <div class="w-[153px] group">
+          <A href="/" class="relative bg-red-100">
+            <div class="border-2 border-black bg-white rounded-lg w-36 h-12" />
+            <div class="absolute top-[6px] left-[9px] bg-black rounded-lg w-36 h-12 text-white grid place-items-center font-gabarito text-lg group-hover:left-[6px] group-hover:top-[9px] duration-100">
+              Get Started
+            </div>
+          </A>
+        </div>
+      </main>
+      <div class="relative ml-10 w-80 h-80">
+        <div class="bg-black rounded-lg w-full h-full" />
+        <div class="border-2 border-black absolute top-[-3px] left-[3px] bg-white rounded-lg w-full h-full">
+          <img src="/logo.png" alt="idk" />
         </div>
       </div>
+      <p>Remoove background / Edit images</p>
       <DropZone onFileChange={(file) => uploadImage(file)} />
     </div>
   );
