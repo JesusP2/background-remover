@@ -76,10 +76,10 @@ export default function Index() {
           </A>
         </div>
       </main>
-      <div class="relative ml-10 w-80 h-80">
+      <div class="relative ml-10 w-[300px] h-80">
         <div class="bg-black rounded-lg w-full h-full" />
         <div class="border-2 border-black absolute top-[-3px] left-[3px] bg-white rounded-lg w-full h-full">
-          <img src="/logo.png" alt="idk" />
+          <img src="/logo.png" alt="logo" width={300} />
         </div>
       </div>
       <p>Remoove background / Edit images</p>
