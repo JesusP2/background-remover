@@ -1,6 +1,6 @@
 import { createDropzone } from '@solid-primitives/upload';
-import { BsCloudDownload, BsFolder } from 'solid-icons/bs';
 import { AiOutlinePicture } from 'solid-icons/ai';
+import { BsCloudDownload, BsFolder } from 'solid-icons/bs';
 
 export function DropZone(props: { onFileChange: (file: File) => void }) {
   const { setRef: dropzoneRef } = createDropzone({
@@ -33,4 +33,3 @@ export function DropZone(props: { onFileChange: (file: File) => void }) {
     </label>
   );
 }
-

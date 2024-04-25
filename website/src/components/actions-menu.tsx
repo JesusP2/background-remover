@@ -1,18 +1,19 @@
-import { Accessor } from 'solid-js';
-import { ActionType } from '~/lib/canvas/utils';
+import clsx from 'clsx';
 import {
-  AiOutlineUndo,
   AiOutlineRedo,
+  AiOutlineUndo,
   AiOutlineZoomIn,
   AiOutlineZoomOut,
 } from 'solid-icons/ai';
-import { VsEdit } from 'solid-icons/vs';
+import { AiOutlineLine } from 'solid-icons/ai';
 import { BiRegularEraser } from 'solid-icons/bi';
+import { BsArrowsMove } from 'solid-icons/bs';
+import { IoCutOutline } from 'solid-icons/io';
+import { RiSystemAddFill } from 'solid-icons/ri';
 import { TbFocusCentered } from 'solid-icons/tb';
-import { RiSystemAddFill } from 'solid-icons/ri'
-import { BsArrowsMove } from 'solid-icons/bs'
-import { AiOutlineLine } from 'solid-icons/ai'
-import clsx from 'clsx';
+import { VsEdit } from 'solid-icons/vs';
+import type { Accessor } from 'solid-js';
+import type { Action, ActionType } from '~/lib/canvas/utils';
 
 export function ActionsMenu({
   setCurrentMode,
@@ -31,8 +32,8 @@ export function ActionsMenu({
   applyMaskToImage: () => Promise<void>;
   undo: () => void;
   redo: () => void;
-  actions: Accessor<any[]>;
-  redoActions: Accessor<any[]>;
+  actions: Accessor<Action[]>;
+  redoActions: Accessor<Action[]>;
   zoomIn: (pos: { x: number; y: number }) => void;
   zoomOut: (pos: { x: number; y: number }) => void;
   isZooming: { value: boolean };
@@ -46,9 +47,10 @@ export function ActionsMenu({
         type="button"
         class="p-2 hover:bg-gray-100"
       >
-        Save
+        <IoCutOutline size={20} />
       </button>
       <button
+        type="button"
         title="undo"
         disabled={!actions().length}
         onClick={undo}
@@ -57,6 +59,7 @@ export function ActionsMenu({
         <AiOutlineUndo size={20} />
       </button>
       <button
+        type="button"
         title="redo"
         disabled={!redoActions().length}
         onClick={redo}
@@ -65,6 +68,7 @@ export function ActionsMenu({
         <AiOutlineRedo size={20} />
       </button>
       <button
+        type="button"
         class="hover:bg-gray-100 rounded-full h-7 w-7 grid place-items-center"
         title="zoom in"
         onMouseDown={() => zoomIn({ x: 417, y: 494 })}
@@ -75,6 +79,7 @@ export function ActionsMenu({
         <AiOutlineZoomIn size={20} />
       </button>
       <button
+        type="button"
         class="hover:bg-gray-100 rounded-full h-7 w-7 grid place-items-center"
         title="zoom out"
         onMouseDown={() => zoomOut({ x: 417, y: 494 })}
@@ -85,6 +90,7 @@ export function ActionsMenu({
         <AiOutlineZoomOut size={20} />
       </button>
       <button
+        type="button"
         onClick={resetToOriginal}
         title="Fit and Center"
         class="hover:bg-gray-100 rounded-full h-7 w-7 grid place-items-center"
@@ -94,35 +100,50 @@ export function ActionsMenu({
       <button
         type="button"
         onClick={() => setCurrentMode('move')}
-        class={clsx("hover:bg-gray-100 rounded-full h-7 w-7 grid place-items-center", currentMode() === 'move' && 'bg-gray-100')}
+        class={clsx(
+          'hover:bg-gray-100 rounded-full h-7 w-7 grid place-items-center',
+          currentMode() === 'move' && 'bg-gray-100',
+        )}
       >
         <BsArrowsMove size={15} />
       </button>
       <button
         type="button"
         onClick={() => setCurrentMode('draw-green')}
-        class={clsx("hover:bg-gray-100 rounded-full h-7 w-7 grid place-items-center", currentMode() === 'draw-green' && 'bg-gray-100')}
+        class={clsx(
+          'hover:bg-gray-100 rounded-full h-7 w-7 grid place-items-center',
+          currentMode() === 'draw-green' && 'bg-gray-100',
+        )}
       >
         <RiSystemAddFill size={20} />
       </button>
       <button
         type="button"
         onClick={() => setCurrentMode('draw-red')}
-        class={clsx("hover:bg-gray-100 rounded-full h-7 w-7 grid place-items-center", currentMode() === 'draw-red' && 'bg-gray-100')}
+        class={clsx(
+          'hover:bg-gray-100 rounded-full h-7 w-7 grid place-items-center',
+          currentMode() === 'draw-red' && 'bg-gray-100',
+        )}
       >
         <AiOutlineLine size={20} />
       </button>
       <button
         type="button"
         onClick={() => setCurrentMode('draw-yellow')}
-        class={clsx("hover:bg-gray-100 rounded-full h-7 w-7 grid place-items-center", currentMode() === 'draw-yellow' && 'bg-gray-100')}
+        class={clsx(
+          'hover:bg-gray-100 rounded-full h-7 w-7 grid place-items-center',
+          currentMode() === 'draw-yellow' && 'bg-gray-100',
+        )}
       >
         <VsEdit size={17} />
       </button>
       <button
         type="button"
         onClick={() => setCurrentMode('erase')}
-        class={clsx("hover:bg-gray-100 rounded-full h-7 w-7 grid place-items-center", currentMode() === 'erase' && 'bg-gray-100')}
+        class={clsx(
+          'hover:bg-gray-100 rounded-full h-7 w-7 grid place-items-center',
+          currentMode() === 'erase' && 'bg-gray-100',
+        )}
       >
         <BiRegularEraser size={20} />
       </button>

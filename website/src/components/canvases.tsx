@@ -1,15 +1,27 @@
 import { ActionsMenu } from '~/components/actions-menu';
 import { useCanvas } from '~/lib/canvas';
+import type { SelectImage } from '~/lib/db/schema';
 
-export function Canvases(props: { img: any }) {
+export function Canvases(props: { img: SelectImage }) {
   const { source, mask, result, base_mask } = props.img;
-  const { setCurrentMode, applyMaskToImage, undo, redo, actions, redoActions, zoomIn, zoomOut, isZooming, resetToOriginal, currentMode } =
-    useCanvas({
-      sourceUrl: source,
-      maskUrl: mask,
-      resultUrl: result,
-      baseMaskUrl: base_mask,
-    });
+  const {
+    setCurrentMode,
+    applyMaskToImage,
+    undo,
+    redo,
+    actions,
+    redoActions,
+    zoomIn,
+    zoomOut,
+    isZooming,
+    resetToOriginal,
+    currentMode,
+  } = useCanvas({
+    sourceUrl: source,
+    maskUrl: mask,
+    resultUrl: result,
+    baseMaskUrl: base_mask,
+  });
   return (
     <>
       <ActionsMenu

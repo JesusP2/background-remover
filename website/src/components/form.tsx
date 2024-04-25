@@ -1,7 +1,7 @@
-import { ComponentProps, splitProps } from 'solid-js';
-import { Label } from './ui/label';
-import { Input } from './ui/input';
+import { type ComponentProps, splitProps } from 'solid-js';
 import { cn } from '~/lib/utils';
+import { Input } from './ui/input';
+import { Label } from './ui/label';
 
 interface FormLabelProps extends ComponentProps<'label'> {
   error?: boolean;
