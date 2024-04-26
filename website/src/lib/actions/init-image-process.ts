@@ -1,9 +1,9 @@
 import { createId } from '@paralleldrive/cuid2';
+import { redirect } from '@solidjs/router';
 import { getRequestEvent } from 'solid-js/web';
-import { uploadFile } from '../r2';
 import { db } from '../db';
 import { imageTable } from '../db/schema';
-import { redirect } from '@solidjs/router';
+import { uploadFile } from '../r2';
 
 export async function uploadImage(file: File) {
   'use server';
@@ -12,7 +12,7 @@ export async function uploadImage(file: File) {
     if (!session) return new Error('Unauthorized');
     const formData = new FormData();
     formData.append('image_file', file);
-    const res = await fetch(`http://localhost:8000/start`, {
+    const res = await fetch('http://localhost:8000/start', {
       method: 'POST',
       body: formData,
       headers: {

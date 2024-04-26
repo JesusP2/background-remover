@@ -1,13 +1,13 @@
-import { appendResponseHeader } from "vinxi/http";
-import { userTable } from "../db/schema";
-import { db } from "../db";
-import { eq } from "drizzle-orm";
-import { Argon2id } from "oslo/password";
-import { lucia } from "../auth";
-import { redirect } from "@solidjs/router";
+import { redirect } from '@solidjs/router';
+import { eq } from 'drizzle-orm';
+import { Argon2id } from 'oslo/password';
+import { appendResponseHeader } from 'vinxi/http';
+import { lucia } from '../auth';
+import { db } from '../db';
+import { userTable } from '../db/schema';
 
 export async function SigninAction(formData: FormData) {
-  "use server"
+  'use server';
   const username = formData.get('username');
   if (
     typeof username !== 'string' ||
@@ -17,7 +17,7 @@ export async function SigninAction(formData: FormData) {
   ) {
     return {
       username: 'Invalid username',
-    }
+    };
   }
   const password = formData.get('password');
   if (
@@ -27,7 +27,7 @@ export async function SigninAction(formData: FormData) {
   ) {
     return {
       password: 'Invalid password',
-    }
+    };
   }
 
   const existingUser = await db
@@ -38,7 +38,7 @@ export async function SigninAction(formData: FormData) {
     return {
       username: 'Incorrect username or password',
       password: 'Incorrect username or password',
-    }
+    };
   }
 
   const validPassword = await new Argon2id().verify(
@@ -57,5 +57,5 @@ export async function SigninAction(formData: FormData) {
     lucia.createSessionCookie(session.id).serialize(),
   );
 
-  throw redirect('/')
+  throw redirect('/');
 }

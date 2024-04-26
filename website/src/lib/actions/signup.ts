@@ -1,11 +1,11 @@
-import { lucia } from '~/lib/auth';
+import { redirect } from '@solidjs/router';
+import { eq } from 'drizzle-orm';
 import { generateId } from 'lucia';
 import { Argon2id } from 'oslo/password';
+import { setCookie } from 'vinxi/http';
+import { lucia } from '~/lib/auth';
 import { db } from '~/lib/db';
 import { userTable } from '~/lib/db/schema';
-import { setCookie } from 'vinxi/http';
-import { eq } from 'drizzle-orm';
-import { redirect } from '@solidjs/router';
 
 export async function signupAction(formData: FormData) {
   'use server';

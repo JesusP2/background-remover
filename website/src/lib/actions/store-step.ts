@@ -1,8 +1,8 @@
+import { eq } from 'drizzle-orm';
 import { getRequestEvent } from 'solid-js/web';
-import { uploadFile } from '../r2';
 import { db } from '../db';
 import { imageTable } from '../db/schema';
-import { eq } from 'drizzle-orm';
+import { uploadFile } from '../r2';
 
 export async function storeStep(result: File, mask: File, id: string) {
   'use server';
