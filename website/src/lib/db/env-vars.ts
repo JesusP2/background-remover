@@ -1,4 +1,4 @@
-import { object, parse, string } from "valibot"
+import { object, parse, string } from 'valibot';
 
 const envsSchema = object({
   DATABASE_URL: string(),
@@ -7,6 +7,6 @@ const envsSchema = object({
   R2_ENDPOINT: string(),
   R2_ACCESS_KEY_ID: string(),
   R2_SECRET_ACCESS_KEY: string(),
-})
+});
 
-export const envs = parse(envsSchema, process.env)
+export const envs = parse(envsSchema, process.env);

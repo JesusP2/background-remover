@@ -19,21 +19,20 @@ export const colors = {
   'draw-yellow': '#fafa41',
 } as Record<ActionType, string>;
 
-export function urlToImage(url: string): Promise<HTMLImageElement> {
-  return new Promise(async (resolve) => {
-    const res = await fetch(url);
-    const blob = await res.blob();
-    const base64 = await new Promise<string | ArrayBuffer | null>((resolve) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(blob);
-      reader.onload = () => {
-        resolve(reader.result);
-      };
-    });
-    if (typeof base64 !== 'string')
-      throw new Error('Failed to convert blob to base64.');
-    resolve(await base64ToImage(base64));
+export async function urlToImage(url: string): Promise<HTMLImageElement> {
+  const res = await fetch(url);
+  const blob = await res.blob();
+  const base64 = await new Promise<string | ArrayBuffer | null>((resolve) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(blob);
+    reader.onload = () => {
+      resolve(reader.result);
+    };
   });
+  if (typeof base64 !== 'string') {
+    throw new Error('Failed to convert blob to base64.');
+  }
+  return base64ToImage(base64);
 }
 
 export function base64ToImage(base64: string): Promise<HTMLImageElement> {
@@ -125,9 +124,13 @@ export function eraseStroke(
     y: action.oldY / action.scale - action.pos.y / action.scale,
   };
   const xPos =
-    strokePos.x - size / 2 < 0 ? 0 : Math.floor(strokePos.x) - Math.floor(size / 2);
+    strokePos.x - size / 2 < 0
+      ? 0
+      : Math.floor(strokePos.x) - Math.floor(size / 2);
   const yPos =
-    strokePos.y - size / 2 < 0 ? 0 : Math.floor(strokePos.y) - Math.floor(size / 2);
+    strokePos.y - size / 2 < 0
+      ? 0
+      : Math.floor(strokePos.y) - Math.floor(size / 2);
   ctx.drawImage(sourceImg, xPos, yPos, size, size, xPos, yPos, size, size);
 }
 
@@ -159,9 +162,13 @@ export function drawStroke(action: Action, ctx: CanvasRenderingContext2D) {
     const xSize = size[i];
     const ySize = size[size.length - i - 1];
     const xPos =
-      strokePos.x - xSize / 2 < 0 ? 0 : Math.floor(strokePos.x) - Math.floor(xSize / 2);
+      strokePos.x - xSize / 2 < 0
+        ? 0
+        : Math.floor(strokePos.x) - Math.floor(xSize / 2);
     const yPos =
-      strokePos.y - ySize / 2 < 0 ? 0 : Math.floor(strokePos.y) - Math.floor(ySize / 2);
+      strokePos.y - ySize / 2 < 0
+        ? 0
+        : Math.floor(strokePos.y) - Math.floor(ySize / 2);
     ctx.fillRect(xPos, yPos, xSize * 2, ySize * 2);
   }
 }
