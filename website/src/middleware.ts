@@ -1,6 +1,6 @@
 import { createMiddleware } from '@solidjs/start/middleware';
+import { type Session, type User, verifyRequestOrigin } from 'lucia';
 import { appendResponseHeader, getCookie, getRequestHeader } from 'vinxi/http';
-import { Session, User, verifyRequestOrigin } from 'lucia';
 import { lucia } from './lib/auth';
 
 export default createMiddleware({
@@ -26,7 +26,7 @@ export default createMiddleware({
     }
 
     const { session, user } = await lucia.validateSession(sessionId);
-    if (session && session.fresh) {
+    if (session?.fresh) {
       appendResponseHeader(
         'Set-Cookie',
         lucia.createSessionCookie(session.id).serialize(),

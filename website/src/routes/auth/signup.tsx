@@ -1,13 +1,13 @@
-import { Button } from '~/components/ui/button';
 import { action, useSubmission } from '@solidjs/router';
-import { signupAction } from '~/lib/actions/signup';
-import { FormInput, FormLabel, FormMessage } from '~/components/form';
 import {
-  AiOutlineLoading,
   AiOutlineEye,
   AiOutlineEyeInvisible,
+  AiOutlineLoading,
 } from 'solid-icons/ai';
 import { Match, Switch, createSignal } from 'solid-js';
+import { FormInput, FormLabel, FormMessage } from '~/components/form';
+import { Button } from '~/components/ui/button';
+import { signupAction } from '~/lib/actions/signup';
 
 const _signup = action(signupAction);
 

@@ -1,13 +1,13 @@
-import { Button } from '~/components/ui/button';
-import { SigninAction } from '~/lib/actions/signin';
 import { action, useSubmission } from '@solidjs/router';
-import { FormInput, FormLabel, FormMessage } from '~/components/form';
 import {
-  AiOutlineLoading,
   AiOutlineEye,
   AiOutlineEyeInvisible,
+  AiOutlineLoading,
 } from 'solid-icons/ai';
 import { Match, Switch, createSignal } from 'solid-js';
+import { FormInput, FormLabel, FormMessage } from '~/components/form';
+import { Button } from '~/components/ui/button';
+import { SigninAction } from '~/lib/actions/signin';
 
 const signin = action(SigninAction);
 export default function Signin() {

@@ -1,14 +1,10 @@
-import {
-  useParams,
-  createAsync,
-  Navigate,
-} from '@solidjs/router';
-import { AiOutlineLoading } from 'solid-icons/ai'
+import { Navigate, createAsync, useParams } from '@solidjs/router';
+import { eq } from 'drizzle-orm';
+import { AiOutlineLoading } from 'solid-icons/ai';
 import { Match, Switch, getRequestEvent } from 'solid-js/web';
 import { Canvases } from '~/components/canvases';
-import { imageTable } from '~/lib/db/schema';
-import { eq } from 'drizzle-orm';
 import { db } from '~/lib/db';
+import { type SelectImage, imageTable } from '~/lib/db/schema';
 
 const getImages = async (id: string) => {
   'use server';
@@ -23,17 +19,17 @@ const getImages = async (id: string) => {
 };
 
 export const route = {
-  load: (event: any) => getImages(event.params.id),
-}
+  load: (event: { params: { id: string } }) => getImages(event.params.id),
+};
 
 export default function Home() {
   const { id } = useParams();
-  const image = createAsync(() => getImages(id))
+  const image = createAsync(() => getImages(id));
   return (
     <main class="flex">
       <Switch>
         <Match when={image()}>
-          <Canvases img={image()} />
+          <Canvases img={image() as SelectImage} />
         </Match>
         <Match when={image() === null}>
           <Navigate href="/" />

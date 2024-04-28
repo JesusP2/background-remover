@@ -1,16 +1,17 @@
-import { APIHandler } from '@solidjs/start/server';
-import { db } from '~/lib/db';
-import { imageTable } from '~/lib/db/schema';
+import type { APIHandler } from '@solidjs/start/server';
 import { eq } from 'drizzle-orm';
 import { getCookie } from 'vinxi/http';
 import { lucia } from '~/lib/auth';
+import { db } from '~/lib/db';
+import { imageTable } from '~/lib/db/schema';
 
 export const GET: APIHandler = async (event) => {
   console.log('--------------------get image by id---------------------');
   const { id } = event.params;
   const sessionId = getCookie(lucia.sessionCookieName) ?? null;
   console.log('get sessionId:', sessionId);
-  if (!sessionId) { return new Response(null, { status: 401 });
+  if (!sessionId) {
+    return new Response(null, { status: 401 });
   }
 
   const { session } = await lucia.validateSession(sessionId);
