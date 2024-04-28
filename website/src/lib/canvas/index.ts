@@ -436,6 +436,16 @@ export function useCanvas({
     });
   }
 
+  async function saveResult(name: string) {
+    console.log()
+    const { destinationCtx } = getCanvas()
+    const url = destinationCtx.canvas.toDataURL()
+    const anchor = document.createElement('a');
+    anchor.download = `${name.split('.')[0]}.png`
+    anchor.href = url
+    anchor.click()
+  }
+
   onMount(() => {
     const { sourceCtx, destinationCtx } = getCanvas();
     sourceCtx.canvas.width = innerWidth / 2;
@@ -463,5 +473,6 @@ export function useCanvas({
     isZooming,
     resetToOriginal,
     currentMode,
+    saveResult,
   };
 }

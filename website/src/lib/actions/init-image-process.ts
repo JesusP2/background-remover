@@ -9,7 +9,9 @@ export async function uploadImage(file: File) {
   'use server';
   try {
     const session = getRequestEvent()?.locals.session;
+    console.log('hit')
     if (!session) return new Error('Unauthorized');
+    console.log('hit x2')
     const formData = new FormData();
     formData.append('image_file', file);
     const res = await fetch('http://localhost:8000/start', {
@@ -23,7 +25,9 @@ export async function uploadImage(file: File) {
     if (!res.ok) {
       throw new Error('Failed to upload image');
     }
+    console.log('hit x3')
     const { result, base_mask } = await res.json();
+    console.log('hit x4')
     const resultBuffer = Buffer.from(
       result.replace(/^data:image\/\w+;base64,/, ''),
       'base64',

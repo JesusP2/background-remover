@@ -14,10 +14,12 @@ import { TbFocusCentered } from 'solid-icons/tb';
 import { VsEdit } from 'solid-icons/vs';
 import type { Accessor } from 'solid-js';
 import type { Action, ActionType } from '~/lib/canvas/utils';
+import { AiOutlineCloudDownload } from 'solid-icons/ai';
 
 export function ActionsMenu({
   setCurrentMode,
   applyMaskToImage,
+  name,
   undo,
   redo,
   actions,
@@ -25,14 +27,17 @@ export function ActionsMenu({
   zoomIn,
   zoomOut,
   isZooming,
+  saveResult,
   currentMode,
   resetToOriginal,
 }: {
   setCurrentMode: (mode: ActionType) => void;
   applyMaskToImage: () => Promise<void>;
+  name: string;
   undo: () => void;
   redo: () => void;
   actions: Accessor<Action[]>;
+  saveResult: (name: string) => void;
   redoActions: Accessor<Action[]>;
   zoomIn: (pos: { x: number; y: number }) => void;
   zoomOut: (pos: { x: number; y: number }) => void;
@@ -138,7 +143,6 @@ export function ActionsMenu({
         <VsEdit size={17} />
       </button>
       <button
-        type="button"
         onClick={() => setCurrentMode('erase')}
         class={clsx(
           'hover:bg-gray-100 rounded-full h-7 w-7 grid place-items-center',
@@ -146,6 +150,14 @@ export function ActionsMenu({
         )}
       >
         <BiRegularEraser size={20} />
+      </button>
+      <button
+        onClick={() => saveResult(name)}
+        class={clsx(
+          'hover:bg-gray-100 rounded-full h-7 w-7 grid place-items-center',
+        )}
+      >
+        <AiOutlineCloudDownload size={20} />
       </button>
     </div>
   );

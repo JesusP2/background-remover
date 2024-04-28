@@ -16,6 +16,7 @@ export function Canvases(props: { img: SelectImage }) {
     isZooming,
     resetToOriginal,
     currentMode,
+    saveResult,
   } = useCanvas({
     sourceUrl: source,
     maskUrl: mask,
@@ -25,17 +26,19 @@ export function Canvases(props: { img: SelectImage }) {
   return (
     <>
       <ActionsMenu
-        applyMaskToImage={applyMaskToImage}
-        setCurrentMode={setCurrentMode}
         undo={undo}
         redo={redo}
-        actions={actions}
         zoomIn={zoomIn}
         zoomOut={zoomOut}
+        actions={actions}
+        name={props.img.name}
         isZooming={isZooming}
+        saveResult={saveResult}
         currentMode={currentMode}
         redoActions={redoActions}
+        setCurrentMode={setCurrentMode}
         resetToOriginal={resetToOriginal}
+        applyMaskToImage={applyMaskToImage}
       />
       <canvas class="w-[49.95%] h-screen svg-bg" id="source" />
       <div class="h-screen w-[0.1%] bg-zinc-400" />
