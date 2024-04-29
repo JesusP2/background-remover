@@ -9,7 +9,7 @@ export default function Index() {
   const uploadImage = useAction(uploadImageAction);
   return (
     <div class="h-[3000px]">
-      <header class="sticky top-0 bg-white h-16 border-b border-zinc-200 items-center flex px-4 justify-between">
+      <header class="sticky z-10 top-0 bg-white h-16 border-b border-zinc-200 items-center flex px-4 justify-between">
         <A href="/" class="w-[210px]">
           <img src="/logo.png" alt="logo" width="40" />
         </A>
@@ -76,10 +76,22 @@ export default function Index() {
           </A>
         </div>
       </main>
-      <div class="relative ml-10 w-[300px] h-80">
+      <div class="relative ml-10 w-[300px] h-[300px]">
         <div class="bg-black rounded-lg w-full h-full" />
         <div class="border-2 border-black absolute top-[-3px] left-[3px] bg-white rounded-lg w-full h-full">
           <img src="/logo.png" alt="logo" width={300} />
+        </div>
+      </div>
+      <div class="relative ml-10 w-[300px] h-[300px]">
+        <div class="bg-black rounded-lg w-full h-full" />
+        <div class="border-2 border-black absolute top-[-3px] left-[3px] bg-white rounded-lg w-full h-full">
+          <img src="/logo-with-background.gif" alt="logo" width={300} class="rounded-md" />
+        </div>
+      </div>
+      <div class="relative ml-10 w-[600px] h-[262px]">
+        <div class="bg-black rounded-lg w-full h-full" />
+        <div class="border-2 border-black absolute top-[-3px] left-[3px] bg-white rounded-lg w-full h-full">
+          <img src="/img-without-background-1.jpeg" alt="logo" width={600} class="rounded-md" />
         </div>
       </div>
       <p>Remoove background / Edit images</p>
