@@ -437,12 +437,10 @@ export function useCanvas({
   }
 
   async function saveResult(name: string) {
-    console.log()
-    const { destinationCtx } = getCanvas()
-    const url = destinationCtx.canvas.toDataURL()
+    if (!destinationImg) return;
     const anchor = document.createElement('a');
     anchor.download = `${name.split('.')[0]}.png`
-    anchor.href = url
+    anchor.href = destinationImg.src
     anchor.click()
   }
 
