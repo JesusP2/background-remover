@@ -3,6 +3,7 @@ import { eq } from 'drizzle-orm';
 import { For, getRequestEvent } from 'solid-js/web';
 import { db } from '~/lib/db';
 import { imageTable } from '~/lib/db/schema';
+import { updateUrlsOfRecordIfExpired } from '~/lib/db/queries';
 
 const getGallery = cache(async () => {
   'use server';
@@ -14,6 +15,17 @@ const getGallery = cache(async () => {
     .select()
     .from(imageTable)
     .where(eq(imageTable.userId, userId));
+
+  await db.transaction(async (tx) => {
+    for (let i = 0; i < userImages.length; i++) {
+      const userImage = userImages[i];
+      const updatedImages = await updateUrlsOfRecordIfExpired(userImage, tx as any);
+      userImages.splice(i, 1, {
+        ...userImage,
+        ...updatedImages,
+      });
+    }
+  });
   return userImages;
 }, 'my-gallery');
 
@@ -37,11 +49,22 @@ export default function MyGallery() {
                 />
               </div>
               <div class="flex justify-between px-2 mt-3">
-                <div class="text-xs max-w-[150px] truncate text-zinc-600 font-geist" title={image.name}>
+                <div
+                  class="text-xs max-w-[150px] truncate text-zinc-600 font-geist"
+                  title={image.name}
+                >
                   {image.name}
                 </div>
                 <div class="flex gap-x-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="#000000" viewBox="0 0 256 256"><path d="M224,144v64a8,8,0,0,1-8,8H40a8,8,0,0,1-8-8V144a8,8,0,0,1,16,0v56H208V144a8,8,0,0,1,16,0Zm-101.66,5.66a8,8,0,0,0,11.32,0l40-40a8,8,0,0,0-11.32-11.32L136,124.69V32a8,8,0,0,0-16,0v92.69L93.66,98.34a8,8,0,0,0-11.32,11.32Z"></path></svg>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="15"
+                    height="15"
+                    fill="#000000"
+                    viewBox="0 0 256 256"
+                  >
+                    <path d="M224,144v64a8,8,0,0,1-8,8H40a8,8,0,0,1-8-8V144a8,8,0,0,1,16,0v56H208V144a8,8,0,0,1,16,0Zm-101.66,5.66a8,8,0,0,0,11.32,0l40-40a8,8,0,0,0-11.32-11.32L136,124.69V32a8,8,0,0,0-16,0v92.69L93.66,98.34a8,8,0,0,0-11.32,11.32Z"></path>
+                  </svg>
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     width="15"

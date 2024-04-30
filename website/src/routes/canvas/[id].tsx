@@ -5,7 +5,7 @@ import { Match, Switch, getRequestEvent } from 'solid-js/web';
 import { Canvases } from '~/components/canvases';
 import { db } from '~/lib/db';
 import { type SelectImage, imageTable } from '~/lib/db/schema';
-import { updateUrlsOfRecordIfExpired } from '~/lib/r2';
+import { updateUrlsOfRecordIfExpired } from '~/lib/db/queries';
 
 const getImages = async (id: string) => {
   'use server';
@@ -16,8 +16,11 @@ const getImages = async (id: string) => {
     .from(imageTable)
     .where(eq(imageTable.id, id));
   if (!images.length || session?.userId !== images[0].userId) return null;
-  await updateUrlsOfRecordIfExpired(images[0]);
-  return images[0];
+  const updatedRecord = await updateUrlsOfRecordIfExpired(images[0], db);
+  return {
+    ...images[0],
+    ...updatedRecord,
+  };
 };
 
 export const route = {
