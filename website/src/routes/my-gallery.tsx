@@ -19,7 +19,8 @@ const getGallery = cache(async () => {
   await db.transaction(async (tx) => {
     for (let i = 0; i < userImages.length; i++) {
       const userImage = userImages[i];
-      const updatedImages = await updateUrlsOfRecordIfExpired(userImage, tx as any);
+      // @ts-ignore shut up
+      const updatedImages = await updateUrlsOfRecordIfExpired(userImage, tx);
       userImages.splice(i, 1, {
         ...userImage,
         ...updatedImages,
