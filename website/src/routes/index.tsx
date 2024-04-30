@@ -24,6 +24,15 @@ export default function Index() {
             Pricing
           </A>
           <A
+            href="/my-gallery"
+            class={cn(
+              buttonVariants({ variant: 'ghost' }),
+              'font-gabarito text-md text-zinc-600',
+            )}
+          >
+            My Gallery
+          </A>
+          <A
             href="/releases"
             class={cn(
               buttonVariants({ variant: 'ghost' }),
