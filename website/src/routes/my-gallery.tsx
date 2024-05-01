@@ -1,4 +1,4 @@
-import { cache, createAsync } from '@solidjs/router';
+import { A, cache, createAsync } from '@solidjs/router';
 import { eq } from 'drizzle-orm';
 import { For, getRequestEvent } from 'solid-js/web';
 import { db } from '~/lib/db';
@@ -36,18 +36,26 @@ export const route = {
 export default function MyGallery() {
   const gallery = createAsync(() => getGallery());
   return (
-    <div class="px-10">
-      <h1>My Gallery</h1>
-      <div class="grid md:grid-cols-[repeat(auto-fill,_minmax(16rem,_1fr))] max-w-7xl mx-auto gap-4">
+    <div class="p-10">
+      <h1 class="font-geist text-4xl font-semibold mb-10 max-w-7xl mx-auto">My Gallery</h1>
+      <div class="grid md:grid-cols-[repeat(auto-fill,_minmax(16rem,_1fr))] max-w-7xl mx-auto gap-8">
         <For each={gallery()}>
           {(image) => (
             <div class="w-full md:w-64 mx-auto">
-              <div class="w-full h-[30rem] md:h-44 grid place-items-center border-[1px] rounded-sm shadow-sm">
+              <div class="group relative w-full h-[30rem] md:h-44 grid place-items-center border-[1px] rounded-sm shadow-sm">
                 <img
                   src={image.source}
                   alt={image.name}
                   class="max-w-[100%] max-h-[100%]"
                 />
+                <A
+                  href={`/canvas/${image.id}`}
+                  class="group-hover:visible invisible absolute w-full h-[30rem] md:h-44 bg-white bg-opacity-90 grid place-items-center"
+                >
+                  <span class="font-gabarito text-blue-500 font-semibold">
+                    Go to editor
+                  </span>
+                </A>
               </div>
               <div class="flex justify-between pl-2 mt-1">
                 <div

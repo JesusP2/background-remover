@@ -20,6 +20,7 @@ export const imageTable = sqliteTable('image', {
   updatedAt: integer('updated_at')
     .notNull()
     .$defaultFn(() => Date.now()),
+  deleted: integer('deleted')
 });
 
 export const selectImageSchema = createSelectSchema(imageTable);
