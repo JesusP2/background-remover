@@ -49,16 +49,46 @@ export default function MyGallery() {
                   class="max-w-[100%] max-h-[100%]"
                 />
               </div>
-              <div class="flex justify-between px-2 mt-3">
+              <div class="flex justify-between pl-2 mt-1">
                 <div
-                  class="text-xs max-w-[150px] truncate text-zinc-600 font-geist"
+                  class="text-xs max-w-[150px] truncate text-zinc-600 font-geist mt-[8px]"
                   title={image.name}
                 >
                   {image.name}
                 </div>
                 <div class="flex gap-x-2">
-                  <img src="/public/download-icon.svg" alt={`download-${image.name}`} />
-                  <img src="/public/x-icon.svg" alt={`delete-${image.name}`} />
+                  <a
+                    href={image.result}
+                    download={image.name}
+                    class="hover:bg-blue-500 rounded-sm p-2 h-[30px] w-[30px] download-icon"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="15"
+                      height="15"
+                      fill="#000000"
+                      viewBox="0 0 256 256"
+                    >
+                      <title>download {image.name}</title>
+                      <path d="M224,144v64a8,8,0,0,1-8,8H40a8,8,0,0,1-8-8V144a8,8,0,0,1,16,0v56H208V144a8,8,0,0,1,16,0Zm-101.66,5.66a8,8,0,0,0,11.32,0l40-40a8,8,0,0,0-11.32-11.32L136,124.69V32a8,8,0,0,0-16,0v92.69L93.66,98.34a8,8,0,0,0-11.32,11.32Z" />
+                    </svg>
+                  </a>
+                  <a
+                    href={image.result}
+                    download={image.name}
+                    class="hover:bg-red-500 rounded-sm p-2 h-[30px] w-[30px] delete-icon"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="15"
+                      height="15"
+                      fill="#000000"
+                      viewBox="0 0 256 256"
+                    >
+                      <title>delete {image.name}</title>
+                      <path d="M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z" />
+                    </svg>
+                  </a>
                 </div>
               </div>
             </div>

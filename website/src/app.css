@@ -130,3 +130,11 @@ body {
     top: 0px;
     left: 0px;
 }
+
+.download-icon:hover path {
+  fill: white;
+}
+
+.delete-icon:hover path {
+  fill: white;
+}
