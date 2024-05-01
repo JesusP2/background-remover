@@ -1,5 +1,5 @@
 import { Navigate, createAsync, useParams } from '@solidjs/router';
-import { eq } from 'drizzle-orm';
+import { and, eq, isNotNull } from 'drizzle-orm';
 import { AiOutlineLoading } from 'solid-icons/ai';
 import { Match, Switch, getRequestEvent } from 'solid-js/web';
 import { Canvases } from '~/components/canvases';
@@ -14,7 +14,7 @@ const getImages = async (id: string) => {
   const images = await db
     .select()
     .from(imageTable)
-    .where(eq(imageTable.id, id));
+    .where(and(eq(imageTable.id, id), isNotNull(imageTable.deleted)));
   if (!images.length || session?.userId !== images[0].userId) return null;
   const updatedRecord = await updateUrlsOfRecordIfExpired(images[0], db);
   return {

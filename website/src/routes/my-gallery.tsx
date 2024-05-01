@@ -1,5 +1,5 @@
 import { A, cache, createAsync } from '@solidjs/router';
-import { eq } from 'drizzle-orm';
+import { and, eq, isNotNull } from 'drizzle-orm';
 import { For, getRequestEvent } from 'solid-js/web';
 import { db } from '~/lib/db';
 import { imageTable } from '~/lib/db/schema';
@@ -14,7 +14,7 @@ const getGallery = cache(async () => {
   const userImages = await db
     .select()
     .from(imageTable)
-    .where(eq(imageTable.userId, userId));
+    .where(and(eq(imageTable.userId, userId), isNotNull(imageTable.deleted)));
 
   await db.transaction(async (tx) => {
     for (let i = 0; i < userImages.length; i++) {
