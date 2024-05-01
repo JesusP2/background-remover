@@ -439,9 +439,9 @@ export function useCanvas({
   async function saveResult(name: string) {
     if (!destinationImg) return;
     const anchor = document.createElement('a');
-    anchor.download = `${name.split('.')[0]}.png`
-    anchor.href = destinationImg.src
-    anchor.click()
+    anchor.download = `${name.split('.')[0]}.png`;
+    anchor.href = destinationImg.src;
+    anchor.click();
   }
 
   onMount(() => {

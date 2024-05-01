@@ -2,12 +2,12 @@ import {
   GetObjectCommand,
   PutObjectCommand,
   S3Client,
-} from "@aws-sdk/client-s3";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { envs } from "../db/env-vars";
+} from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { envs } from '../db/env-vars';
 
 export const client = new S3Client({
-  region: "auto",
+  region: 'auto',
   endpoint: envs.R2_ENDPOINT,
   credentials: {
     accessKeyId: envs.R2_ACCESS_KEY_ID,
@@ -17,7 +17,7 @@ export const client = new S3Client({
 
 export async function uploadFile(buffer: Buffer, name: string) {
   const command = new PutObjectCommand({
-    Bucket: "erased",
+    Bucket: 'erased',
     Key: name,
     Body: buffer,
   });
@@ -31,7 +31,7 @@ export async function createPresignedUrl(key: string) {
   const url = await getSignedUrl(
     client,
     new GetObjectCommand({
-      Bucket: "erased",
+      Bucket: 'erased',
       Key: key,
     }),
     { expiresIn: 60 * 60 * 24 * 7 },
@@ -40,7 +40,7 @@ export async function createPresignedUrl(key: string) {
 }
 
 function getExpirationDate(amzDate: string) {
-  const [date, time] = amzDate.split("T");
+  const [date, time] = amzDate.split('T');
   const year = date.slice(0, 4);
   const month = date.slice(4, 6);
   const day = date.slice(6, 8);
@@ -54,7 +54,7 @@ function getExpirationDate(amzDate: string) {
 
 export function didUrlExpire(_url: string) {
   const url = new URL(_url);
-  const amzDate = url.searchParams.get("X-Amz-Date");
+  const amzDate = url.searchParams.get('X-Amz-Date');
   if (!amzDate) return;
   const expirationDate = getExpirationDate(amzDate);
   const expirationTimestap = expirationDate.getTime();

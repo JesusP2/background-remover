@@ -1,9 +1,19 @@
-import { A, cache, createAsync } from '@solidjs/router';
-import { and, eq, isNotNull } from 'drizzle-orm';
+import {
+  A,
+  cache,
+  createAsync,
+  useAction,
+  useSubmission,
+  useSubmissions,
+} from '@solidjs/router';
+import { and, eq, isNull } from 'drizzle-orm';
+import { createEffect } from 'solid-js';
 import { For, getRequestEvent } from 'solid-js/web';
+import { showToast } from '~/components/ui/toast';
+import { deleteImageAction } from '~/lib/actions/delete-image';
 import { db } from '~/lib/db';
-import { imageTable } from '~/lib/db/schema';
 import { updateUrlsOfRecordIfExpired } from '~/lib/db/queries';
+import { imageTable } from '~/lib/db/schema';
 
 const getGallery = cache(async () => {
   'use server';
@@ -14,7 +24,7 @@ const getGallery = cache(async () => {
   const userImages = await db
     .select()
     .from(imageTable)
-    .where(and(eq(imageTable.userId, userId), isNotNull(imageTable.deleted)));
+    .where(and(eq(imageTable.userId, userId), isNull(imageTable.deleted)));
 
   await db.transaction(async (tx) => {
     for (let i = 0; i < userImages.length; i++) {
@@ -33,11 +43,26 @@ const getGallery = cache(async () => {
 export const route = {
   load: () => getGallery(),
 };
+
 export default function MyGallery() {
+  const deleteImageState = useSubmission(deleteImageAction);
   const gallery = createAsync(() => getGallery());
+
+  createEffect(() => {
+    if (deleteImageState.result instanceof Error) {
+      showToast({
+        variant: 'destructive',
+        title: 'Unexpected error',
+        description: deleteImageState.result.message,
+        duration: 10_000,
+      });
+    }
+  });
   return (
     <div class="p-10">
-      <h1 class="font-geist text-4xl font-semibold mb-10 max-w-7xl mx-auto">My Gallery</h1>
+      <h1 class="font-geist text-4xl font-semibold mb-10 max-w-7xl mx-auto">
+        My Gallery
+      </h1>
       <div class="grid md:grid-cols-[repeat(auto-fill,_minmax(16rem,_1fr))] max-w-7xl mx-auto gap-8">
         <For each={gallery()}>
           {(image) => (
@@ -81,22 +106,25 @@ export default function MyGallery() {
                       <path d="M224,144v64a8,8,0,0,1-8,8H40a8,8,0,0,1-8-8V144a8,8,0,0,1,16,0v56H208V144a8,8,0,0,1,16,0Zm-101.66,5.66a8,8,0,0,0,11.32,0l40-40a8,8,0,0,0-11.32-11.32L136,124.69V32a8,8,0,0,0-16,0v92.69L93.66,98.34a8,8,0,0,0-11.32,11.32Z" />
                     </svg>
                   </a>
-                  <a
-                    href={image.result}
-                    download={image.name}
-                    class="hover:bg-red-500 rounded-sm p-2 h-[30px] w-[30px] delete-icon"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="15"
-                      height="15"
-                      fill="#000000"
-                      viewBox="0 0 256 256"
+                  <form action={deleteImageAction} method="post">
+                    <input name="id" value={image.id} hidden />
+                    <button
+                      disabled={deleteImageState.pending}
+                      type="submit"
+                      class="hover:bg-red-500 rounded-sm p-2 h-[30px] w-[30px] delete-icon disabled:hover:bg-zinc-100"
                     >
-                      <title>delete {image.name}</title>
-                      <path d="M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z" />
-                    </svg>
-                  </a>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="15"
+                        height="15"
+                        fill="#000000"
+                        viewBox="0 0 256 256"
+                      >
+                        <title>delete {image.name}</title>
+                        <path d="M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z" />
+                      </svg>
+                    </button>
+                  </form>
                 </div>
               </div>
             </div>

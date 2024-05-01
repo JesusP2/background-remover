@@ -1,4 +1,4 @@
-import { and, eq, isNotNull } from 'drizzle-orm';
+import { and, eq, isNull } from 'drizzle-orm';
 import { getRequestEvent } from 'solid-js/web';
 import { db } from '../db';
 import { imageTable } from '../db/schema';
@@ -14,7 +14,7 @@ export async function storeStep(result: File, mask: File, id: string) {
         userId: imageTable.userId,
       })
       .from(imageTable)
-      .where(and(eq(imageTable.id, id), isNotNull(imageTable.deleted)));
+      .where(and(eq(imageTable.id, id), isNull(imageTable.deleted)));
     if (!imageRecord.length || imageRecord[0].userId !== session.userId)
       return new Error('Unauthorized');
 

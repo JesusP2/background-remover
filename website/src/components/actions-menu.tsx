@@ -6,6 +6,7 @@ import {
   AiOutlineZoomOut,
 } from 'solid-icons/ai';
 import { AiOutlineLine } from 'solid-icons/ai';
+import { AiOutlineCloudDownload } from 'solid-icons/ai';
 import { BiRegularEraser } from 'solid-icons/bi';
 import { BsArrowsMove } from 'solid-icons/bs';
 import { IoCutOutline } from 'solid-icons/io';
@@ -14,7 +15,6 @@ import { TbFocusCentered } from 'solid-icons/tb';
 import { VsEdit } from 'solid-icons/vs';
 import type { Accessor } from 'solid-js';
 import type { Action, ActionType } from '~/lib/canvas/utils';
-import { AiOutlineCloudDownload } from 'solid-icons/ai';
 
 export function ActionsMenu({
   setCurrentMode,
