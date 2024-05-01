@@ -1,5 +1,6 @@
 import { A, action, useAction } from '@solidjs/router';
 import { DropZone } from '~/components/dropzone';
+import { Navbar } from '~/components/nav';
 import { buttonVariants } from '~/components/ui/button';
 import { uploadImage } from '~/lib/actions/init-image-process';
 import { cn } from '~/lib/utils';
@@ -9,69 +10,7 @@ export default function Index() {
   const uploadImage = useAction(uploadImageAction);
   return (
     <div class="h-[3000px]">
-      <header class="sticky z-10 top-0 bg-white h-16 border-b border-zinc-200 items-center flex px-4 justify-between">
-        <A href="/" class="w-[210px]">
-          <img src="/logo.png" alt="logo" width="40" />
-        </A>
-        <div>
-          <A
-            href="/pricing"
-            class={cn(
-              buttonVariants({ variant: 'ghost' }),
-              'font-gabarito text-md text-zinc-600',
-            )}
-          >
-            Pricing
-          </A>
-          <A
-            href="/my-gallery"
-            class={cn(
-              buttonVariants({ variant: 'ghost' }),
-              'font-gabarito text-md text-zinc-600',
-            )}
-          >
-            My Gallery
-          </A>
-          <A
-            href="/releases"
-            class={cn(
-              buttonVariants({ variant: 'ghost' }),
-              'font-gabarito text-md text-zinc-600',
-            )}
-          >
-            Releases
-          </A>
-          <A
-            href="/github"
-            class={cn(
-              buttonVariants({ variant: 'ghost' }),
-              'font-gabarito text-md text-zinc-600',
-            )}
-          >
-            Github
-          </A>
-        </div>
-        <div class="space-x-4">
-          <A
-            href="/auth/signin"
-            class={cn(
-              buttonVariants({ variant: 'ghost' }),
-              'font-gabarito text-md text-zinc-600',
-            )}
-          >
-            Sign in
-          </A>
-          <A
-            href="/auth/signup"
-            class={cn(
-              buttonVariants({ variant: 'default' }),
-              'font-gabarito text-md',
-            )}
-          >
-            Get Started
-          </A>
-        </div>
-      </header>
+      <Navbar />
       <main class="grid place-items-center gap-y-10 mt-20">
         <h1 class="font-gabarito text-6xl font-semibold">
           Background Removal App
