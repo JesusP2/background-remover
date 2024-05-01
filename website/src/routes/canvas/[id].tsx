@@ -1,4 +1,4 @@
-import { Navigate, createAsync, useParams } from '@solidjs/router';
+import { A, Navigate, createAsync, useParams } from '@solidjs/router';
 import { and, eq, isNull } from 'drizzle-orm';
 import { AiOutlineLoading } from 'solid-icons/ai';
 import { Match, Switch, getRequestEvent } from 'solid-js/web';
@@ -6,6 +6,7 @@ import { Canvases } from '~/components/canvases';
 import { db } from '~/lib/db';
 import { updateUrlsOfRecordIfExpired } from '~/lib/db/queries';
 import { type SelectImage, imageTable } from '~/lib/db/schema';
+import { AiOutlineClose } from 'solid-icons/ai';
 
 const getImages = async (id: string) => {
   'use server';
@@ -34,6 +35,11 @@ export default function Home() {
     <main class="flex">
       <Switch>
         <Match when={image()}>
+          <div class="rounded-sm px-2 py-1 bg-white absolute top-0 right-0 flex gap-x-4 items-center">
+            <A href="/my-gallery">
+              <AiOutlineClose size={20} />
+            </A>
+          </div>
           <Canvases img={image() as SelectImage} />
         </Match>
         <Match when={image() === null}>
