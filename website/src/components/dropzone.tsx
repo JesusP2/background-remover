@@ -27,7 +27,7 @@ export function DropZone(props: {
         <BsCloudDownload size={40} />
         <BsFolder size={40} />
       </div>
-      Drag image here
+      Click or Drag image here
       <input
         onChange={(event) => {
           if (!event.target.files?.length) return;
