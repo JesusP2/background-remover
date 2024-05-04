@@ -61,7 +61,7 @@ export default function MyGallery() {
   });
   return (
     <>
-      <Navbar />
+      <Navbar route="/my-gallery" />
       <main class="mt-10">
         <h1 class="font-geist text-4xl font-semibold mb-10 max-w-7xl mx-auto">
           My Gallery

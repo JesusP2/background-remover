@@ -138,3 +138,43 @@ body {
 .delete-icon:hover path {
   fill: white;
 }
+
+.loading-bar {
+  position: relative;
+  height: 20px;
+  width: 100%;
+  border: 1;
+  background: #e4e4e7;
+  border-radius: 50px;
+}
+.loading-bar span {
+  display: block;
+  position: relative;
+  height: 100%;
+  border-radius: 50px;
+  background-image: linear-gradient(to bottom, #fff, #71717a 30%);
+  overflow: hidden;
+}
+.loading-bar span:after {
+  content: "";
+  position: absolute;
+  top: 0px;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  background-image: linear-gradient( -45deg, rgba(255, 255, 255, .2) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, .2) 50%, rgba(255, 255, 255, .2) 75%, transparent 75%, transparent);
+  z-index: 1;
+  background-size: 50px 50px;
+  overflow: hidden;
+}
+.loading-bar > span:after, .animate>span>span {
+  animation: load .88s infinite;
+}
+@keyframes load {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 50px 50px;
+  }
+}

@@ -2,7 +2,7 @@ import { A } from '@solidjs/router';
 import { cn } from '~/lib/utils';
 import { buttonVariants } from './ui/button';
 
-export function Navbar() {
+export function Navbar(props: { route: string }) {
   return (
     <header class="sticky z-10 top-0 bg-white h-16 border-b border-zinc-200 items-center flex px-4 justify-between">
       <div class="w-[210px]">
@@ -18,6 +18,9 @@ export function Navbar() {
           class={cn(
             buttonVariants({ variant: 'ghost' }),
             'font-gabarito text-md text-zinc-600',
+            props.route === '/pricing'
+              ? 'bg-accent text-accent-foreground'
+              : '',
           )}
         >
           Pricing
@@ -27,6 +30,9 @@ export function Navbar() {
           class={cn(
             buttonVariants({ variant: 'ghost' }),
             'font-gabarito text-md text-zinc-600',
+            props.route === '/my-gallery'
+              ? 'bg-accent text-accent-foreground'
+              : '',
           )}
         >
           My Gallery
@@ -36,6 +42,9 @@ export function Navbar() {
           class={cn(
             buttonVariants({ variant: 'ghost' }),
             'font-gabarito text-md text-zinc-600',
+            props.route === '/releases'
+              ? 'bg-accent text-accent-foreground'
+              : '',
           )}
         >
           Releases
@@ -45,6 +54,9 @@ export function Navbar() {
           class={cn(
             buttonVariants({ variant: 'ghost' }),
             'font-gabarito text-md text-zinc-600',
+            props.route === '/github'
+              ? 'bg-accent text-accent-foreground'
+              : '',
           )}
         >
           Github

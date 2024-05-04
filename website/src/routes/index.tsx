@@ -1,16 +1,19 @@
-import { A, action, useAction } from '@solidjs/router';
+import { A, action, useAction, useSubmission } from '@solidjs/router';
+import { Show } from 'solid-js';
 import { DropZone } from '~/components/dropzone';
 import { Navbar } from '~/components/nav';
-import { buttonVariants } from '~/components/ui/button';
+import { Progress, ProgressLabel } from '~/components/ui/progress';
+import { Separator } from '~/components/ui/separator';
+import { UploadingFileDialog } from '~/components/uploading-file-dialog';
 import { uploadImage } from '~/lib/actions/init-image-process';
-import { cn } from '~/lib/utils';
 
 const uploadImageAction = action(uploadImage);
 export default function Index() {
   const uploadImage = useAction(uploadImageAction);
+  const uploadImageState = useSubmission(uploadImageAction);
   return (
     <div class="h-[3000px]">
-      <Navbar />
+      <Navbar route="/" />
       <main class="grid place-items-center gap-y-10 mt-20">
         <h1 class="font-gabarito text-6xl font-semibold">
           Background Removal App
@@ -54,6 +57,7 @@ export default function Index() {
       </div>
       <p>Remoove background / Edit images</p>
       <DropZone onFileChange={(file) => uploadImage(file)} />
+      <UploadingFileDialog open={uploadImageState.pending} />
     </div>
   );
 }
