@@ -21,9 +21,9 @@ export default createMiddleware({
     }
     const path = event.nativeEvent.path
     const authPaths = ['/auth/signin', '/auth/signup']
-    if (authPaths.includes(path)) return redirect('/');
 
     const sessionId = getCookie(lucia.sessionCookieName) ?? null;
+    if (authPaths.includes(path) && sessionId) return redirect('/');
     if (!sessionId) {
       event.locals.session = null;
       event.locals.user = null;
