@@ -1,11 +1,4 @@
-import {
-  A,
-  cache,
-  createAsync,
-  useAction,
-  useSubmission,
-  useSubmissions,
-} from '@solidjs/router';
+import { A, cache, createAsync, useSubmission } from '@solidjs/router';
 import { and, eq, isNull } from 'drizzle-orm';
 import { createEffect } from 'solid-js';
 import { For, getRequestEvent } from 'solid-js/web';
@@ -69,16 +62,16 @@ export default function MyGallery() {
         <div class="grid md:grid-cols-[repeat(auto-fill,_minmax(16rem,_1fr))] max-w-7xl mx-auto gap-8">
           <For each={gallery()}>
             {(image) => (
-              <div class="w-full md:w-64 mx-auto">
-                <div class="group relative w-full h-[30rem] md:h-44 grid place-items-center border-[1px] rounded-sm shadow-sm">
+              <div class="md:w-64 md:mx-auto mx-8 mb-4 md:mb-0">
+                <div class="group relative h-full w-full border-[1px] rounded-sm shadow-sm grid place-items-center">
                   <img
                     src={image.source}
                     alt={image.name}
-                    class="max-w-[100%] max-h-[100%]"
+                    class="max-w-[100%] max-h-[100%] md:h-44 object-contain"
                   />
                   <A
                     href={`/canvas/${image.id}`}
-                    class="group-hover:visible invisible absolute w-full h-[30rem] md:h-44 bg-white bg-opacity-90 grid place-items-center"
+                    class="group-hover:visible invisible top-0 absolute w-full h-full bg-white bg-opacity-90 grid place-items-center"
                   >
                     <span class="font-gabarito text-blue-500 font-semibold">
                       Go to editor
