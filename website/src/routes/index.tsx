@@ -15,18 +15,21 @@ export default function Index() {
         <h1 class="font-gabarito lg:text-6xl md:text-5xl sm:text-4xl text-3xl font-semibold z-10">
           Background Removal App
         </h1>
-        <div class="w-[153px] group z-10">
-          <A href="/" class="relative bg-red-100">
-            <div class="border-2 border-black bg-white rounded-lg w-36 h-12" />
-            <div class="absolute top-[6px] left-[9px] bg-black rounded-lg w-36 h-12 text-white grid place-items-center font-gabarito text-lg group-hover:left-[6px] group-hover:top-[9px] duration-100">
-              Get Started
+        <div class="group z-10 w-[153px]">
+          <A href="/" class="relative h-12">
+            <div class="border-2 border-black bg-white rounded-lg w-36 h-12 relative">
+              <div class="bg-black w-36 h-12 relative top-[-0.7rem] rounded-lg text-white grid place-items-center font-gabarito text-lg group-hover:top-[-0.4rem] group-hover:left-[0.2rem] left-[0.5rem] duration-100">
+                Get Started
+              </div>
             </div>
           </A>
         </div>
-        <img src="/collage.png" alt="collage" class="relative sm:top-[-100px]" />
-        <DropZone
-          onFileChange={(file) => uploadImage(file)}
+        <img
+          src="/collage.png"
+          alt="collage"
+          class="relative sm:top-[-100px]"
         />
+        <DropZone onFileChange={(file) => uploadImage(file)} />
         <UploadingFileDialog open={uploadImageState.pending} />
       </main>
     </div>
