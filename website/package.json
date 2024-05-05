@@ -19,6 +19,7 @@
     "@libsql/client": "^0.6.0",
     "@lucia-auth/adapter-drizzle": "^1.0.7",
     "@paralleldrive/cuid2": "^2.2.2",
+    "@solid-primitives/resize-observer": "^2.0.25",
     "@solid-primitives/upload": "^0.0.117",
     "@solidjs/router": "^0.13.1",
     "@solidjs/start": "^1.0.0-rc.0",

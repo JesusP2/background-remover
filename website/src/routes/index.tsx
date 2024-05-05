@@ -1,12 +1,6 @@
 import { A, action, useAction, useSubmission } from '@solidjs/router';
 import { DropZone } from '~/components/dropzone';
-import { Image1 } from '~/components/img-1';
-import { Image2 } from '~/components/img-2';
-import { Image3 } from '~/components/img-3';
-import { Image4 } from '~/components/img-4';
-import { Image5 } from '~/components/img-5';
 import { Navbar } from '~/components/nav';
-import { PerfectArrow } from '~/components/perfect-arrow';
 import { UploadingFileDialog } from '~/components/uploading-file-dialog';
 import { uploadImage } from '~/lib/actions/init-image-process';
 
