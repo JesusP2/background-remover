@@ -16,7 +16,7 @@ export default function Index() {
           Background Removal App
         </h1>
         <div class="group z-10 w-[153px]">
-          <A href="/" class="relative h-12">
+          <A href="#dropzone" class="relative h-12">
             <div class="border-2 border-black bg-white rounded-lg w-36 h-12 relative">
               <div class="bg-black w-36 h-12 relative top-[-0.7rem] rounded-lg text-white grid place-items-center font-gabarito text-lg group-hover:top-[-0.4rem] group-hover:left-[0.2rem] left-[0.5rem] duration-100">
                 Get Started
@@ -29,7 +29,9 @@ export default function Index() {
           alt="collage"
           class="relative sm:top-[-130px]"
         />
-        <DropZone onFileChange={(file) => uploadImage(file)} />
+        <div id="dropzone" class="w-full">
+          <DropZone onFileChange={(file) => uploadImage(file)} />
+        </div>
         <UploadingFileDialog open={uploadImageState.pending} />
       </main>
     </div>

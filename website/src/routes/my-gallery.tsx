@@ -61,7 +61,7 @@ export default function MyGallery() {
           My Gallery
         </h1>
         <Show when={!gallery()?.length}>
-          <div class="flex justify-center border border-zinc-400 rounded-xs py-4 max-w-7xl mx-10 xl:mx-auto">
+          <div class="flex justify-center rounded-xs py-4 max-w-7xl mx-10 xl:mx-auto">
             <div class="items-center flex flex-col text-zinc-400">
               <BsArchive size={30} />
               <p>Empty</p>

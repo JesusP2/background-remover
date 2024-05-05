@@ -90,7 +90,7 @@ export function Navbar(props: { route: string }) {
             Github
           </A>
         </div>
-        <div class="space-x-4 flex">
+        <div class="space-x-4 flex w-[153px] justify-end">
           <Show when={!userId()}>
             <A
               href="/auth/signin"
@@ -112,15 +112,6 @@ export function Navbar(props: { route: string }) {
               </Button>
             </form>
           </Show>
-          <A
-            href="/auth/signup"
-            class={cn(
-              buttonVariants({ variant: 'default' }),
-              'font-gabarito text-md',
-            )}
-          >
-            Get Started
-          </A>
         </div>
       </div>
       <div class="mid:hidden flex justify-between items-center max-w-7xl mx-auto h-16">
