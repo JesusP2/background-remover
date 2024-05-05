@@ -1,6 +1,7 @@
+import { BsArchive } from 'solid-icons/bs';
 import { A, cache, createAsync, useSubmission } from '@solidjs/router';
 import { and, eq, isNull } from 'drizzle-orm';
-import { createEffect } from 'solid-js';
+import { Show, createEffect } from 'solid-js';
 import { For, getRequestEvent } from 'solid-js/web';
 import { Navbar } from '~/components/nav';
 import { showToast } from '~/components/ui/toast';
@@ -56,18 +57,26 @@ export default function MyGallery() {
     <>
       <Navbar route="/my-gallery" />
       <main class="mt-10">
-        <h1 class="font-geist text-4xl font-semibold mb-10 max-w-7xl mx-auto">
+        <h1 class="font-geist text-4xl font-semibold mb-10 max-w-7xl mx-10 xl:mx-auto">
           My Gallery
         </h1>
-        <div class="grid md:grid-cols-[repeat(auto-fill,_minmax(16rem,_1fr))] max-w-7xl mx-auto gap-8">
+        <Show when={!gallery()?.length}>
+          <div class="flex justify-center border border-zinc-400 rounded-xs py-4 max-w-7xl mx-10 xl:mx-auto">
+            <div class="items-center flex flex-col text-zinc-400">
+              <BsArchive size={30} />
+              <p>Empty</p>
+            </div>
+          </div>
+        </Show>
+        <div class="grid md:grid-cols-[repeat(auto-fill,_minmax(16rem,_1fr))] max-w-7xl mx-4 md:mx-10 xl:mx-auto gap-8">
           <For each={gallery()}>
             {(image) => (
-              <div class="md:w-64 md:mx-auto mx-8 mb-4 md:mb-0">
+              <div class="md:w-64 max-md:w-full mx-auto mb-4 md:mb-0">
                 <div class="group relative h-full w-full border-[1px] rounded-sm shadow-sm grid place-items-center">
                   <img
                     src={image.source}
                     alt={image.name}
-                    class="max-w-[100%] max-h-[100%] md:h-44 object-contain"
+                    class="max-w-[100%]  max-h-[100%] h-96 md:h-44 object-contain"
                   />
                   <A
                     href={`/canvas/${image.id}`}

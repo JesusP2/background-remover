@@ -16,13 +16,14 @@ const getUserId = cache(async () => {
   const req = getRequestEvent();
   if (!req?.locals.session?.userId) return null;
   return req.locals.session.userId;
-}, 'session');
+}, 'session')
 
 export const route = {
   load: () => getUserId(),
 };
 export function Navbar(props: { route: string }) {
   const userId = createAsync(() => getUserId());
+
   const [isOpen, open] = createSignal(false);
   return (
     <header
@@ -90,7 +91,7 @@ export function Navbar(props: { route: string }) {
           </A>
         </div>
         <div class="space-x-4 flex">
-          <Show when={!userId}>
+          <Show when={!userId()}>
             <A
               href="/auth/signin"
               class={cn(
@@ -101,7 +102,7 @@ export function Navbar(props: { route: string }) {
               Sign in
             </A>
           </Show>
-          <Show when={userId}>
+          <Show when={userId()}>
             <form method="post" action={signOutAction}>
               <Button
                 variant="ghost"
