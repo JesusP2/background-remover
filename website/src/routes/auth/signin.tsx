@@ -44,12 +44,12 @@ export default function Signin() {
               </FormLabel>
               <Switch>
                 <Match when={showPassword()}>
-                  <button onClick={() => setShowPassword(false)}>
+                  <button type="button" onClick={() => setShowPassword(false)}>
                     <AiOutlineEyeInvisible />
                   </button>
                 </Match>
                 <Match when={!showPassword()}>
-                  <button onClick={() => setShowPassword(true)}>
+                  <button type="button" onClick={() => setShowPassword(true)}>
                     <AiOutlineEye />
                   </button>
                 </Match>
@@ -65,7 +65,7 @@ export default function Signin() {
               disabled={signinState.pending}
               error={!!signinState.result?.password}
               name="password"
-              type="password"
+              type={showPassword() ? 'text' : 'password'}
               id="password"
             />
             <FormMessage error={!!signinState.result?.password}>
