@@ -1,18 +1,14 @@
-import { Button } from '~/components/ui/button';
 import {
   Dialog,
-  DialogContent,
   DialogContentWithoutClose,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '~/components/ui/dialog';
 import { Separator } from './ui/separator';
 
 export function UploadingFileDialog(props: { open: boolean}) {
   return (
     <Dialog open={props.open}>
-      <DialogTrigger as={Button}>Edit Profile</DialogTrigger>
       <DialogContentWithoutClose class="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Loading</DialogTitle>

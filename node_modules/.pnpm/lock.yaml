@@ -1,0 +1,23 @@
+lockfileVersion: '9.0'
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
+importers:
+
+  .:
+    dependencies:
+      perfect-arrows:
+        specifier: ^0.3.7
+        version: 0.3.7
+
+packages:
+
+  perfect-arrows@0.3.7:
+    resolution: {integrity: sha512-wEN2gerTPVWl3yqoFEF8OeGbg3aRe2sxNUi9rnyYrCsL4JcI6K2tBDezRtqVrYG0BNtsWLdYiiTrYm+X//8yLQ==}
+    engines: {node: '>=10'}
+
+snapshots:
+
+  perfect-arrows@0.3.7: {}
