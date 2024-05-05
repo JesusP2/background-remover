@@ -2,6 +2,7 @@ import { createMiddleware } from '@solidjs/start/middleware';
 import { type Session, type User, verifyRequestOrigin } from 'lucia';
 import { appendResponseHeader, getCookie, getRequestHeader } from 'vinxi/http';
 import { lucia } from './lib/auth';
+import { redirect } from '@solidjs/router';
 
 export default createMiddleware({
   onRequest: async (event) => {
@@ -18,6 +19,10 @@ export default createMiddleware({
         return;
       }
     }
+    const path = event.nativeEvent.path
+    const authPaths = ['/auth/signin', '/auth/signup']
+    if (authPaths.includes(path)) return redirect('/');
+
     const sessionId = getCookie(lucia.sessionCookieName) ?? null;
     if (!sessionId) {
       event.locals.session = null;

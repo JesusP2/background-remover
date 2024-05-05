@@ -1,9 +1,28 @@
-import { A } from '@solidjs/router';
+import {
+  A,
+  RouteDefinition,
+  RouteLoadFuncArgs,
+  cache,
+  createAsync,
+} from '@solidjs/router';
 import { cn } from '~/lib/utils';
-import { buttonVariants } from './ui/button';
-import { createSignal } from 'solid-js';
+import { Button, buttonVariants } from './ui/button';
+import { Show, createSignal } from 'solid-js';
+import { getRequestEvent } from 'solid-js/web';
+import { signOutAction } from '~/lib/actions/signout';
 
+const getUserId = cache(async () => {
+  'use server';
+  const req = getRequestEvent();
+  if (!req?.locals.session?.userId) return null;
+  return req.locals.session.userId;
+}, 'session');
+
+export const route = {
+  load: () => getUserId(),
+};
 export function Navbar(props: { route: string }) {
+  const userId = createAsync(() => getUserId());
   const [isOpen, open] = createSignal(false);
   return (
     <header
@@ -70,16 +89,28 @@ export function Navbar(props: { route: string }) {
             Github
           </A>
         </div>
-        <div class="space-x-4">
-          <A
-            href="/auth/signin"
-            class={cn(
-              buttonVariants({ variant: 'ghost' }),
-              'font-gabarito text-md text-zinc-600',
-            )}
-          >
-            Sign in
-          </A>
+        <div class="space-x-4 flex">
+          <Show when={!userId}>
+            <A
+              href="/auth/signin"
+              class={cn(
+                buttonVariants({ variant: 'ghost' }),
+                'font-gabarito text-md text-zinc-600',
+              )}
+            >
+              Sign in
+            </A>
+          </Show>
+          <Show when={userId}>
+            <form method="post" action={signOutAction}>
+              <Button
+                variant="ghost"
+                class="font-gabarito text-md text-zinc-600"
+              >
+                Sign out
+              </Button>
+            </form>
+          </Show>
           <A
             href="/auth/signup"
             class={cn(

@@ -27,7 +27,7 @@ export default function Index() {
         <img
           src="/collage.png"
           alt="collage"
-          class="relative sm:top-[-100px]"
+          class="relative sm:top-[-130px]"
         />
         <DropZone onFileChange={(file) => uploadImage(file)} />
         <UploadingFileDialog open={uploadImageState.pending} />
