@@ -2,13 +2,11 @@ export * from './user';
 import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core';
 import { createSelectSchema } from 'drizzle-valibot';
 import type { Output } from 'valibot';
-import { userTable } from './user';
 
 export const imageTable = sqliteTable('image', {
   id: text('id').notNull().primaryKey(),
   userId: text('user_id')
-    .notNull()
-    .references(() => userTable.id),
+    .notNull(),
   name: text('name').notNull(),
   source: text('source').notNull(),
   base_mask: text('base_mask').notNull(),
