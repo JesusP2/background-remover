@@ -6,9 +6,9 @@ import { appendResponseHeader } from "vinxi/http";
 export const signOutAction = action(async () => {
   'use server'
   const req = getRequestEvent();
-  const session = req?.locals.session?.id;
-  if (session) {
-    await lucia.invalidateSession(session);
+  const sessionId = req?.locals.session?.id;
+  if (sessionId) {
+    await lucia.invalidateSession(sessionId);
     appendResponseHeader('Set-Cookie', lucia.createBlankSessionCookie().serialize())
   }
   return redirect("/");

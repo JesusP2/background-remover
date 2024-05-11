@@ -14,8 +14,8 @@ import { signOutAction } from '~/lib/actions/signout';
 const getUserId = cache(async () => {
   'use server';
   const req = getRequestEvent();
-  if (!req?.locals.session?.userId) return null;
-  return req.locals.session.userId;
+  if (!req?.locals.userId) return null;
+  return req.locals.userId;
 }, 'session')
 
 export const route = {

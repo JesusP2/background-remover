@@ -34,14 +34,19 @@ async def start(image_file: UploadFile = File(...)):
     base_mask_array = cv2.cvtColor(base_mask_array, cv2.COLOR_RGB2GRAY)
     rect = (1, 1, image.shape[1], image.shape[0])
     cv2.grabCut(image, base_mask_array, rect, bgdModel, fgdModel, 1, cv2.GC_INIT_WITH_RECT)
-    new_mask = np.where((base_mask_array == 2) | (base_mask_array == 0), 0, 1).astype("uint8")
+    new_mask = np.where((base_mask_array == 2) | (base_mask_array == 0), 0, 1).astype(
+        "uint8"
+    )
     new_mask = np.array(cv2.blur(new_mask * 255, (1, 2)), dtype=np.uint8)
     rgba_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGBA)
+    # if original_res[0] > 1080:
+    #     rgba_image = cv2.resize(rgba_image, original_res[::-1])
+    #     new_mask = cv2.resize(new_mask, original_res[::-1])
     img_base64 = array_to_base64(apply_mask(rgba_image, new_mask))
-    new_mask = apply_mask(cv2.cvtColor(new_mask, cv2.COLOR_GRAY2RGBA), new_mask)
-    new_mask_base64 = array_to_base64(new_mask)
+    new_mask_base64 = array_to_base64(
+        apply_mask(cv2.cvtColor(new_mask, cv2.COLOR_GRAY2RGBA), new_mask)
+    )
     return {"result": img_base64, "base_mask": new_mask_base64}
-    # return Response(content=blob, media_type="image/png")
 
 
 @app.post("/mask")
@@ -63,6 +68,7 @@ async def apply_mask_endpoint(
     base_mask = Image.open(io.BytesIO(await base_mask_file.read())).convert("RGB")
     base_mask_array = cv2.cvtColor(np.array(base_mask), cv2.COLOR_RGB2GRAY)
     base_mask_array_copy = cv2.cvtColor(np.array(base_mask), cv2.COLOR_RGB2GRAY)
+
     # 229 = yellow, 177 = green, 122 = red, 128 = gray
     base_mask_array[:] = cv2.GC_PR_BGD
     base_mask_array[base_mask_array_copy == 0] = cv2.GC_PR_BGD
@@ -70,22 +76,29 @@ async def apply_mask_endpoint(
     base_mask_array[mask_array == 122] = cv2.GC_BGD
     base_mask_array[mask_array == 177] = cv2.GC_FGD
 
-    cv2.grabCut(image, base_mask_array, None, bgdModel, fgdModel, 1, cv2.GC_INIT_WITH_MASK)
-    new_mask = np.where((base_mask_array == 2) | (base_mask_array == 0), 0, 1).astype("uint8")
+    cv2.grabCut(
+        image, base_mask_array, None, bgdModel, fgdModel, 1, cv2.GC_INIT_WITH_MASK
+    )
+    new_mask = np.where((base_mask_array == 2) | (base_mask_array == 0), 0, 1).astype(
+        "uint8"
+    )
     new_mask = np.array(cv2.blur(new_mask * 255, (2, 2)), dtype=np.uint8)
 
+    # 11.5, 5.5, 22.2, 11, 38, 39, 42, 139
     # alpha matting
-    trimap = new_mask.copy().astype('float32')
+    trimap = new_mask.copy().astype("float32")
     trimap[mask_array == 229] = 128
     trimap = trimap / 255
     rgba_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGBA)
-    rgb_image = np.array(cv2.cvtColor(image, cv2.COLOR_BGR2RGB)).astype('float64') / 255
+    rgb_image = np.array(cv2.cvtColor(image, cv2.COLOR_BGR2RGB)).astype("float64") / 255
     alpha = pymatting.estimate_alpha_cf(rgb_image, trimap) * 255
-    alpha = alpha.astype('uint8')
+    alpha = alpha.astype("uint8")
     rgba_image[:, :, 3] = alpha
+    # if original_res[0] > 1080:
+    #     rgba_image = cv2.resize(rgba_image, original_res[::-1])
+    #     alpha = cv2.resize(alpha, original_res[::-1])
 
     # send response
-    cv2.imwrite("cutout.png", rgba_image)
     img_base64 = array_to_base64(rgba_image)
     new_mask_base64 = array_to_base64(alpha)
     return {"result": img_base64, "mask": new_mask_base64}

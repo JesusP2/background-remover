@@ -13,8 +13,7 @@ import { imageTable } from '~/lib/db/schema';
 const getGallery = cache(async () => {
   'use server';
   const event = getRequestEvent();
-  const session = event?.locals.session;
-  const userId = session?.userId;
+  const userId = event?.locals.userId;
   if (!userId) return [];
   const userImages = await db
     .select()

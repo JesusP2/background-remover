@@ -8,8 +8,8 @@ import { uploadFile } from '../r2';
 export async function uploadImage(file: File) {
   'use server';
   try {
-    const session = getRequestEvent()?.locals.session;
-    if (!session) return new Error('Unauthorized');
+    const userId = getRequestEvent()?.locals.userId;
+    if (!userId) return new Error('Unauthorized');
     const formData = new FormData();
     formData.append('image_file', file);
     const res = await fetch('http://localhost:8000/start', {
@@ -42,7 +42,7 @@ export async function uploadImage(file: File) {
     ]);
     await db.insert(imageTable).values({
       id,
-      userId: session.userId,
+      userId: userId,
       name: file.name,
       source: sourceUrl,
       base_mask: maskUrl,

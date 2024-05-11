@@ -7,15 +7,15 @@ import { uploadFile } from '../r2';
 export async function storeStep(result: File, mask: File, id: string) {
   'use server';
   try {
-    const session = getRequestEvent()?.locals.session;
-    if (!session) return new Error('Unauthorized');
+    const userId = getRequestEvent()?.locals.userId;
+    if (!userId) return new Error('Unauthorized');
     const imageRecord = await db
       .select({
         userId: imageTable.userId,
       })
       .from(imageTable)
       .where(and(eq(imageTable.id, id), isNull(imageTable.deleted)));
-    if (!imageRecord.length || imageRecord[0].userId !== session.userId)
+    if (!imageRecord.length || imageRecord[0].userId !== userId)
       return new Error('Unauthorized');
 
     const resultBuffer = Buffer.from(await result.arrayBuffer());
