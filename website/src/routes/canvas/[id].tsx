@@ -11,12 +11,12 @@ import { AiOutlineClose } from 'solid-icons/ai';
 const getImages = async (id: string) => {
   'use server';
   const event = getRequestEvent();
-  const session = event?.locals.session;
+  const userId = event?.locals.userId;
   const images = await db
     .select()
     .from(imageTable)
     .where(and(eq(imageTable.id, id), isNull(imageTable.deleted)));
-  if (!images.length || session?.userId !== images[0].userId) return null;
+  if (!images.length || userId !== images[0].userId) return null;
   const updatedRecord = await updateUrlsOfRecordIfExpired(images[0], db);
   return {
     ...images[0],

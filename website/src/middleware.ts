@@ -34,9 +34,14 @@ export default createMiddleware({
     if (!sessionId) {
       event.locals.session = null;
       event.locals.user = null;
-      const id = createId();
-      setCookie(nonLoggedInCookie, id);
-      event.locals.userId = id;
+      const storedUserId = getCookie(nonLoggedInCookie)
+      if (!storedUserId) {
+        const id = createId();
+        setCookie(nonLoggedInCookie, id);
+        event.locals.userId = id;
+      } else {
+        event.locals.userId = storedUserId
+      }
       return;
     }
 
