@@ -33,7 +33,9 @@ async def start(image_file: UploadFile = File(...)):
     base_mask_array = np.zeros(image.shape, np.uint8)
     base_mask_array = cv2.cvtColor(base_mask_array, cv2.COLOR_RGB2GRAY)
     rect = (1, 1, image.shape[1], image.shape[0])
-    cv2.grabCut(image, base_mask_array, rect, bgdModel, fgdModel, 1, cv2.GC_INIT_WITH_RECT)
+    cv2.grabCut(
+        image, base_mask_array, rect, bgdModel, fgdModel, 1, cv2.GC_INIT_WITH_RECT
+    )
     new_mask = np.where((base_mask_array == 2) | (base_mask_array == 0), 0, 1).astype(
         "uint8"
     )
@@ -100,8 +102,9 @@ async def apply_mask_endpoint(
 
     # send response
     img_base64 = array_to_base64(rgba_image)
-    new_mask_base64 = array_to_base64(alpha)
-    return {"result": img_base64, "mask": new_mask_base64}
+    # new_mask_base64 = array_to_base64(alpha)
+    return {"result": img_base64}
+    # return {"result": img_base64, "mask": new_mask_base64}
     # return Response(content=blob, media_type="image/png")
 
 

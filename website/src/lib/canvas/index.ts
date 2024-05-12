@@ -1,7 +1,7 @@
 import { createId } from '@paralleldrive/cuid2';
-import { action, useAction, useParams } from '@solidjs/router';
+import { useAction, useParams } from '@solidjs/router';
 import { createSignal, onMount } from 'solid-js';
-import { storeStep } from '../actions/store-step';
+import { createStepAction } from '../actions/store-step';
 import {
   base64ToImage,
   canvasToFile,
@@ -12,7 +12,6 @@ import {
 } from './utils';
 import { type Action, type ActionType, drawStroke } from './utils';
 
-const _storeStepAction = action(storeStep);
 export function useCanvas({
   sourceUrl,
   maskUrl,
@@ -33,7 +32,7 @@ export function useCanvas({
   const isZooming = {
     value: false,
   };
-  const storeStepAction = useAction(_storeStepAction);
+  const createStep = useAction(createStepAction)
   const { id } = useParams();
 
   const [currentMode, setCurrentMode] = createSignal<ActionType>('draw-green');
@@ -200,8 +199,7 @@ export function useCanvas({
     }
   }
 
-  async function createMask() {
-    const formData = new FormData();
+  async function applyMaskToImage() {
     const imgCopied = getDataFromSourceCanvas('image');
     const maskCopied = getDataFromSourceCanvas('mask');
     if (!imgCopied || !maskCopied || !baseMask) return;
@@ -213,37 +211,8 @@ export function useCanvas({
       'base_mask.png',
       'image/png',
     );
-    formData.append('image_file', image);
-    formData.append('mask_file', mask);
-    formData.append('base_mask_file', baseMaskImg);
-    const res = await fetch('http://localhost:8000/mask', {
-      method: 'POST',
-      body: formData,
-      headers: {
-        Accept: 'application/json',
-      },
-    });
-
-    if (!res.ok) {
-      throw new Error('Failed to upload image');
-    }
-
-    const payload = await res.json();
-    return { result: payload.result, mask: maskCopied };
-  }
-
-  async function applyMaskToImage() {
-    const payload = await createMask();
-    if (!payload) return;
-    const { result, mask } = payload;
-    const resultFile = await canvasToFile(
-      imageToCanvas(await base64ToImage(result)),
-      'result.png',
-      'image/png',
-    );
-    const maskFile = await canvasToFile(mask, 'mask.png', 'image/png');
-    await storeStepAction(resultFile, maskFile, id);
-    destinationImg = await base64ToImage(result);
+    const payload = await createStep(image, mask, baseMaskImg, id)
+    destinationImg = await base64ToImage(payload.result);
     redrawEverything();
   }
 
