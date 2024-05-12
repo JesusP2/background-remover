@@ -13,6 +13,7 @@ import { createId } from "@paralleldrive/cuid2";
 
 export default createMiddleware({
   onRequest: async (event) => {
+    console.log(event.clientAddress)
     if (event.request.method !== "GET") {
       const originHeader = getRequestHeader("Origin") ?? null;
       // NOTE: You may need to use `X-Forwarded-Host` instead
