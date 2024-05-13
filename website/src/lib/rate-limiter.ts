@@ -3,6 +3,8 @@ import type * as schema from "../lib/db/schema";
 import { rateLimitTable } from "./db/schema/rate-limit";
 import { and, count, eq, gt } from "drizzle-orm";
 import { createId } from "@paralleldrive/cuid2";
+import { db } from "./db";
+import { getRequestEvent } from "solid-js/web";
 
 type Sum<A extends number, B extends number> = [
   ...ArrayOfLen<A>,
@@ -78,4 +80,23 @@ export class RateLimit {
       success: true,
     };
   }
+}
+
+const defaultRateLimiter = new RateLimit({
+  db: db,
+  interval: "10s",
+  limiter: 20,
+});
+
+export async function rateLimit(rateLimiter = defaultRateLimiter) {
+    const event = getRequestEvent();
+    const ip = event?.clientAddress;
+    if (!ip) {
+      return new Error("Too many requests");
+    }
+    const { success } = await rateLimiter.limit(ip);
+    if (!success) {
+      return new Error("Too many requests");
+    }
+  return;
 }

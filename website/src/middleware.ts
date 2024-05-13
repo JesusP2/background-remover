@@ -13,7 +13,6 @@ import { createId } from "@paralleldrive/cuid2";
 
 export default createMiddleware({
   onRequest: async (event) => {
-    console.log(event.clientAddress)
     if (event.request.method !== "GET") {
       const originHeader = getRequestHeader("Origin") ?? null;
       // NOTE: You may need to use `X-Forwarded-Host` instead
@@ -35,13 +34,13 @@ export default createMiddleware({
     if (!sessionId) {
       event.locals.session = null;
       event.locals.user = null;
-      const storedUserId = getCookie(nonLoggedInCookie)
+      const storedUserId = getCookie(nonLoggedInCookie);
       if (!storedUserId) {
         const id = createId();
         setCookie(nonLoggedInCookie, id);
         event.locals.userId = id;
       } else {
-        event.locals.userId = storedUserId
+        event.locals.userId = storedUserId;
       }
       return;
     }
@@ -62,6 +61,7 @@ export default createMiddleware({
     event.locals.session = session;
     event.locals.user = user;
     event.locals.userId = session?.userId as string;
+    return;
   },
 });
 

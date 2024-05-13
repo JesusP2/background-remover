@@ -1,4 +1,4 @@
-import { action, useSubmission } from '@solidjs/router';
+import { useSubmission } from '@solidjs/router';
 import {
   AiOutlineEye,
   AiOutlineEyeInvisible,
@@ -7,11 +7,10 @@ import {
 import { Match, Switch, createSignal } from 'solid-js';
 import { FormInput, FormLabel, FormMessage } from '~/components/form';
 import { Button } from '~/components/ui/button';
-import { SigninAction } from '~/lib/actions/signin';
+import { signinAction } from '~/lib/actions/signin';
 
-const signin = action(SigninAction);
 export default function Signin() {
-  const signinState = useSubmission(signin);
+  const signinState = useSubmission(signinAction);
   const [showPassword, setShowPassword] = createSignal(false);
   return (
     <div class="font-geist rounded-lg border bg-card text-card-foreground shadow-sm mx-auto max-w-sm">
@@ -22,24 +21,24 @@ export default function Signin() {
         </p>
       </div>
       <div class="p-6 pt-0">
-        <form class="grid gap-4" method="post" action={signin}>
+        <form class="grid gap-4" method="post" action={signinAction}>
           <div class="grid gap-2">
-            <FormLabel for="username" error={!!signinState.result?.username}>
+            <FormLabel for="username" error={!(signinState.result instanceof Error) && !!signinState.result?.username}>
               Username
             </FormLabel>
             <FormInput
               disabled={signinState.pending}
-              error={!!signinState.result?.username}
+              error={!(signinState.result instanceof Error) && !!signinState.result?.username}
               name="username"
               id="username"
             />
-            <FormMessage error={!!signinState.result?.username}>
-              {signinState.result?.username}
+            <FormMessage error={!(signinState.result instanceof Error) && !!signinState.result?.username}>
+              {!(signinState.result instanceof Error) && signinState.result?.username}
             </FormMessage>
           </div>
           <div class="grid gap-2">
             <div class="flex items-center gap-x-2">
-              <FormLabel for="password" error={!!signinState.result?.password}>
+              <FormLabel for="password" error={!(signinState.result instanceof Error) && !!signinState.result?.password}>
                 Password
               </FormLabel>
               <Switch>
@@ -63,13 +62,13 @@ export default function Signin() {
             </div>
             <FormInput
               disabled={signinState.pending}
-              error={!!signinState.result?.password}
+              error={!(signinState.result instanceof Error) && !!signinState.result?.password}
               name="password"
               type={showPassword() ? 'text' : 'password'}
               id="password"
             />
-            <FormMessage error={!!signinState.result?.password}>
-              {signinState.result?.password}
+            <FormMessage error={!(signinState.result instanceof Error) && !!signinState.result?.password}>
+              {!(signinState.result instanceof Error) && signinState.result?.password}
             </FormMessage>
           </div>
           <Button disabled={signinState.pending} class="w-full">

@@ -1,4 +1,4 @@
-import { action, useSubmission } from '@solidjs/router';
+import { useSubmission } from '@solidjs/router';
 import {
   AiOutlineEye,
   AiOutlineEyeInvisible,
@@ -9,10 +9,8 @@ import { FormInput, FormLabel, FormMessage } from '~/components/form';
 import { Button } from '~/components/ui/button';
 import { signupAction } from '~/lib/actions/signup';
 
-const _signup = action(signupAction);
-
 export default function Signup() {
-  const signupState = useSubmission(_signup);
+  const signupState = useSubmission(signupAction);
   const [showPassword, setShowPassword] = createSignal(false);
   return (
     <div class="font-geist rounded-lg border bg-card text-card-foreground shadow-sm mx-auto max-w-sm">
@@ -23,24 +21,24 @@ export default function Signup() {
         </p>
       </div>
       <div class="p-6 pt-0">
-        <form class="grid gap-4" method="post" action={_signup}>
+        <form class="grid gap-4" method="post" action={signupAction}>
           <div class="grid gap-2">
-            <FormLabel for="username" error={!!signupState.result?.username}>
+            <FormLabel for="username" error={!(signupState.result instanceof Error) && !!signupState.result?.username}>
               Username
             </FormLabel>
             <FormInput
               disabled={signupState.pending}
-              error={!!signupState.result?.username}
+              error={!(signupState.result instanceof Error) && !!signupState.result?.username}
               name="username"
               id="username"
             />
-            <FormMessage error={!!signupState.result?.username}>
-              {signupState.result?.username}
+            <FormMessage error={!(signupState.result instanceof Error) && !!signupState.result?.username}>
+              {!(signupState.result instanceof Error) && signupState.result?.username}
             </FormMessage>
           </div>
           <div class="grid gap-2 relative">
             <div class="flex gap-x-2 items-center">
-              <FormLabel for="password" error={!!signupState.result?.password}>
+              <FormLabel for="password" error={!(signupState.result instanceof Error) && !!signupState.result?.password}>
                 Password
               </FormLabel>
               <Switch>
@@ -58,13 +56,13 @@ export default function Signup() {
             </div>
             <FormInput
               disabled={signupState.pending}
-              error={!!signupState.result?.password}
+              error={!(signupState.result instanceof Error) && !!signupState.result?.password}
               name="password"
               type={showPassword() ? 'text' : 'password'}
               id="password"
             />
-            <FormMessage error={!!signupState.result?.password}>
-              {signupState.result?.password}
+            <FormMessage error={!(signupState.result instanceof Error) && !!signupState.result?.password}>
+              {!(signupState.result instanceof Error) && signupState.result?.password}
             </FormMessage>
           </div>
           <Button disabled={signupState.pending} class="w-full">

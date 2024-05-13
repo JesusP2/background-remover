@@ -10,9 +10,14 @@ import { Button, buttonVariants } from './ui/button';
 import { Show, createSignal } from 'solid-js';
 import { getRequestEvent } from 'solid-js/web';
 import { signOutAction } from '~/lib/actions/signout';
+import { rateLimit } from '~/lib/rate-limiter';
 
 const getUserId = cache(async () => {
   'use server';
+  const error = await rateLimit();
+  if (error) {
+    return error;
+  }
   const req = getRequestEvent();
   if (!req?.locals.userId) return null;
   return req.locals.userId;

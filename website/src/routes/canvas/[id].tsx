@@ -7,9 +7,14 @@ import { db } from '~/lib/db';
 import { updateUrlsOfRecordIfExpired } from '~/lib/db/queries';
 import { type SelectImage, imageTable } from '~/lib/db/schema';
 import { AiOutlineClose } from 'solid-icons/ai';
+import { rateLimit } from '~/lib/rate-limiter';
 
 const getImages = async (id: string) => {
   'use server';
+  const error = await rateLimit();
+  if (error) {
+    return error;
+  }
   const event = getRequestEvent();
   const userId = event?.locals.userId;
   const images = await db

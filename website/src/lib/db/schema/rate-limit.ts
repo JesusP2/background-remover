@@ -4,7 +4,7 @@ export const rateLimitTable = sqliteTable(
   "rate_limit",
   {
     id: text("id").notNull().primaryKey(),
-    key: text("key").notNull().unique(),
+    key: text("key").notNull(),
     createdAt: integer("created_at").notNull(),
   },
   (table) => ({

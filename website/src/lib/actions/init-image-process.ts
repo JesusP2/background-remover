@@ -1,36 +1,41 @@
-import { createId } from '@paralleldrive/cuid2';
-import { redirect } from '@solidjs/router';
-import { getRequestEvent } from 'solid-js/web';
-import { db } from '../db';
-import { imageTable } from '../db/schema';
-import { uploadFile } from '../r2';
+import { createId } from "@paralleldrive/cuid2";
+import { action, redirect } from "@solidjs/router";
+import { getRequestEvent } from "solid-js/web";
+import { db } from "../db";
+import { imageTable } from "../db/schema";
+import { uploadFile } from "../r2";
+import { rateLimit } from "../rate-limiter";
 
-export async function uploadImage(file: File) {
-  'use server';
+export const uploadImageAction = action(async (file: File) => {
+  "use server";
   try {
+    const error = await rateLimit();
+    if (error) {
+      return error;
+    }
     const userId = getRequestEvent()?.locals.userId;
-    if (!userId) return new Error('Unauthorized');
+    if (!userId) return new Error("Unauthorized");
     const formData = new FormData();
-    formData.append('image_file', file);
-    const res = await fetch('http://localhost:8000/start', {
-      method: 'POST',
+    formData.append("image_file", file);
+    const res = await fetch("http://localhost:8000/start", {
+      method: "POST",
       body: formData,
       headers: {
-        Accept: 'application/json',
+        Accept: "application/json",
       },
     });
 
     if (!res.ok) {
-      throw new Error('Failed to upload image');
+      throw new Error("Failed to upload image");
     }
     const { result, base_mask } = await res.json();
     const resultBuffer = Buffer.from(
-      result.replace(/^data:image\/\w+;base64,/, ''),
-      'base64',
+      result.replace(/^data:image\/\w+;base64,/, ""),
+      "base64",
     );
     const baseMaskBuffer = Buffer.from(
-      base_mask.replace(/^data:image\/\w+;base64,/, ''),
-      'base64',
+      base_mask.replace(/^data:image\/\w+;base64,/, ""),
+      "base64",
     );
     const sourceBuffer = Buffer.from(await file.arrayBuffer());
 
@@ -54,4 +59,4 @@ export async function uploadImage(file: File) {
   } catch (error) {
     console.error(error);
   }
-}
+}, "upload-image-action");

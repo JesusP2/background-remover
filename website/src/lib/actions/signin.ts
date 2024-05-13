@@ -1,32 +1,37 @@
-import { redirect } from '@solidjs/router';
-import { eq } from 'drizzle-orm';
-import { Argon2id } from 'oslo/password';
-import { appendResponseHeader } from 'vinxi/http';
-import { lucia } from '../auth';
-import { db } from '../db';
-import { userTable } from '../db/schema';
+import { action, redirect } from "@solidjs/router";
+import { eq } from "drizzle-orm";
+import { Argon2id } from "oslo/password";
+import { appendResponseHeader } from "vinxi/http";
+import { lucia } from "../auth";
+import { db } from "../db";
+import { userTable } from "../db/schema";
+import { rateLimit } from "../rate-limiter";
 
-export async function SigninAction(formData: FormData) {
-  'use server';
-  const username = formData.get('username');
+export const signinAction = action(async (formData: FormData) => {
+  "use server";
+  const error = await rateLimit();
+  if (error) {
+    return error;
+  }
+  const username = formData.get("username");
   if (
-    typeof username !== 'string' ||
+    typeof username !== "string" ||
     username.length < 3 ||
     username.length > 31 ||
     !/^[a-z0-9_-]+$/.test(username)
   ) {
     return {
-      username: 'Invalid username',
+      username: "Invalid username",
     };
   }
-  const password = formData.get('password');
+  const password = formData.get("password");
   if (
-    typeof password !== 'string' ||
+    typeof password !== "string" ||
     password.length < 6 ||
     password.length > 255
   ) {
     return {
-      password: 'Invalid password',
+      password: "Invalid password",
     };
   }
 
@@ -36,8 +41,8 @@ export async function SigninAction(formData: FormData) {
     .where(eq(userTable.username, username.toLowerCase()));
   if (!existingUser) {
     return {
-      username: 'Incorrect username or password',
-      password: 'Incorrect username or password',
+      username: "Incorrect username or password",
+      password: "Incorrect username or password",
     };
   }
 
@@ -47,15 +52,15 @@ export async function SigninAction(formData: FormData) {
   );
   if (!validPassword) {
     return {
-      password: 'Incorrect password',
+      password: "Incorrect password",
     };
   }
 
   const session = await lucia.createSession(existingUser[0].id, {});
   appendResponseHeader(
-    'Set-Cookie',
+    "Set-Cookie",
     lucia.createSessionCookie(session.id).serialize(),
   );
 
-  throw redirect('/');
-}
+  throw redirect("/");
+}, "signin-action");

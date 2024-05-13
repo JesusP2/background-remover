@@ -4,10 +4,15 @@ import { db } from "../db";
 import { imageTable } from "../db/schema";
 import { uploadFile } from "../r2";
 import { action, json } from "@solidjs/router";
+import { rateLimit } from "../rate-limiter";
 
 export const createStepAction = action(
   async (image: File, mask: File, baseMaskImg: File, id: string) => {
     "use server";
+    const error = await rateLimit();
+    if (error) {
+      return error;
+    }
     const userId = getRequestEvent()?.locals.userId;
     if (!userId) return new Error("Unauthorized");
     try {

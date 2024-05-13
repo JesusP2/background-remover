@@ -9,9 +9,14 @@ import { deleteImageAction } from '~/lib/actions/delete-image';
 import { db } from '~/lib/db';
 import { updateUrlsOfRecordIfExpired } from '~/lib/db/queries';
 import { imageTable } from '~/lib/db/schema';
+import { rateLimit } from '~/lib/rate-limiter';
 
 const getGallery = cache(async () => {
   'use server';
+  const error = await rateLimit();
+  if (error) {
+    return error;
+  }
   const event = getRequestEvent();
   const userId = event?.locals.userId;
   if (!userId) return [];

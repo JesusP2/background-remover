@@ -1,10 +1,10 @@
-import { A, action, useAction, useSubmission } from '@solidjs/router';
+import { A, useAction, useSubmission } from '@solidjs/router';
 import { DropZone } from '~/components/dropzone';
 import { Navbar } from '~/components/nav';
+import { showToast } from '~/components/ui/toast';
 import { UploadingFileDialog } from '~/components/uploading-file-dialog';
-import { uploadImage } from '~/lib/actions/init-image-process';
+import { uploadImageAction } from '~/lib/actions/init-image-process';
 
-const uploadImageAction = action(uploadImage);
 export default function Index() {
   const uploadImage = useAction(uploadImageAction);
   const uploadImageState = useSubmission(uploadImageAction);
@@ -30,7 +30,18 @@ export default function Index() {
           class="relative sm:top-[-130px]"
         />
         <div id="dropzone" class="w-full">
-          <DropZone onFileChange={(file) => uploadImage(file)} />
+          <DropZone
+            onFileChange={async (file) => {
+              const payload = await uploadImage(file);
+              if (payload instanceof Error) {
+                showToast({
+                  variant: 'destructive',
+                  title: payload.message,
+                  duration: 10_000,
+                });
+              }
+            }}
+          />
         </div>
         <UploadingFileDialog open={uploadImageState.pending} />
       </main>
