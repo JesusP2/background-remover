@@ -11,7 +11,7 @@ from backend.utils import apply_mask, array_to_base64
 
 app = FastAPI()
 
-origins = ["http://localhost:3000"]
+origins = []
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
@@ -22,7 +22,6 @@ app.add_middleware(
 
 bgdModel = np.zeros((1, 65), np.float64)
 fgdModel = np.zeros((1, 65), np.float64)
-
 
 @app.post("/start")
 async def start(image_file: UploadFile = File(...)):
