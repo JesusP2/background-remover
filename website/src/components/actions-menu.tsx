@@ -13,38 +13,33 @@ import { IoCutOutline } from 'solid-icons/io';
 import { RiSystemAddFill } from 'solid-icons/ri';
 import { TbFocusCentered } from 'solid-icons/tb';
 import { VsEdit } from 'solid-icons/vs';
-import type { Accessor } from 'solid-js';
-import type { Action, ActionType } from '~/lib/canvas/utils';
+import { useCanvas } from '~/lib/canvas';
 
-export function ActionsMenu({
-  setCurrentMode,
-  applyMaskToImage,
-  name,
-  undo,
-  redo,
-  actions,
-  redoActions,
-  zoomIn,
-  zoomOut,
-  isZooming,
-  saveResult,
-  currentMode,
-  resetToOriginal,
-}: {
-  setCurrentMode: (mode: ActionType) => void;
-  applyMaskToImage: () => Promise<void>;
-  name: string;
-  undo: () => void;
-  redo: () => void;
-  actions: Accessor<Action[]>;
-  saveResult: (name: string) => void;
-  redoActions: Accessor<Action[]>;
-  zoomIn: (pos: { x: number; y: number }) => void;
-  zoomOut: (pos: { x: number; y: number }) => void;
-  isZooming: { value: boolean };
-  currentMode: Accessor<ActionType>;
-  resetToOriginal: () => void;
+export function ActionsMenu(props: {
+  source: string;
+  mask: string | null;
+  result: string;
+  base_mask: string;
 }) {
+  const {
+    setCurrentMode,
+    applyMaskToImage,
+    undo,
+    redo,
+    actions,
+    redoActions,
+    zoomIn,
+    zoomOut,
+    isZooming,
+    resetToOriginal,
+    currentMode,
+    saveResult,
+  } = useCanvas({
+    sourceUrl: props.source,
+    maskUrl: props.mask,
+    resultUrl: props.result,
+    baseMaskUrl: props.base_mask,
+  });
   return (
     <div class="rounded-sm px-2 py-1 bg-white absolute bottom-0 left-0 flex gap-x-4 items-center">
       <button

@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from PIL import Image
 import pymatting
 
-from backend.utils import apply_mask, array_to_base64
+from utils import apply_mask, array_to_base64
 
 app = FastAPI()
 
@@ -20,13 +20,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-bgdModel = np.zeros((1, 65), np.float64)
-fgdModel = np.zeros((1, 65), np.float64)
 
 @app.post("/start")
 async def start(image_file: UploadFile = File(...)):
-    global bgdModel
-    global fgdModel
+    bgdModel = np.zeros((1, 65), np.float64)
+    fgdModel = np.zeros((1, 65), np.float64)
     stream = io.BytesIO(await image_file.read())
     image = cv2.cvtColor(np.array(Image.open(stream).convert("RGB")), cv2.COLOR_RGB2BGR)
     base_mask_array = np.zeros(image.shape, np.uint8)
@@ -56,8 +54,8 @@ async def apply_mask_endpoint(
     image_file: UploadFile = File(...),
     base_mask_file: UploadFile = File(...),
 ):
-    global bgdModel
-    global fgdModel
+    bgdModel = np.zeros((1, 65), np.float64)
+    fgdModel = np.zeros((1, 65), np.float64)
     image_file_stream = io.BytesIO(await image_file.read())
     image = cv2.cvtColor(
         np.array(Image.open(image_file_stream).convert("RGB")), cv2.COLOR_RGB2BGR

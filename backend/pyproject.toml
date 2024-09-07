@@ -1,30 +1,7 @@
-[tool.poetry]
-name = "backend"
+[project]
+name = "backend2"
 version = "0.1.0"
-description = ""
-authors = ["JesusP2 <jesus_perez99@hotmail.com>"]
+description = "Add your description here"
 readme = "README.md"
-
-[tool.poetry.dependencies]
-python = "^3.10"
-transformers = "^4.39.1"
-fastapi = "^0.110.0"
-uvicorn = {extras = ["standard"], version = "^0.29.0"}
-torch = {version = "^2.2.2+cpu", source = "pytorch_cpu"}
-torchvision = {version = "^0.17.2+cpu", source = "pytorch_cpu"}
-matplotlib = "^3.8.3"
-segment-anything = {git = "https://github.com/facebookresearch/segment-anything.git"}
-opencv-python-headless = "^4.9.0.80"
-python-multipart = "^0.0.9"
-libsql-experimental = "^0.0.34"
-pymatting = "^1.1.12"
-
-
-[[tool.poetry.source]]
-name = "pytorch_cpu"
-url = "https://download.pytorch.org/whl/cpu"
-priority = "explicit"
-
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires-python = ">=3.9.19"
+dependencies = []
