@@ -1,6 +1,6 @@
 import { createId } from "@paralleldrive/cuid2";
 import { useAction, useParams } from "@solidjs/router";
-import { createEffect, createSignal, onMount } from "solid-js";
+import { createSignal, onCleanup, onMount } from "solid-js";
 import { createStepAction } from "../actions/store-step";
 import {
   base64ToImage,
@@ -57,6 +57,7 @@ export function useCanvas({
     if (dirty) {
       update();
     }
+    console.log("redrawing everything");
     const { sourceCtx, destinationCtx } = getCanvas();
     if (!sourceImg || !intermediateMask || !destinationImg) return;
     sourceCtx.setTransform(1, 0, 0, 1, 0, 0);
@@ -430,15 +431,20 @@ export function useCanvas({
     destinationCtx.canvas.height = innerHeight;
     setupListeners(sourceCtx.canvas, "source");
     setupListeners(destinationCtx.canvas, "destination");
-    window.addEventListener("resize", () => {
+    function handleResize() {
       sourceCtx.canvas.width = innerWidth / 2;
       sourceCtx.canvas.height = innerHeight;
       destinationCtx.canvas.width = innerWidth / 2;
       destinationCtx.canvas.height = innerHeight;
-      dirty = true
+      dirty = true;
+      console.log("rezising");
       redrawEverything();
-    });
+    }
+    window.addEventListener("resize", handleResize);
     loadImage();
+    onCleanup(() => {
+      window.removeEventListener("resize", handleResize);
+    });
   });
 
   return {

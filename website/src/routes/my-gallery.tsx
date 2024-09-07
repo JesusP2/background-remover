@@ -7,15 +7,15 @@ import { Navbar } from '~/components/nav';
 import { showToast } from '~/components/ui/toast';
 import { deleteImageAction } from '~/lib/actions/delete-image';
 import { db } from '~/lib/db';
-import { updateUrlsOfRecordIfExpired } from '~/lib/db/queries';
 import { imageTable } from '~/lib/db/schema';
 import { rateLimit } from '~/lib/rate-limiter';
+import { createPresignedUrl } from '~/lib/r2';
 
 const getGallery = cache(async () => {
   'use server';
   const error = await rateLimit();
   if (error) {
-    return error;
+    return [];
   }
   const event = getRequestEvent();
   const userId = event?.locals.userId;
@@ -25,18 +25,27 @@ const getGallery = cache(async () => {
     .from(imageTable)
     .where(and(eq(imageTable.userId, userId), isNull(imageTable.deleted)));
 
-  await db.transaction(async (tx) => {
-    for (let i = 0; i < userImages.length; i++) {
-      const userImage = userImages[i];
-      // @ts-ignore shut up
-      const updatedImages = await updateUrlsOfRecordIfExpired(userImage, tx);
-      userImages.splice(i, 1, {
-        ...userImage,
-        ...updatedImages,
-      });
-    }
+  const userImagesPromises = userImages.map(async (image) => {
+    const imagesResults = await Promise.allSettled([
+      createPresignedUrl(image.result),
+      createPresignedUrl(image.source),
+      createPresignedUrl(image.base_mask),
+      image.mask && createPresignedUrl(image.mask),
+    ]);
+    image.result =
+      imagesResults[0].status === 'fulfilled' ? imagesResults[0].value : '';
+    image.source =
+      imagesResults[1].status === 'fulfilled' ? imagesResults[1].value : '';
+    image.base_mask =
+      imagesResults[2].status === 'fulfilled' ? imagesResults[2].value : '';
+    image.mask =
+      imagesResults[3].status === 'fulfilled' ? imagesResults[3].value : null;
+    return image;
   });
-  return userImages;
+  const userImagesResults = await Promise.allSettled(userImagesPromises);
+  return userImagesResults
+    .filter((result) => result.status === 'fulfilled')
+    .map((result) => result.value);
 }, 'my-gallery');
 
 export const route = {
@@ -83,7 +92,7 @@ export default function MyGallery() {
                     class="max-w-[100%]  max-h-[100%] h-96 md:h-44 object-contain"
                   />
                   <A
-                    href={`/canvas/${image.id}`}
+                    href={`/canvas/grabcut/${image.id}`}
                     class="group-hover:visible invisible top-0 absolute w-full h-full bg-white bg-opacity-90 grid place-items-center"
                   >
                     <span class="font-gabarito text-blue-500 font-semibold">

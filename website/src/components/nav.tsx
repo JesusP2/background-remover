@@ -1,7 +1,5 @@
 import {
   A,
-  RouteDefinition,
-  RouteLoadFuncArgs,
   cache,
   createAsync,
 } from '@solidjs/router';

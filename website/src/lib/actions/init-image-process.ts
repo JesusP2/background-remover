@@ -5,6 +5,7 @@ import { db } from "../db";
 import { imageTable } from "../db/schema";
 import { uploadFile } from "../r2";
 import { rateLimit } from "../rate-limiter";
+import { envs } from "../db/env-vars";
 
 export const uploadImageAction = action(async (file: File) => {
   "use server";
@@ -17,7 +18,7 @@ export const uploadImageAction = action(async (file: File) => {
     if (!userId) return new Error("Unauthorized");
     const formData = new FormData();
     formData.append("image_file", file);
-    const res = await fetch("http://localhost:8000/start", {
+    const res = await fetch(`${envs.PYTHON_BACKEND}/start`, {
       method: "POST",
       body: formData,
       headers: {
@@ -40,7 +41,7 @@ export const uploadImageAction = action(async (file: File) => {
     const sourceBuffer = Buffer.from(await file.arrayBuffer());
 
     const id = createId();
-    const [resultUrl, maskUrl, sourceUrl] = await Promise.all([
+    await Promise.all([
       uploadFile(resultBuffer, `${id}-result.png`),
       uploadFile(baseMaskBuffer, `${id}-basemask.png`),
       uploadFile(sourceBuffer, `${id}-${file.name}`),
@@ -49,13 +50,13 @@ export const uploadImageAction = action(async (file: File) => {
       id,
       userId: userId,
       name: file.name,
-      source: sourceUrl,
-      base_mask: maskUrl,
-      result: resultUrl,
+      source: `${id}-${file.name}`,
+      base_mask: `${id}-basemask.png`,
+      result: `${id}-result.png`,
       createdAt: Date.now(),
       updatedAt: Date.now(),
     });
-    return redirect(`/canvas/${id}`);
+    return redirect(`/canvas/grabcut/${id}`);
   } catch (error) {
     console.error(error);
   }

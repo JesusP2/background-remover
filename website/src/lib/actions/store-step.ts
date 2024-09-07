@@ -5,6 +5,7 @@ import { imageTable } from "../db/schema";
 import { uploadFile } from "../r2";
 import { action, json } from "@solidjs/router";
 import { rateLimit } from "../rate-limiter";
+import { envs } from "../db/env-vars";
 
 export const createStepAction = action(
   async (image: File, mask: File, baseMaskImg: File, id: string) => {
@@ -30,7 +31,7 @@ export const createStepAction = action(
       formData.append("image_file", image);
       formData.append("mask_file", mask);
       formData.append("base_mask_file", baseMaskImg);
-      const res = await fetch("http://localhost:8000/mask", {
+      const res = await fetch(`${envs.PYTHON_BACKEND}/mask`, {
         method: "POST",
         body: formData,
         headers: {

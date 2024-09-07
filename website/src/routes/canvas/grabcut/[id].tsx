@@ -4,10 +4,10 @@ import { AiOutlineLoading } from 'solid-icons/ai';
 import { Match, Switch, getRequestEvent } from 'solid-js/web';
 import { Canvases } from '~/components/canvases';
 import { db } from '~/lib/db';
-import { updateUrlsOfRecordIfExpired } from '~/lib/db/queries';
 import { type SelectImage, imageTable } from '~/lib/db/schema';
 import { AiOutlineClose } from 'solid-icons/ai';
 import { rateLimit } from '~/lib/rate-limiter';
+import { createPresignedUrl } from '~/lib/r2';
 
 const getImages = async (id: string) => {
   'use server';
@@ -17,16 +17,26 @@ const getImages = async (id: string) => {
   }
   const event = getRequestEvent();
   const userId = event?.locals.userId;
-  const images = await db
+  const [image] = await db
     .select()
     .from(imageTable)
     .where(and(eq(imageTable.id, id), isNull(imageTable.deleted)));
-  if (!images.length || userId !== images[0].userId) return null;
-  const updatedRecord = await updateUrlsOfRecordIfExpired(images[0], db);
-  return {
-    ...images[0],
-    ...updatedRecord,
-  };
+  if (userId !== image.userId) return null;
+  const imagesResults = await Promise.allSettled([
+    createPresignedUrl(image.result),
+    createPresignedUrl(image.source),
+    createPresignedUrl(image.base_mask),
+    image.mask && createPresignedUrl(image.mask),
+  ]);
+  image.result =
+    imagesResults[0].status === 'fulfilled' ? imagesResults[0].value : '';
+  image.source =
+    imagesResults[1].status === 'fulfilled' ? imagesResults[1].value : '';
+  image.base_mask =
+    imagesResults[2].status === 'fulfilled' ? imagesResults[2].value : '';
+  image.mask =
+    imagesResults[3].status === 'fulfilled' ? imagesResults[3].value : null;
+  return image;
 };
 
 export const route = {

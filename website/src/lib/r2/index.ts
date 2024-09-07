@@ -17,7 +17,7 @@ export const client = new S3Client({
 
 export async function uploadFile(buffer: Buffer, name: string) {
   const command = new PutObjectCommand({
-    Bucket: 'erased',
+    Bucket: envs.R2_BUCKET,
     Key: name,
     Body: buffer,
   });
@@ -31,7 +31,7 @@ export async function createPresignedUrl(key: string) {
   const url = await getSignedUrl(
     client,
     new GetObjectCommand({
-      Bucket: 'erased',
+      Bucket: envs.R2_BUCKET,
       Key: key,
     }),
     { expiresIn: 60 * 60 * 24 * 7 },
