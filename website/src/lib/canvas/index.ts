@@ -57,7 +57,6 @@ export function useCanvas({
     if (dirty) {
       update();
     }
-    console.log("redrawing everything");
     const { sourceCtx, destinationCtx } = getCanvas();
     if (!sourceImg || !intermediateMask || !destinationImg) return;
     sourceCtx.setTransform(1, 0, 0, 1, 0, 0);
@@ -437,7 +436,6 @@ export function useCanvas({
       destinationCtx.canvas.width = innerWidth / 2;
       destinationCtx.canvas.height = innerHeight;
       dirty = true;
-      console.log("rezising");
       redrawEverything();
     }
     window.addEventListener("resize", handleResize);
