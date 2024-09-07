@@ -430,22 +430,12 @@ export function useCanvas({
     destinationCtx.canvas.height = innerHeight;
     setupListeners(sourceCtx.canvas, "source");
     setupListeners(destinationCtx.canvas, "destination");
-    window.addEventListener("resize", (event) => {
+    window.addEventListener("resize", () => {
       sourceCtx.canvas.width = innerWidth / 2;
       sourceCtx.canvas.height = innerHeight;
       destinationCtx.canvas.width = innerWidth / 2;
       destinationCtx.canvas.height = innerHeight;
-      // // resetToOriginal();
-      // {
-      //   const { sourceCtx } = getCanvas();
-      //   if (!sourceImg) return;
-      //   scale = 1;
-      //   const _scale = calculateBaseScale(sourceCtx);
-      //   pos.x = (sourceCtx.canvas.width / _scale - sourceImg.width) / 2;
-      //   pos.y = (sourceCtx.canvas.height / _scale - sourceImg.height) / 2;
-      //   scaleAt({ x: 0, y: 0 }, _scale);
-      //   redrawEverything();
-      // }
+      dirty = true
       redrawEverything();
     });
     loadImage();
