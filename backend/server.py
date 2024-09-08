@@ -5,9 +5,8 @@ import numpy as np
 from fastapi import FastAPI, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from PIL import Image
-import pymatting
 
-from lib.utils import apply_mask, array_to_base64
+from lib.utils import array_to_base64
 from lib.pipeline import apply_trimap
 
 app = FastAPI()

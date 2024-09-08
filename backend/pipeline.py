@@ -1,9 +1,8 @@
 import numpy as np
 import cv2
-from sklearn.cluster import DBSCAN
-import pymatting
 
 # from trimap_generation_attempt_1 import create_trimap, dbscan_clustering
+from lib.color_variance import create_alpha_matting_mask
 from lib.pipeline import (
     apply_trimap,
     create_overlap_mask,
@@ -24,15 +23,14 @@ from lib.pipeline import (
 
 # user uploads image to web sends mask to backend
 mask = cv2.imread("./test_images/kojiro_mask.png", cv2.IMREAD_GRAYSCALE)
+image = cv2.imread("./test_images/kojiro.jpg", cv2.IMREAD_COLOR)
 _, mask = cv2.threshold(mask, 127, 255, cv2.THRESH_BINARY)
 
 vicinity = get_vicinity(mask)
 cv2.imwrite(f"./result_images/pipeline/vicinity.jpg", vicinity)
 
 # find noise using color variance
-color_variance_mask = cv2.imread(
-    "./result_images/color_variance/kojiro.jpg", cv2.IMREAD_GRAYSCALE
-)
+color_variance_mask = create_alpha_matting_mask(image, threshold_method="mean_std")
 
 
 overlap = create_overlap_mask(vicinity, color_variance_mask)
