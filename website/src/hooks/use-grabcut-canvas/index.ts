@@ -118,11 +118,17 @@ export function useGrabcutCanvas({
 
   function adjustImagePosition(ctx: CanvasRenderingContext2D) {
     if (!sourceImg) return;
+    // the right side of the image should always end at the middle of the canvas
     const leftBoundary = ctx.canvas.width / 2 - sourceImg.width * scale;
+    // the left side of the image should always end at the middle of the canvas
     const rightBoundary = ctx.canvas.width / 2;
     const topBoundary = ctx.canvas.height / 2 - sourceImg.height * scale;
     const bottomBoundary = ctx.canvas.height / 2;
 
+    // after moving/resizing, we perform boundary checks
+    // we discard the smallest between current x and left boundary
+    // and the greatest between the previous result and the right boundary
+    // the same applies for y
     pos.x = Math.min(Math.max(pos.x, leftBoundary), rightBoundary);
     pos.y = Math.min(Math.max(pos.y, topBoundary), bottomBoundary);
   }
