@@ -110,20 +110,21 @@ export function useGrabcutCanvas({
       update();
     }
     if (!sourceImg) return;
-    const leftBoundary = sourceCtx.canvas.width / 2 - sourceImg.width * scale;
-    const rightBoundary = sourceCtx.canvas.width / 2;
-    const topBoundary = sourceCtx.canvas.height / 2 - sourceImg.height * scale;
-    const bottomBoundary = sourceCtx.canvas.height / 2;
-    if (
-      pos.x + amount.x < rightBoundary &&
-      pos.x + amount.x > leftBoundary &&
-      pos.y + amount.y < bottomBoundary &&
-      pos.y + amount.y > topBoundary
-    ) {
-      pos.x += amount.x;
-      pos.y += amount.y;
-      dirty = true;
-    }
+    pos.x += amount.x;
+    pos.y += amount.y;
+    adjustImagePosition(sourceCtx);
+    dirty = true;
+  }
+
+  function adjustImagePosition(ctx: CanvasRenderingContext2D) {
+    if (!sourceImg) return;
+    const leftBoundary = ctx.canvas.width / 2 - sourceImg.width * scale;
+    const rightBoundary = ctx.canvas.width / 2;
+    const topBoundary = ctx.canvas.height / 2 - sourceImg.height * scale;
+    const bottomBoundary = ctx.canvas.height / 2;
+
+    pos.x = Math.min(Math.max(pos.x, leftBoundary), rightBoundary);
+    pos.y = Math.min(Math.max(pos.y, topBoundary), bottomBoundary);
   }
 
   function scaleAt(at: { x: number; y: number }, _amount: number) {
@@ -438,12 +439,22 @@ export function useGrabcutCanvas({
     destinationCtx.canvas.height = innerHeight;
     setupListeners(sourceCtx.canvas, "source");
     setupListeners(destinationCtx.canvas, "destination");
+    // function handleResize() {
+    //   sourceCtx.canvas.width = innerWidth / 2;
+    //   sourceCtx.canvas.height = innerHeight;
+    //   destinationCtx.canvas.width = innerWidth / 2;
+    //   destinationCtx.canvas.height = innerHeight;
+    //   dirty = true;
+    //   redrawEverything();
+    // }
+    //
     function handleResize() {
       sourceCtx.canvas.width = innerWidth / 2;
       sourceCtx.canvas.height = innerHeight;
       destinationCtx.canvas.width = innerWidth / 2;
       destinationCtx.canvas.height = innerHeight;
       dirty = true;
+      adjustImagePosition(sourceCtx);
       redrawEverything();
     }
     window.addEventListener("resize", handleResize);
