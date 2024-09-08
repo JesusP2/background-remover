@@ -13,7 +13,7 @@ import { IoCutOutline } from 'solid-icons/io';
 import { RiSystemAddFill } from 'solid-icons/ri';
 import { TbFocusCentered } from 'solid-icons/tb';
 import { VsEdit } from 'solid-icons/vs';
-import { useCanvas } from '~/lib/canvas';
+import { useGrabcutCanvas } from '~/hooks/use-grabcut-canvas';
 
 export function ActionsMenu(props: {
   source: string;
@@ -34,7 +34,7 @@ export function ActionsMenu(props: {
     resetToOriginal,
     currentMode,
     saveResult,
-  } = useCanvas({
+  } = useGrabcutCanvas({
     sourceUrl: props.source,
     maskUrl: props.mask,
     resultUrl: props.result,

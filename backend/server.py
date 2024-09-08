@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from PIL import Image
 import pymatting
 
-from utils import apply_mask, array_to_base64
+from lib.utils import apply_mask, array_to_base64
 
 app = FastAPI()
 
@@ -52,40 +52,25 @@ async def start(image_file: UploadFile = File(...)):
 async def apply_mask_endpoint(
     mask_file: UploadFile = File(...),
     image_file: UploadFile = File(...),
-    base_mask_file: UploadFile = File(...),
 ):
     bgdModel = np.zeros((1, 65), np.float64)
     fgdModel = np.zeros((1, 65), np.float64)
     image_file_stream = io.BytesIO(await image_file.read())
-    image = cv2.cvtColor(
+    bgr_image = cv2.cvtColor(
         np.array(Image.open(image_file_stream).convert("RGB")), cv2.COLOR_RGB2BGR
     )
 
     mask = Image.open(io.BytesIO(await mask_file.read())).convert("RGB")
     mask_array = cv2.cvtColor(np.array(mask), cv2.COLOR_RGB2GRAY)
 
-    base_mask = Image.open(io.BytesIO(await base_mask_file.read())).convert("RGB")
-    base_mask_array = cv2.cvtColor(np.array(base_mask), cv2.COLOR_RGB2GRAY)
-    base_mask_array_copy = cv2.cvtColor(np.array(base_mask), cv2.COLOR_RGB2GRAY)
-
-    # 229 = yellow, 177 = green, 122 = red, 128 = gray
+    base_mask_array = np.zeros(bgr_image.shape, np.uint8)
+    base_mask_array = cv2.cvtColor(base_mask_array, cv2.COLOR_RGB2GRAY)
     base_mask_array[:] = cv2.GC_PR_BGD
-    base_mask_array[base_mask_array_copy == 0] = cv2.GC_PR_BGD
-    base_mask_array[base_mask_array_copy == 255] = cv2.GC_PR_FGD
     base_mask_array[mask_array == 122] = cv2.GC_BGD
     base_mask_array[mask_array == 177] = cv2.GC_FGD
 
-    # base_mask_array = np.zeros(image.shape, np.uint8)
-    # base_mask_array = cv2.cvtColor(base_mask_array, cv2.COLOR_RGB2GRAY)
-    # # base_mask_array_copy = cv2.cvtColor(np.zeros(image.shape, np.uint8), cv2.COLOR_RGB2GRAY)
-    # base_mask_array[:] = cv2.GC_PR_BGD
-    # # base_mask_array[base_mask_array_copy == 0] = cv2.GC_PR_BGD
-    # # base_mask_array[base_mask_array_copy == 255] = cv2.GC_PR_FGD
-    # base_mask_array[mask_array == 122] = cv2.GC_BGD
-    # base_mask_array[mask_array == 177] = cv2.GC_FGD
-
     cv2.grabCut(
-        image, base_mask_array, None, bgdModel, fgdModel, 1, cv2.GC_INIT_WITH_MASK
+        bgr_image, base_mask_array, None, bgdModel, fgdModel, 1, cv2.GC_INIT_WITH_MASK
     )
     new_mask = np.where((base_mask_array == 2) | (base_mask_array == 0), 0, 1).astype(
         "uint8"
@@ -97,8 +82,8 @@ async def apply_mask_endpoint(
     trimap = new_mask.copy().astype("float32")
     trimap[mask_array == 229] = 128
     trimap = trimap / 255
-    rgba_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGBA)
-    rgb_image = np.array(cv2.cvtColor(image, cv2.COLOR_BGR2RGB)).astype("float64") / 255
+    rgba_image = cv2.cvtColor(bgr_image, cv2.COLOR_BGR2RGBA)
+    rgb_image = np.array(cv2.cvtColor(bgr_image, cv2.COLOR_BGR2RGB)).astype("float64") / 255
     alpha = pymatting.estimate_alpha_cf(rgb_image, trimap) * 255
     alpha = alpha.astype("uint8")
     rgba_image[:, :, 3] = alpha

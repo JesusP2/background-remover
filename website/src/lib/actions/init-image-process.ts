@@ -5,7 +5,6 @@ import { db } from "../db";
 import { imageTable } from "../db/schema";
 import { uploadFile } from "../r2";
 import { rateLimit } from "../rate-limiter";
-import { envs } from "../db/env-vars";
 
 export const uploadImageAction = action(async (file: File) => {
   "use server";
@@ -16,42 +15,17 @@ export const uploadImageAction = action(async (file: File) => {
     }
     const userId = getRequestEvent()?.locals.userId;
     if (!userId) return new Error("Unauthorized");
-    const formData = new FormData();
-    formData.append("image_file", file);
-    const res = await fetch(`${envs.PYTHON_BACKEND}/start`, {
-      method: "POST",
-      body: formData,
-      headers: {
-        Accept: "application/json",
-      },
-    });
-
-    if (!res.ok) {
-      throw new Error("Failed to upload image");
-    }
-    const { result, base_mask } = await res.json();
-    const resultBuffer = Buffer.from(
-      result.replace(/^data:image\/\w+;base64,/, ""),
-      "base64",
-    );
-    const baseMaskBuffer = Buffer.from(
-      base_mask.replace(/^data:image\/\w+;base64,/, ""),
-      "base64",
-    );
     const sourceBuffer = Buffer.from(await file.arrayBuffer());
-
     const id = createId();
     await Promise.all([
-      uploadFile(resultBuffer, `${id}-result.png`),
-      uploadFile(baseMaskBuffer, `${id}-basemask.png`),
       uploadFile(sourceBuffer, `${id}-${file.name}`),
+      uploadFile(sourceBuffer, `${id}-result.${file.type.split("/")[1]}`),
     ]);
     await db.insert(imageTable).values({
       id,
       userId: userId,
       name: file.name,
       source: `${id}-${file.name}`,
-      base_mask: `${id}-basemask.png`,
       result: `${id}-result.png`,
       createdAt: Date.now(),
       updatedAt: Date.now(),

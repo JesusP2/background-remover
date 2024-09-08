@@ -8,7 +8,7 @@ import { rateLimit } from "../rate-limiter";
 import { envs } from "../db/env-vars";
 
 export const createStepAction = action(
-  async (image: File, mask: File, baseMaskImg: File, id: string) => {
+  async (image: File, mask: File /*baseMaskImg: File */, id: string) => {
     "use server";
     const error = await rateLimit();
     if (error) {
@@ -30,7 +30,7 @@ export const createStepAction = action(
       const formData = new FormData();
       formData.append("image_file", image);
       formData.append("mask_file", mask);
-      formData.append("base_mask_file", baseMaskImg);
+      // formData.append("base_mask_file", baseMaskImg);
       const res = await fetch(`${envs.PYTHON_BACKEND}/mask`, {
         method: "POST",
         body: formData,

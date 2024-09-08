@@ -36,6 +36,13 @@
       "when": 1714526076365,
       "tag": "0004_clean_the_liberteens",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "5",
+      "when": 1725725038140,
+      "tag": "0005_fancy_gauntlet",
+      "breakpoints": true
     }
   ]
 }

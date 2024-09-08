@@ -9,7 +9,6 @@ export const imageTable = sqliteTable('image', {
     .notNull(),
   name: text('name').notNull(),
   source: text('source').notNull(),
-  base_mask: text('base_mask').notNull(),
   mask: text('mask'),
   result: text('result').notNull(),
   createdAt: integer('created_at')
