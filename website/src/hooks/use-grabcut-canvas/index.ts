@@ -26,6 +26,7 @@ export function useGrabcutCanvas({
   drawStroke: <T extends GrabcutAction>(
     action: T,
     ctx: CanvasRenderingContext2D,
+    newMousePosition?: { x: number; y: number },
   ) => void;
 }) {
   const createStep = useAction(createStepAction);
@@ -325,6 +326,8 @@ export function useGrabcutCanvas({
       type: currentMode(),
       oldX: mouse.oldX,
       oldY: mouse.oldY,
+      x: mouse.x,
+      y: mouse.y,
       pos: { x: pos.x, y: pos.y },
       scale,
     };
