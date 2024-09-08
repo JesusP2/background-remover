@@ -89,14 +89,14 @@ const defaultRateLimiter = new RateLimit({
 });
 
 export async function rateLimit(rateLimiter = defaultRateLimiter) {
-    const event = getRequestEvent();
-    const ip = event?.clientAddress;
-    if (!ip) {
-      return new Error("Too many requests");
-    }
-    const { success } = await rateLimiter.limit(ip);
-    if (!success) {
-      return new Error("Too many requests");
-    }
+  const event = getRequestEvent();
+  const ip = event?.clientAddress;
+  if (!ip) {
+    return new Error("Too many requests");
+  }
+  const { success } = await rateLimiter.limit(ip);
+  if (!success) {
+    return new Error("Too many requests");
+  }
   return;
 }

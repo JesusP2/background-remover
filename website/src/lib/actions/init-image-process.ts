@@ -19,7 +19,7 @@ export const uploadImageAction = action(async (file: File) => {
     const id = createId();
     await Promise.all([
       uploadFile(sourceBuffer, `${id}-${file.name}`),
-      uploadFile(sourceBuffer, `${id}-result.${file.type.split("/")[1]}`),
+      uploadFile(sourceBuffer, `${id}-result.png`),
     ]);
     await db.insert(imageTable).values({
       id,

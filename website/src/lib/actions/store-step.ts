@@ -1,4 +1,4 @@
-import { and, eq, isNull } from "drizzle-orm";
+import { and, eq, isNull, sql } from "drizzle-orm";
 import { getRequestEvent } from "solid-js/web";
 import { db } from "../db";
 import { imageTable } from "../db/schema";
@@ -45,15 +45,14 @@ export const createStepAction = action(
       const resultBuffer = Buffer.from(payload.result.slice(22), "base64");
       const maskBuffer = Buffer.from(await mask.arrayBuffer());
 
-      const [resultUrl, maskUrl] = await Promise.all([
+      await Promise.all([
         uploadFile(resultBuffer, `${id}-result.png`),
         uploadFile(maskBuffer, `${id}-mask.png`),
       ]);
       await db
         .update(imageTable)
         .set({
-          mask: maskUrl,
-          result: resultUrl,
+          mask: `${id}-mask.png`,
         })
         .where(eq(imageTable.id, id));
       return json(payload);

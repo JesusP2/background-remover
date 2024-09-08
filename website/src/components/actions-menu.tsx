@@ -14,12 +14,12 @@ import { RiSystemAddFill } from 'solid-icons/ri';
 import { TbFocusCentered } from 'solid-icons/tb';
 import { VsEdit } from 'solid-icons/vs';
 import { useGrabcutCanvas } from '~/hooks/use-grabcut-canvas';
+import { drawStroke } from '~/hooks/use-grabcut-canvas/utils';
 
 export function ActionsMenu(props: {
   source: string;
   mask: string | null;
   result: string;
-  base_mask: string;
 }) {
   const {
     setCurrentMode,
@@ -38,7 +38,8 @@ export function ActionsMenu(props: {
     sourceUrl: props.source,
     maskUrl: props.mask,
     resultUrl: props.result,
-    baseMaskUrl: props.base_mask,
+    drawStroke: drawStroke,
+    eventTrigger: 'mousemove'
   });
   return (
     <div class="rounded-sm px-2 py-1 bg-white absolute bottom-0 left-0 flex gap-x-4 items-center">

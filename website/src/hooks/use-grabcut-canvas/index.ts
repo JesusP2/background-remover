@@ -9,20 +9,28 @@ import {
   getCanvas,
   urlToImage,
 } from "./utils";
-import { type Action, type ActionType, drawStroke } from "./utils";
+import type { GrabcutAction, GrabcutActionType } from "./utils";
 import { showToast } from "~/components/ui/toast";
 
 export function useGrabcutCanvas({
   sourceUrl,
   maskUrl,
   resultUrl,
+  drawStroke,
+  eventTrigger,
 }: {
   sourceUrl: string;
   maskUrl: string | null;
   resultUrl: string;
+  eventTrigger: "mousedown" | "mousemove";
+  drawStroke: <T extends GrabcutAction>(
+    action: T,
+    ctx: CanvasRenderingContext2D,
+  ) => void;
 }) {
   const createStep = useAction(createStepAction);
-  const [currentMode, setCurrentMode] = createSignal<ActionType>("draw-green");
+  const [currentMode, setCurrentMode] =
+    createSignal<GrabcutActionType>("draw-green");
   let currentId = createId();
   let sourceImg: HTMLImageElement | null = null;
   let destinationImg: HTMLImageElement | null = null;
@@ -43,10 +51,10 @@ export function useGrabcutCanvas({
     oldY: number;
     button: null | number;
   };
-  const [actions, setActions] = createSignal<Action[]>([], {
+  const [actions, setActions] = createSignal<GrabcutAction[]>([], {
     equals: false,
   });
-  const [redoActions, setRedoActions] = createSignal<Action[]>([]);
+  const [redoActions, setRedoActions] = createSignal<GrabcutAction[]>([]);
 
   function redrawEverything() {
     if (dirty) {
@@ -135,7 +143,7 @@ export function useGrabcutCanvas({
 
   function undo() {
     const lastAction = actions()[actions().length - 1];
-    const lastStroke: Action[] = [];
+    const lastStroke: GrabcutAction[] = [];
     setActions((prev) =>
       prev.filter((a) => {
         if (a.id === lastAction.id) {
@@ -152,7 +160,7 @@ export function useGrabcutCanvas({
 
   function redo() {
     const lastAction = redoActions()[redoActions().length - 1];
-    const lastStroke: Action[] = [];
+    const lastStroke: GrabcutAction[] = [];
     setRedoActions((prev) =>
       prev.filter((a) => {
         if (a.id === lastAction.id) {
@@ -280,6 +288,10 @@ export function useGrabcutCanvas({
     event.preventDefault();
     mouse.button = event.button;
     currentId = createId();
+    if (eventTrigger === "mousedown") {
+      const { sourceCtx } = getCanvas();
+      applyAction(sourceCtx);
+    }
   }
 
   function mousemove(event: MouseEvent) {
@@ -300,7 +312,12 @@ export function useGrabcutCanvas({
       redrawEverything();
       return;
     }
+    if (eventTrigger === "mousemove") {
+      applyAction(sourceCtx);
+    }
+  }
 
+  function applyAction(sourceCtx: CanvasRenderingContext2D) {
     const intermediateMaskCtx = intermediateMask?.getContext("2d");
     if (!sourceImg || !intermediateMask || !intermediateMaskCtx) return;
     const action = {

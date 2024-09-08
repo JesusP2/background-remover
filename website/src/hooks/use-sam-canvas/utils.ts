@@ -1,23 +1,24 @@
-export type GrabcutActionType =
+export type SamActionType =
   | 'move'
   | 'draw-green'
   | 'draw-red'
   | 'draw-yellow'
   | 'erase';
-export type GrabcutAction = {
+
+export type SamAction = {
   id: string;
-  type: GrabcutActionType;
+  type: SamActionType;
   oldX: number;
   oldY: number;
   pos: { x: number; y: number };
   scale: number;
 };
 
-export const grabcutColors = {
+export const SamColors = {
   'draw-green': '#41fa5d',
   'draw-red': '#fa4150',
   'draw-yellow': '#fafa41',
-} as Record<GrabcutActionType, string>;
+} as Record<SamActionType, string>;
 
 export async function urlToImage(url: string): Promise<HTMLImageElement> {
   const res = await fetch(url);
@@ -100,7 +101,7 @@ export function getCanvas() {
 
 export function eraseStroke(
   sourceImg: HTMLImageElement,
-  action: GrabcutAction,
+  action: SamAction,
   ctx: CanvasRenderingContext2D,
 ) {
   let size = 0;
@@ -134,12 +135,12 @@ export function eraseStroke(
   ctx.drawImage(sourceImg, xPos, yPos, size, size, xPos, yPos, size, size);
 }
 
-export function drawStroke(action: GrabcutAction, ctx: CanvasRenderingContext2D) {
+export function drawStroke(action: SamAction, ctx: CanvasRenderingContext2D) {
   const strokePos = {
     x: action.oldX / action.scale - action.pos.x / action.scale,
     y: action.oldY / action.scale - action.pos.y / action.scale,
   };
-  ctx.fillStyle = grabcutColors[action.type];
+  ctx.fillStyle = SamColors[action.type];
   let size: number[] = [];
   if (action.scale < 0.3) {
     size = [
@@ -173,7 +174,7 @@ export function drawStroke(action: GrabcutAction, ctx: CanvasRenderingContext2D)
   }
 }
 
-export function getDataPoints(actions: GrabcutAction[]) {
+export function getDataPoints(actions: SamAction[]) {
   const positive_points = actions
     .filter((action) => action.type === 'draw-green')
     .map((action) => {
