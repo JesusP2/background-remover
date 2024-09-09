@@ -1,16 +1,22 @@
-import { createId } from "@paralleldrive/cuid2";
-import { useAction, useParams } from "@solidjs/router";
-import { createSignal, onCleanup, onMount } from "solid-js";
-import { createStepAction } from "../../lib/actions/store-step";
+import { createId } from '@paralleldrive/cuid2';
+import { useAction, useParams } from '@solidjs/router';
+import { createSignal, onCleanup, onMount } from 'solid-js';
+import { createStepAction } from '../../lib/actions/store-step';
 import {
   base64ToImage,
   canvasToFile,
   eraseStroke,
   getCanvas,
   urlToImage,
-} from "./utils";
-import type { GrabcutAction, GrabcutActionType } from "./utils";
-import { showToast } from "~/components/ui/toast";
+} from './utils';
+import type { GrabcutAction, GrabcutActionType } from './utils';
+import { toaster } from '@kobalte/core';
+import {
+  Toast,
+  ToastContent,
+  ToastProgress,
+  ToastTitle,
+} from '~/components/ui/toast';
 
 export function useGrabcutCanvas({
   sourceUrl,
@@ -22,7 +28,7 @@ export function useGrabcutCanvas({
   sourceUrl: string;
   maskUrl: string | null;
   resultUrl: string;
-  eventTrigger: "mousedown" | "mousemove";
+  eventTrigger: 'mousedown' | 'mousemove';
   drawStroke: <T extends GrabcutAction>(
     action: T,
     ctx: CanvasRenderingContext2D,
@@ -31,7 +37,7 @@ export function useGrabcutCanvas({
 }) {
   const createStep = useAction(createStepAction);
   const [currentMode, setCurrentMode] =
-    createSignal<GrabcutActionType>("draw-green");
+    createSignal<GrabcutActionType>('draw-green');
   let currentId = createId();
   let svgImg: HTMLImageElement | null = null;
   let sourceImg: HTMLImageElement | null = null;
@@ -189,43 +195,46 @@ export function useGrabcutCanvas({
   }
 
   function saveSnapshot() {
-    const maskCopied = getDataFromSourceCanvas("mask");
+    const maskCopied = getDataFromSourceCanvas('mask');
     if (!maskCopied) return;
     intermediateMask = maskCopied;
   }
 
   function redrawActions(
     ctx: CanvasRenderingContext2D,
-    actionsType: "all" | "mask",
+    actionsType: 'all' | 'mask',
   ) {
     for (const action of actions()) {
       if (
-        actionsType === "all" ||
-        (actionsType === "mask" &&
-          (action.type === "draw-red" ||
-            action.type === "draw-green" ||
-            action.type === "draw-yellow"))
+        actionsType === 'all' ||
+        (actionsType === 'mask' &&
+          (action.type === 'draw-red' ||
+            action.type === 'draw-green' ||
+            action.type === 'draw-yellow'))
       ) {
         drawStroke(action, ctx);
-      } else if (action.type === "erase" && sourceImg) {
+      } else if (action.type === 'erase' && sourceImg) {
         eraseStroke(sourceImg, action, ctx);
       }
     }
   }
 
   async function applyMaskToImage() {
-    const imgCopied = getDataFromSourceCanvas("image");
-    const maskCopied = getDataFromSourceCanvas("mask");
+    const imgCopied = getDataFromSourceCanvas('image');
+    const maskCopied = getDataFromSourceCanvas('mask');
     if (!imgCopied || !maskCopied) return;
-    const image = await canvasToFile(imgCopied, "file.png", "image/png");
-    const mask = await canvasToFile(maskCopied, "mask.png", "image/png");
+    const image = await canvasToFile(imgCopied, 'file.png', 'image/png');
+    const mask = await canvasToFile(maskCopied, 'mask.png', 'image/png');
     const payload = await createStep(image, mask, id);
     if (payload instanceof Error) {
-      showToast({
-        variant: "destructive",
-        title: payload.message,
-        duration: 10_000,
-      });
+      toaster.show((props) => (
+        <Toast toastId={props.toastId}>
+          <ToastContent>
+            <ToastTitle>{payload.message}</ToastTitle>
+          </ToastContent>
+          <ToastProgress />
+        </Toast>
+      ));
       return;
     }
     destinationImg = await base64ToImage(payload.result);
@@ -271,20 +280,20 @@ export function useGrabcutCanvas({
     destinationCtx.imageSmoothingEnabled = false;
   }
 
-  function getDataFromSourceCanvas(type: "image" | "mask" | "all") {
-    const copy = document.createElement("canvas");
-    const copyCtx = copy.getContext("2d");
+  function getDataFromSourceCanvas(type: 'image' | 'mask' | 'all') {
+    const copy = document.createElement('canvas');
+    const copyCtx = copy.getContext('2d');
     if (!copyCtx || !sourceImg) return;
     copy.width = sourceImg.width;
     copy.height = sourceImg.height;
-    if (type === "image" || type === "all") {
+    if (type === 'image' || type === 'all') {
       copyCtx.drawImage(sourceImg, 0, 0);
     }
-    if (type === "mask" || type === "all") {
+    if (type === 'mask' || type === 'all') {
       if (storedMask) {
         copyCtx.drawImage(storedMask, 0, 0);
       }
-      redrawActions(copyCtx, "mask");
+      redrawActions(copyCtx, 'mask');
     }
     return copy;
   }
@@ -299,7 +308,7 @@ export function useGrabcutCanvas({
     event.preventDefault();
     mouse.button = event.button;
     currentId = createId();
-    if (eventTrigger === "mousedown") {
+    if (eventTrigger === 'mousedown') {
       const { sourceCtx } = getCanvas();
       applyAction(sourceCtx);
     }
@@ -318,18 +327,18 @@ export function useGrabcutCanvas({
       redrawEverything();
       return;
     }
-    if (currentMode() === "move") {
+    if (currentMode() === 'move') {
       pan({ x: mouse.x - mouse.oldX, y: mouse.y - mouse.oldY });
       redrawEverything();
       return;
     }
-    if (eventTrigger === "mousemove") {
+    if (eventTrigger === 'mousemove') {
       applyAction(sourceCtx);
     }
   }
 
   function applyAction(sourceCtx: CanvasRenderingContext2D) {
-    const intermediateMaskCtx = intermediateMask?.getContext("2d");
+    const intermediateMaskCtx = intermediateMask?.getContext('2d');
     if (!sourceImg || !intermediateMask || !intermediateMaskCtx) return;
     const action = {
       id: currentId,
@@ -349,7 +358,7 @@ export function useGrabcutCanvas({
       setRedoActions([]);
     }
     if (
-      currentMode() !== "erase" &&
+      currentMode() !== 'erase' &&
       sourceImg &&
       action.oldX / action.scale - action.pos.x / action.scale > -10 &&
       action.oldX / action.scale - action.pos.x / action.scale <
@@ -370,7 +379,7 @@ export function useGrabcutCanvas({
       sourceCtx.globalAlpha = 0.5;
       sourceCtx.drawImage(intermediateMask, 0, 0);
       sourceCtx.globalAlpha = 1.0;
-    } else if (currentMode() === "erase") {
+    } else if (currentMode() === 'erase') {
       eraseStroke(sourceImg, action, sourceCtx);
     }
   }
@@ -393,10 +402,10 @@ export function useGrabcutCanvas({
     }
   }
 
-  function mouseWheelEvent(event: WheelEvent, type: "source" | "destination") {
+  function mouseWheelEvent(event: WheelEvent, type: 'source' | 'destination') {
     const { sourceCtx, destinationCtx } = getCanvas();
     let canvas = sourceCtx.canvas;
-    if (type === "destination") {
+    if (type === 'destination') {
       canvas = destinationCtx.canvas;
     }
     const x = event.pageX - canvas.offsetLeft;
@@ -413,29 +422,29 @@ export function useGrabcutCanvas({
 
   function setupListeners(
     canvas: HTMLCanvasElement,
-    type: "source" | "destination",
+    type: 'source' | 'destination',
   ) {
-    canvas.addEventListener("mousemove", mousemove, {
+    canvas.addEventListener('mousemove', mousemove, {
       passive: false,
     });
-    canvas.addEventListener("mousedown", mousedown, {
+    canvas.addEventListener('mousedown', mousedown, {
       passive: false,
     });
-    canvas.addEventListener("mouseup", mouseup, {
+    canvas.addEventListener('mouseup', mouseup, {
       passive: false,
     });
-    canvas.addEventListener("mouseout", mouseup, {
+    canvas.addEventListener('mouseout', mouseup, {
       passive: false,
     });
-    canvas.addEventListener("wheel", (e) => mouseWheelEvent(e, type), {
+    canvas.addEventListener('wheel', (e) => mouseWheelEvent(e, type), {
       passive: false,
     });
   }
 
   async function saveResult(name: string) {
     if (!destinationImg) return;
-    const anchor = document.createElement("a");
-    anchor.download = `${name.split(".")[0]}.png`;
+    const anchor = document.createElement('a');
+    anchor.download = `${name.split('.')[0]}.png`;
     anchor.href = destinationImg.src;
     anchor.click();
   }
@@ -446,8 +455,8 @@ export function useGrabcutCanvas({
     sourceCtx.canvas.height = innerHeight;
     destinationCtx.canvas.width = innerWidth / 2;
     destinationCtx.canvas.height = innerHeight;
-    setupListeners(sourceCtx.canvas, "source");
-    setupListeners(destinationCtx.canvas, "destination");
+    setupListeners(sourceCtx.canvas, 'source');
+    setupListeners(destinationCtx.canvas, 'destination');
     function handleResize() {
       sourceCtx.canvas.width = innerWidth / 2;
       sourceCtx.canvas.height = innerHeight;
@@ -457,10 +466,10 @@ export function useGrabcutCanvas({
       adjustImagePosition(sourceCtx);
       redrawEverything();
     }
-    window.addEventListener("resize", handleResize);
+    window.addEventListener('resize', handleResize);
     loadImage();
     onCleanup(() => {
-      window.removeEventListener("resize", handleResize);
+      window.removeEventListener('resize', handleResize);
     });
   });
 

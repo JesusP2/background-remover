@@ -1,7 +1,14 @@
 import { A, useAction, useSubmission } from '@solidjs/router';
 import { DropZone } from '~/components/dropzone';
 import { Navbar } from '~/components/nav';
-import { showToast } from '~/components/ui/toast';
+import { toaster } from '@kobalte/core';
+import {
+  Toast,
+  ToastContent,
+  ToastDescription,
+  ToastProgress,
+  ToastTitle,
+} from '~/components/ui/toast';
 import { UploadingFileDialog } from '~/components/uploading-file-dialog';
 import { uploadImageAction } from '~/lib/actions/init-image-process';
 
@@ -34,11 +41,14 @@ export default function Index() {
             onFileChange={async (file) => {
               const payload = await uploadImage(file);
               if (payload instanceof Error) {
-                showToast({
-                  variant: 'destructive',
-                  title: payload.message,
-                  duration: 10_000,
-                });
+                toaster.show((props) => (
+                  <Toast toastId={props.toastId}>
+                    <ToastContent>
+                      <ToastTitle>{payload.message}</ToastTitle>
+                    </ToastContent>
+                    <ToastProgress />
+                  </Toast>
+                ));
               }
             }}
           />

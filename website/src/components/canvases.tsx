@@ -8,7 +8,6 @@ export function Canvases(props: { img: SelectImage }) {
         source={props.img.source}
         mask={props.img.mask}
         result={props.img.result}
-        base_mask={props.img.base_mask}
       />
       <canvas class="w-[49.95%] h-screen svg-bg" id="source" />
       <div class="h-screen w-[0.1%] bg-zinc-400" />

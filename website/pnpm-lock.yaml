@@ -21,8 +21,8 @@ importers:
         specifier: ^5.0.2
         version: 5.0.3
       '@kobalte/core':
-        specifier: ^0.12.6
-        version: 0.12.6(solid-js@1.8.22)
+        specifier: ^0.13.6
+        version: 0.13.6(solid-js@1.8.22)
       '@libsql/client':
         specifier: ^0.6.0
         version: 0.6.0
@@ -54,7 +54,7 @@ importers:
         specifier: ^0.7.0
         version: 0.7.0
       clsx:
-        specifier: ^2.1.0
+        specifier: ^2.1.1
         version: 2.1.1
       drizzle-orm:
         specifier: ^0.30.7
@@ -78,7 +78,7 @@ importers:
         specifier: ^1.8.22
         version: 1.8.22
       tailwind-merge:
-        specifier: ^2.2.2
+        specifier: ^2.3.0
         version: 2.3.0
       tailwindcss:
         specifier: ^3.4.1
@@ -461,6 +461,11 @@ packages:
 
   '@corvu/utils@0.1.1':
     resolution: {integrity: sha512-NY6s6ZvOJKQw3gI6Ra9CixHslKeGTQJsaGCPBVX/K5DtDXgEPeinD5k2EnCvWmey92L2btPtasDrlGUx0sY9JA==}
+    peerDependencies:
+      solid-js: ^1.8
+
+  '@corvu/utils@0.4.1':
+    resolution: {integrity: sha512-swd/2DUJiXTo9PM5GVbBv3jNlEOwmKWvVOJG2l8Cwu1cokoXknKrDkBSZRz+yf0rFXdbhWhRQMWDPMPwuBnWNg==}
     peerDependencies:
       solid-js: ^1.8
 
@@ -897,11 +902,17 @@ packages:
   '@floating-ui/core@1.6.0':
     resolution: {integrity: sha512-PcF++MykgmTj3CIyOQbKA/hDzOAiqI3mhuoN44WRCopIs1sgoDoU4oty4Jtqaj/y3oDU6fnVSm4QG0a3t5i0+g==}
 
+  '@floating-ui/dom@1.6.10':
+    resolution: {integrity: sha512-fskgCFv8J8OamCmyun8MfjB1Olfn+uZKjOKZ0vhYF3gRmEUXcGOjxWL8bBr7i4kIuPZ2KD2S3EUIOxnjC8kl2A==}
+
   '@floating-ui/dom@1.6.3':
     resolution: {integrity: sha512-RnDthu3mzPlQ31Ss/BTwQ1zjzIhr3lk1gZB1OC56h/1vEtaXkESrOqL5fQVMfXpwGtRwX+YsZBdyHtJMQnkArw==}
 
   '@floating-ui/utils@0.2.1':
     resolution: {integrity: sha512-9TANp6GPoMtYzQdt54kfAyMmz1+osLlXdg2ENroU7zzrtflTLrrC/lgrIfaSe+Wu0b89GKccT7vxXA0MoAIO+Q==}
+
+  '@floating-ui/utils@0.2.7':
+    resolution: {integrity: sha512-X8R8Oj771YRl/w+c1HqAC1szL8zWQRwFvgDwT129k9ACdBoud/+/rX9V0qiMl6LWUdP9voC2nDVZYPMQQsb6eA==}
 
   '@fontsource-variable/gabarito@5.0.4':
     resolution: {integrity: sha512-fqa65zhyP+l4Rs0zhavgt5kkOQBGh5lXl2xxHpkG4GtrXwXet1vv+ceD/teA5xn2lKo8O0uOYrmn0r8wjb0wkw==}
@@ -953,15 +964,15 @@ packages:
   '@jridgewell/trace-mapping@0.3.25':
     resolution: {integrity: sha512-vNk6aEwybGtawWmy/PzwnGDOjCkLWSD2wqvjGGAgOAwCGWySYXfYoxt00IJkTF+8Lb57DwOb3Aa0o9CApepiYQ==}
 
-  '@kobalte/core@0.12.6':
-    resolution: {integrity: sha512-+Ta2o2wEqZ2fCqLMkvjT40VHNmcFKdGe8TNDVQbbMPk66qoU6g/DDRFR/Ib7eAjb+C95VoIyk6zaafos2VOo0w==}
+  '@kobalte/core@0.13.6':
+    resolution: {integrity: sha512-MuO9tBDjfmYISF4weKpcRi0+7FEUhqz8wHbcayfSHR5mulXQbru5PRE5gdfhf84C7UdOHTZBLiPeQD2VppdfIQ==}
     peerDependencies:
       solid-js: ^1.8.15
 
-  '@kobalte/utils@0.9.0':
-    resolution: {integrity: sha512-TYVCpQcpqo1+0HBn3NXoGEBzxd4tH6Um1oc07nrYw1V7Qq0qbMaYAOnfBc1qhlh7sGV4XZldmb0j13Of0FrZQg==}
+  '@kobalte/utils@0.9.1':
+    resolution: {integrity: sha512-eeU60A3kprIiBDAfv9gUJX1tXGLuZiKMajUfSQURAF2pk4ZoMYiqIzmrMBvzcxP39xnYttgTyQEVLwiTZnrV4w==}
     peerDependencies:
-      solid-js: ^1.7.11
+      solid-js: ^1.8.8
 
   '@libsql/client@0.6.0':
     resolution: {integrity: sha512-qhQzTG/y2IEVbL3+9PULDvlQFWJ/RnjFXECr/Nc3nRngGiiMysDaOV5VUzYk7DulUX98EA4wi+z3FspKrUplUA==}
@@ -1708,6 +1719,11 @@ packages:
 
   '@solid-primitives/resize-observer@2.0.25':
     resolution: {integrity: sha512-jVDXkt2MiriYRaz4DYs62185d+6jQ+1DCsR+v7f6XMsIJJuf963qdBRFjtZtKXBaxdPNMyuPeDgf5XQe3EoDJg==}
+    peerDependencies:
+      solid-js: ^1.6.12
+
+  '@solid-primitives/resize-observer@2.0.26':
+    resolution: {integrity: sha512-KbPhwal6ML9OHeUTZszBbt6PYSMj89d4wVCLxlvDYL4U0+p+xlCEaqz6v9dkCwm/0Lb+Wed7W5T1dQZCP3JUUw==}
     peerDependencies:
       solid-js: ^1.6.12
 
@@ -3467,6 +3483,11 @@ packages:
   solid-js@1.8.22:
     resolution: {integrity: sha512-VBzN5j+9Y4rqIKEnK301aBk+S7fvFSTs9ljg+YEdFxjNjH0hkjXPiQRcws9tE5fUzMznSS6KToL5hwMfHDgpLA==}
 
+  solid-presence@0.1.8:
+    resolution: {integrity: sha512-pWGtXUFWYYUZNbg5YpG5vkQJyOtzn2KXhxYaMx/4I+lylTLYkITOLevaCwMRN+liCVk0pqB6EayLWojNqBFECA==}
+    peerDependencies:
+      solid-js: ^1.8
+
   solid-prevent-scroll@0.1.6:
     resolution: {integrity: sha512-uLyVFx5bQL0/Gw3dr7BRsFiZ5CGyPUeqVW44dMxcSGt4eC7N40QJirMUTbLDaYeOTTyQ2MtXfk7Td3FdaBfAFw==}
     peerDependencies:
@@ -4657,6 +4678,11 @@ snapshots:
     dependencies:
       solid-js: 1.8.22
 
+  '@corvu/utils@0.4.1(solid-js@1.8.22)':
+    dependencies:
+      '@floating-ui/dom': 1.6.10
+      solid-js: 1.8.22
+
   '@deno/shim-deno-test@0.5.0': {}
 
   '@deno/shim-deno@0.19.1':
@@ -4894,12 +4920,19 @@ snapshots:
     dependencies:
       '@floating-ui/utils': 0.2.1
 
+  '@floating-ui/dom@1.6.10':
+    dependencies:
+      '@floating-ui/core': 1.6.0
+      '@floating-ui/utils': 0.2.7
+
   '@floating-ui/dom@1.6.3':
     dependencies:
       '@floating-ui/core': 1.6.0
       '@floating-ui/utils': 0.2.1
 
   '@floating-ui/utils@0.2.1': {}
+
+  '@floating-ui/utils@0.2.7': {}
 
   '@fontsource-variable/gabarito@5.0.4': {}
 
@@ -4953,16 +4986,19 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.4.15
 
-  '@kobalte/core@0.12.6(solid-js@1.8.22)':
+  '@kobalte/core@0.13.6(solid-js@1.8.22)':
     dependencies:
       '@floating-ui/dom': 1.6.3
       '@internationalized/date': 3.5.2
       '@internationalized/number': 3.5.1
-      '@kobalte/utils': 0.9.0(solid-js@1.8.22)
+      '@kobalte/utils': 0.9.1(solid-js@1.8.22)
+      '@solid-primitives/props': 3.1.11(solid-js@1.8.22)
+      '@solid-primitives/resize-observer': 2.0.26(solid-js@1.8.22)
       solid-js: 1.8.22
+      solid-presence: 0.1.8(solid-js@1.8.22)
       solid-prevent-scroll: 0.1.6(solid-js@1.8.22)
 
-  '@kobalte/utils@0.9.0(solid-js@1.8.22)':
+  '@kobalte/utils@0.9.1(solid-js@1.8.22)':
     dependencies:
       '@solid-primitives/event-listener': 2.3.3(solid-js@1.8.22)
       '@solid-primitives/keyed': 1.2.2(solid-js@1.8.22)
@@ -5744,6 +5780,14 @@ snapshots:
       solid-js: 1.8.22
 
   '@solid-primitives/resize-observer@2.0.25(solid-js@1.8.22)':
+    dependencies:
+      '@solid-primitives/event-listener': 2.3.3(solid-js@1.8.22)
+      '@solid-primitives/rootless': 1.4.5(solid-js@1.8.22)
+      '@solid-primitives/static-store': 0.0.8(solid-js@1.8.22)
+      '@solid-primitives/utils': 6.2.3(solid-js@1.8.22)
+      solid-js: 1.8.22
+
+  '@solid-primitives/resize-observer@2.0.26(solid-js@1.8.22)':
     dependencies:
       '@solid-primitives/event-listener': 2.3.3(solid-js@1.8.22)
       '@solid-primitives/rootless': 1.4.5(solid-js@1.8.22)
@@ -7641,6 +7685,11 @@ snapshots:
       csstype: 3.1.3
       seroval: 1.1.1
       seroval-plugins: 1.1.1(seroval@1.1.1)
+
+  solid-presence@0.1.8(solid-js@1.8.22):
+    dependencies:
+      '@corvu/utils': 0.4.1(solid-js@1.8.22)
+      solid-js: 1.8.22
 
   solid-prevent-scroll@0.1.6(solid-js@1.8.22):
     dependencies:

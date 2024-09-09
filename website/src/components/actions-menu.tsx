@@ -15,6 +15,7 @@ import { TbFocusCentered } from 'solid-icons/tb';
 import { VsEdit } from 'solid-icons/vs';
 import { useGrabcutCanvas } from '~/hooks/use-grabcut-canvas';
 import { drawStroke } from '~/hooks/use-grabcut-canvas/utils';
+import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 
 export function ActionsMenu(props: {
   source: string;
@@ -39,7 +40,7 @@ export function ActionsMenu(props: {
     maskUrl: props.mask,
     resultUrl: props.result,
     drawStroke: drawStroke,
-    eventTrigger: 'mousemove'
+    eventTrigger: 'mousemove',
   });
   return (
     <div class="rounded-sm px-2 py-1 bg-white absolute bottom-0 left-0 flex gap-x-4 items-center">
@@ -128,16 +129,12 @@ export function ActionsMenu(props: {
       >
         <AiOutlineLine size={20} />
       </button>
-      <button
-        type="button"
-        onClick={() => setCurrentMode('draw-yellow')}
-        class={clsx(
-          'hover:bg-gray-100 rounded-full h-7 w-7 grid place-items-center',
-          currentMode() === 'draw-yellow' && 'bg-gray-100',
-        )}
-      >
-        <VsEdit size={17} />
-      </button>
+      <Tooltip>
+        <TooltipTrigger>
+          hello
+        </TooltipTrigger>
+        <TooltipContent>Draw yellow</TooltipContent>
+      </Tooltip>
       <button
         onClick={() => setCurrentMode('erase')}
         class={clsx(

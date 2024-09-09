@@ -1,12 +1,18 @@
+import type { DialogTriggerProps } from '@kobalte/core/dialog';
 import {
   Dialog,
+  DialogContent,
   DialogContentWithoutClose,
+  DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from '~/components/ui/dialog';
 import { Separator } from './ui/separator';
+import { Button } from './ui/button';
 
-export function UploadingFileDialog(props: { open: boolean}) {
+export function UploadingFileDialog(props: { open: boolean }) {
   return (
     <Dialog open={props.open}>
       <DialogContentWithoutClose class="sm:max-w-[425px]">
