@@ -33,6 +33,7 @@ export function useGrabcutCanvas({
   const [currentMode, setCurrentMode] =
     createSignal<GrabcutActionType>("draw-green");
   let currentId = createId();
+  let svgImg: HTMLImageElement | null = null;
   let sourceImg: HTMLImageElement | null = null;
   let destinationImg: HTMLImageElement | null = null;
   let intermediateMask: HTMLCanvasElement | null = null;
@@ -77,6 +78,7 @@ export function useGrabcutCanvas({
     sourceCtx.globalAlpha = 0.5;
     sourceCtx.drawImage(intermediateMask, 0, 0);
     sourceCtx.globalAlpha = 1.0;
+    // sourceCtx.drawImage(svgImg, 0, 0);
 
     destinationCtx.setTransform(1, 0, 0, 1, 0, 0);
     destinationCtx.clearRect(
@@ -255,6 +257,7 @@ export function useGrabcutCanvas({
 
   async function loadImage() {
     const { sourceCtx, destinationCtx } = getCanvas();
+    // svgImg = await urlToImage('https://erased.13e14d558cce799d0040255703bae354.r2.cloudflarestorage.com/contour.svg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=8998abc8cba410ef72731b8554c88f75%2F20240909%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20240909T013455Z&X-Amz-Expires=604800&X-Amz-Signature=1cf7719a77fefa38925afc568d0372b4ee3ec5d6b798b02d00219644c831a483&X-Amz-SignedHeaders=host&x-id=GetObject')
     sourceImg = await urlToImage(sourceUrl);
     destinationImg = await urlToImage(resultUrl);
     storedMask = maskUrl ? await urlToImage(maskUrl) : null;
@@ -445,15 +448,6 @@ export function useGrabcutCanvas({
     destinationCtx.canvas.height = innerHeight;
     setupListeners(sourceCtx.canvas, "source");
     setupListeners(destinationCtx.canvas, "destination");
-    // function handleResize() {
-    //   sourceCtx.canvas.width = innerWidth / 2;
-    //   sourceCtx.canvas.height = innerHeight;
-    //   destinationCtx.canvas.width = innerWidth / 2;
-    //   destinationCtx.canvas.height = innerHeight;
-    //   dirty = true;
-    //   redrawEverything();
-    // }
-    //
     function handleResize() {
       sourceCtx.canvas.width = innerWidth / 2;
       sourceCtx.canvas.height = innerHeight;

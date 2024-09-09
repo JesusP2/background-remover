@@ -21,21 +21,22 @@ const getImages = async (id: string) => {
     .select()
     .from(imageTable)
     .where(and(eq(imageTable.id, id), isNull(imageTable.deleted)));
-  if (userId !== image.userId) return null;
+  if (userId !== image?.userId) return null;
   const imagesResults = await Promise.allSettled([
     createPresignedUrl(image.result),
     createPresignedUrl(image.source),
-    createPresignedUrl(image.base_mask),
     image.mask && createPresignedUrl(image.mask),
+    // createPresignedUrl('contour.svg'),
   ]);
   image.result =
     imagesResults[0].status === 'fulfilled' ? imagesResults[0].value : '';
   image.source =
     imagesResults[1].status === 'fulfilled' ? imagesResults[1].value : '';
-  image.base_mask =
-    imagesResults[2].status === 'fulfilled' ? imagesResults[2].value : '';
   image.mask =
-    imagesResults[3].status === 'fulfilled' ? imagesResults[3].value : null;
+    imagesResults[2]?.status === 'fulfilled' ? imagesResults[2].value : null;
+  // const contour =
+  //   imagesResults[3]?.status === 'fulfilled' ? imagesResults[3].value : null;
+  // console.log(contour)
   return image;
 };
 

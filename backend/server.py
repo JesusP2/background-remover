@@ -55,6 +55,6 @@ async def apply_mask_endpoint(
     trimap = new_mask.copy().astype("float32")
     trimap[mask_array == 229] = 128
     trimap = trimap / 255
-    rgba_image = apply_trimap(bgr_image, trimap, 'BGR')
+    alpha, rgba_image = apply_trimap(bgr_image, trimap, 'BGR')
     img_base64 = array_to_base64(rgba_image)
     return {"result": img_base64}

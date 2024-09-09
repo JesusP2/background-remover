@@ -89,4 +89,4 @@ def apply_trimap(image, trimap, image_type="RGB"):
     else:
         rgba_img = cv2.cvtColor(image, cv2.COLOR_BGR2RGBA)
     rgba_img[:, :, 3] = alpha_uint8
-    return rgba_img
+    return alpha_uint8, rgba_img
