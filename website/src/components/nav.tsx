@@ -108,6 +108,7 @@ export function Navbar(props: { route: string }) {
           <Show when={userId()}>
             <form method="post" action={signOutAction}>
               <Button
+                type="submit"
                 variant="ghost"
                 class="font-gabarito text-md text-zinc-600"
               >

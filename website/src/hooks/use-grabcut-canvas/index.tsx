@@ -1,6 +1,12 @@
 import { createId } from '@paralleldrive/cuid2';
 import { useAction, useParams } from '@solidjs/router';
-import { createSignal, onCleanup, onMount } from 'solid-js';
+import {
+  Accessor,
+  createEffect,
+  createSignal,
+  onCleanup,
+  onMount,
+} from 'solid-js';
 import { createStepAction } from '../../lib/actions/store-step';
 import {
   base64ToImage,
@@ -17,6 +23,7 @@ import {
   ToastProgress,
   ToastTitle,
 } from '~/components/ui/toast';
+import type { CanvasLayout } from '~/lib/types';
 
 export function useGrabcutCanvas({
   sourceUrl,
@@ -24,11 +31,13 @@ export function useGrabcutCanvas({
   resultUrl,
   drawStroke,
   eventTrigger,
+  canvasLayout,
 }: {
   sourceUrl: string;
   maskUrl: string | null;
   resultUrl: string;
   eventTrigger: 'mousedown' | 'mousemove';
+  canvasLayout: Accessor<CanvasLayout>;
   drawStroke: <T extends GrabcutAction>(
     action: T,
     ctx: CanvasRenderingContext2D,
@@ -84,7 +93,6 @@ export function useGrabcutCanvas({
     sourceCtx.globalAlpha = 0.5;
     sourceCtx.drawImage(intermediateMask, 0, 0);
     sourceCtx.globalAlpha = 1.0;
-    // sourceCtx.drawImage(svgImg, 0, 0);
 
     destinationCtx.setTransform(1, 0, 0, 1, 0, 0);
     destinationCtx.clearRect(
@@ -102,6 +110,14 @@ export function useGrabcutCanvas({
       matrix[5],
     );
     destinationCtx.drawImage(destinationImg, 0, 0);
+    destinationCtx.strokeStyle = 'black';
+    destinationCtx.lineWidth = 1 / scale;
+    destinationCtx.strokeRect(
+      0,
+      0,
+      destinationImg.width,
+      destinationImg.height,
+    );
   }
 
   function update() {
@@ -449,23 +465,37 @@ export function useGrabcutCanvas({
     anchor.click();
   }
 
+  function handleResize() {
+    const { sourceCtx, destinationCtx } = getCanvas();
+    if (canvasLayout() === 'both') {
+      sourceCtx.canvas.width = innerWidth / 2;
+      destinationCtx.canvas.width = innerWidth / 2;
+    } else {
+      sourceCtx.canvas.width = innerWidth;
+      destinationCtx.canvas.width = innerWidth;
+    }
+    sourceCtx.canvas.height = innerHeight;
+    destinationCtx.canvas.height = innerHeight;
+    dirty = true;
+    adjustImagePosition(sourceCtx);
+    redrawEverything();
+  }
+
+  createEffect(handleResize);
+
   onMount(() => {
     const { sourceCtx, destinationCtx } = getCanvas();
-    sourceCtx.canvas.width = innerWidth / 2;
+    if (canvasLayout() === 'both') {
+      sourceCtx.canvas.width = innerWidth / 2;
+      destinationCtx.canvas.width = innerWidth / 2;
+    } else {
+      sourceCtx.canvas.width = innerWidth;
+      destinationCtx.canvas.width = innerWidth;
+    }
     sourceCtx.canvas.height = innerHeight;
-    destinationCtx.canvas.width = innerWidth / 2;
     destinationCtx.canvas.height = innerHeight;
     setupListeners(sourceCtx.canvas, 'source');
     setupListeners(destinationCtx.canvas, 'destination');
-    function handleResize() {
-      sourceCtx.canvas.width = innerWidth / 2;
-      sourceCtx.canvas.height = innerHeight;
-      destinationCtx.canvas.width = innerWidth / 2;
-      destinationCtx.canvas.height = innerHeight;
-      dirty = true;
-      adjustImagePosition(sourceCtx);
-      redrawEverything();
-    }
     window.addEventListener('resize', handleResize);
     loadImage();
     onCleanup(() => {

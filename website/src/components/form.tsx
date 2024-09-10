@@ -1,16 +1,16 @@
 import { type ComponentProps, splitProps } from 'solid-js';
 import { cn } from '~/lib/utils';
-import { Input } from './ui/input';
-import { Label } from './ui/label';
+import { TextField, TextFieldRoot } from '~/components/ui/textfield';
 
 interface FormLabelProps extends ComponentProps<'label'> {
   error?: boolean;
+  htmlFor?: string;
 }
 export function FormLabel(props: FormLabelProps) {
   const [, rest] = splitProps(props, ['class']);
   return (
-    <Label
-      class={cn(props.error ? 'text-destructive' : '', props.class)}
+    <label
+      class={cn(props.error ? 'text-destructive text-sm' : 'text-sm', props.class)}
       {...rest}
     />
   );
@@ -22,13 +22,17 @@ interface FormInputProps extends ComponentProps<'input'> {
 export function FormInput(props: FormInputProps) {
   const [, rest] = splitProps(props, ['class']);
   return (
-    <Input
-      class={cn(
-        props.error ? 'border-destructive focus-visible:ring-destructive' : '',
-        props.class,
-      )}
-      {...rest}
-    />
+    <TextFieldRoot>
+      <TextField
+        class={cn(
+          props.error
+            ? 'border-destructive focus-visible:ring-destructive'
+            : '',
+          props.class,
+        )}
+        {...rest}
+      />
+    </TextFieldRoot>
   );
 }
 

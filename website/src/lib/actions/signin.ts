@@ -6,32 +6,31 @@ import { lucia } from "../auth";
 import { db } from "../db";
 import { userTable } from "../db/schema";
 import { rateLimit } from "../rate-limiter";
+import { signinSchema } from "../schemas";
 
 export const signinAction = action(async (formData: FormData) => {
   "use server";
   const error = await rateLimit();
   if (error) {
-    return error;
-  }
-  const username = formData.get("username");
-  if (
-    typeof username !== "string" ||
-    username.length < 3 ||
-    username.length > 31 ||
-    !/^[a-z0-9_-]+$/.test(username)
-  ) {
     return {
-      username: "Invalid username",
+      fieldErrors: {
+        form: ["Too many requests"],
+        username: [],
+        password: [],
+      },
     };
   }
-  const password = formData.get("password");
-  if (
-    typeof password !== "string" ||
-    password.length < 6 ||
-    password.length > 255
-  ) {
+  const username = formData.get("username") as string;
+  const password = formData.get("password") as string;
+  const result = signinSchema.safeParse({ username, password });
+  if (!result.success) {
+    const errors = result.error.flatten().fieldErrors;
     return {
-      password: "Invalid password",
+      fieldErrors: {
+        form: [],
+        username: errors.username,
+        password: errors.password,
+      },
     };
   }
 
@@ -41,8 +40,11 @@ export const signinAction = action(async (formData: FormData) => {
     .where(eq(userTable.username, username.toLowerCase()));
   if (!existingUser) {
     return {
-      username: "Incorrect username or password",
-      password: "Incorrect username or password",
+      fieldErrors: {
+        form: [],
+        username: ["Incorrect username or password"],
+        password: ["Incorrect username or password"],
+      },
     };
   }
 
@@ -52,7 +54,11 @@ export const signinAction = action(async (formData: FormData) => {
   );
   if (!validPassword) {
     return {
-      password: "Incorrect password",
+      fieldErrors: {
+        form: [],
+        username: [],
+        password: ["Invalid password"],
+      },
     };
   }
 

@@ -4,68 +4,70 @@ import {
   AiOutlineEyeInvisible,
   AiOutlineLoading,
 } from 'solid-icons/ai';
-import { Match, Switch, createSignal } from 'solid-js';
-import { FormInput, FormLabel, FormMessage } from '~/components/form';
+import { A } from '@solidjs/router';
+import { createSignal } from 'solid-js';
+import { FormInput, FormLabel } from '~/components/form';
 import { Button } from '~/components/ui/button';
 import { signupAction } from '~/lib/actions/signup';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '~/components/ui/card';
 
 export default function Signup() {
   const signupState = useSubmission(signupAction);
   const [showPassword, setShowPassword] = createSignal(false);
   return (
-    <div class="font-geist rounded-lg border bg-card text-card-foreground shadow-sm mx-auto max-w-sm">
-      <div class="lex flex-col space-y-1.5 p-6">
-        <h3 class="font-semibold tracking-tight text-2xl">Sign up</h3>
-        <p class="text-sm text-muted-foreground">
-          Enter your email below to create an account
-        </p>
-      </div>
-      <div class="p-6 pt-0">
-        <form class="grid gap-4" method="post" action={signupAction}>
+    <form method="post" action={signupAction} class="w-full max-w-sm">
+      <Card class="w-full max-w-sm">
+        <CardHeader>
+          <CardTitle class="text-2xl text-center">Sign up</CardTitle>
+          <CardDescription class="text-center">Get started by creating an account</CardDescription>
+        </CardHeader>
+        <CardContent class="grid gap-4">
           <div class="grid gap-2">
-            <FormLabel for="username" error={!(signupState.result instanceof Error) && !!signupState.result?.username}>
+            <FormLabel
+              error={!!signupState.result?.fieldErrors.username?.[0]}
+              htmlFor="username"
+            >
               Username
             </FormLabel>
-            <FormInput
-              disabled={signupState.pending}
-              error={!(signupState.result instanceof Error) && !!signupState.result?.username}
-              name="username"
-              id="username"
-            />
-            <FormMessage error={!(signupState.result instanceof Error) && !!signupState.result?.username}>
-              {!(signupState.result instanceof Error) && signupState.result?.username}
-            </FormMessage>
+            <FormInput id="username" name="username" placeholder="John Doe" />
+            <span class="text-sm text-red-500">
+              {signupState.result?.fieldErrors.username?.[0]}
+            </span>
           </div>
-          <div class="grid gap-2 relative">
-            <div class="flex gap-x-2 items-center">
-              <FormLabel for="password" error={!(signupState.result instanceof Error) && !!signupState.result?.password}>
+          <div class="grid gap-2">
+            <div class="flex items-center gap-x-4">
+              <FormLabel
+                error={!!signupState.result?.fieldErrors.password?.[0]}
+                htmlFor="password"
+              >
                 Password
               </FormLabel>
-              <Switch>
-                <Match when={showPassword()}>
-                  <button onClick={() => setShowPassword(false)}>
-                    <AiOutlineEyeInvisible />
-                  </button>
-                </Match>
-                <Match when={!showPassword()}>
-                  <button onClick={() => setShowPassword(true)}>
-                    <AiOutlineEye />
-                  </button>
-                </Match>
-              </Switch>
+              <button
+                type="button"
+                onClick={() => setShowPassword((prev) => !prev)}
+                class="hover:text-gray-600"
+              >
+                {showPassword() ? <AiOutlineEyeInvisible /> : <AiOutlineEye />}
+              </button>
             </div>
             <FormInput
-              disabled={signupState.pending}
-              error={!(signupState.result instanceof Error) && !!signupState.result?.password}
+              id="password"
               name="password"
               type={showPassword() ? 'text' : 'password'}
-              id="password"
+              required
+              minLength={8}
             />
-            <FormMessage error={!(signupState.result instanceof Error) && !!signupState.result?.password}>
-              {!(signupState.result instanceof Error) && signupState.result?.password}
-            </FormMessage>
+            <span class="text-sm text-red-500">
+              {signupState.result?.fieldErrors.password?.[0]}
+            </span>
           </div>
-          <Button disabled={signupState.pending} class="w-full">
+          <Button type="submit" disabled={signupState.pending} class="w-full">
             {signupState.pending ? (
               <AiOutlineLoading
                 class={
@@ -76,14 +78,14 @@ export default function Signup() {
               'Sign up'
             )}
           </Button>
-        </form>
-        <div class="mt-4 text-center text-sm">
-          Don you have an account?{' '}
-          <a class="underline" href="/auth/signin">
-            Login
-          </a>
-        </div>
-      </div>
-    </div>
+          <div class="text-center text-sm">
+            Don&apos;t have an account?{' '}
+            <A href="/auth/signin" class="underline">
+              Sign in
+            </A>
+          </div>
+        </CardContent>
+      </Card>
+    </form>
   );
 }

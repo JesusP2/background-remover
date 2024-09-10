@@ -7,6 +7,7 @@ import { rateLimit } from "../rate-limiter";
 export const signOutAction = action(async () => {
   'use server'
   const error = await rateLimit();
+  console.error(error)
   if (error) {
     return error;
   }

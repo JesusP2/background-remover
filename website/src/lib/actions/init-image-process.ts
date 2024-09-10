@@ -9,6 +9,7 @@ import { rateLimit } from "../rate-limiter";
 export const uploadImageAction = action(async (file: File) => {
   "use server";
   try {
+    console.log('trying to do anything')
     const error = await rateLimit();
     if (error) {
       return error;

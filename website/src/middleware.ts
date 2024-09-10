@@ -8,8 +8,6 @@ import {
 } from "vinxi/http";
 import { lucia } from "./lib/auth";
 import { redirect } from "@solidjs/router";
-import { nonLoggedInCookie } from "./lib/constants";
-import { createId } from "@paralleldrive/cuid2";
 
 export default createMiddleware({
   onRequest: async (event) => {
@@ -34,17 +32,8 @@ export default createMiddleware({
     if (!sessionId) {
       event.locals.session = null;
       event.locals.user = null;
-      const storedUserId = getCookie(nonLoggedInCookie);
-      if (!storedUserId) {
-        const id = createId();
-        setCookie(nonLoggedInCookie, id);
-        event.locals.userId = id;
-      } else {
-        event.locals.userId = storedUserId;
-      }
       return;
     }
-
     const { session, user } = await lucia.validateSession(sessionId);
     if (session?.fresh) {
       appendResponseHeader(
@@ -58,6 +47,7 @@ export default createMiddleware({
         lucia.createBlankSessionCookie().serialize(),
       );
     }
+    console.log(session, user)
     event.locals.session = session;
     event.locals.user = user;
     event.locals.userId = session?.userId as string;

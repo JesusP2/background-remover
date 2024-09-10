@@ -16,11 +16,14 @@ import { VsEdit } from 'solid-icons/vs';
 import { useGrabcutCanvas } from '~/hooks/use-grabcut-canvas';
 import { drawStroke } from '~/hooks/use-grabcut-canvas/utils';
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
+import type { Accessor } from 'solid-js';
+import type { CanvasLayout } from '~/lib/types';
 
 export function ActionsMenu(props: {
   source: string;
   mask: string | null;
   result: string;
+  canvasLayout: Accessor<CanvasLayout>
 }) {
   const {
     setCurrentMode,
@@ -41,6 +44,7 @@ export function ActionsMenu(props: {
     resultUrl: props.result,
     drawStroke: drawStroke,
     eventTrigger: 'mousemove',
+    canvasLayout: props.canvasLayout,
   });
   return (
     <div class="rounded-sm px-2 py-1 bg-white absolute bottom-0 left-0 flex gap-x-4 items-center">
@@ -131,7 +135,16 @@ export function ActionsMenu(props: {
       </button>
       <Tooltip>
         <TooltipTrigger>
-          hello
+          <button
+            type="button"
+            onClick={() => setCurrentMode('draw-yellow')}
+            class={clsx(
+              'hover:bg-gray-100 rounded-full h-7 w-7 grid place-items-center',
+              currentMode() === 'draw-yellow' && 'bg-gray-100',
+            )}
+          >
+            <VsEdit size={20} />
+          </button>
         </TooltipTrigger>
         <TooltipContent>Draw yellow</TooltipContent>
       </Tooltip>
