@@ -147,14 +147,25 @@ _, alpha = cv2.threshold(alpha, 127, 255, cv2.THRESH_BINARY)
 contours, _ = cv2.findContours(alpha, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 height, width = alpha.shape
 contour_image = np.zeros((height, width, 3), dtype=np.uint8)
-cv2.drawContours(contour_image, contours, -1, (0, 255, 255), 2)
+
+# Smooth the contours
+smoothed_contours = []
+for contour in contours:
+    # Calculate the perimeter of the contour
+    perimeter = cv2.arcLength(contour, True)
+    # Approximate the contour
+    epsilon = 0.001 * perimeter  # Adjust this value to control smoothness
+    approx = cv2.approxPolyDP(contour, epsilon, True)
+    smoothed_contours.append(approx)
+
+# Draw the smoothed contours
+cv2.drawContours(contour_image, smoothed_contours, -1, (0, 255, 255), 2)
 
 rgb_and = cv2.bitwise_or(rgb_img, contour_image)
 svg_base64 = image_to_svg_base64(contour_image)
 contour_end_time = time() - contour_start_time
 cv2.imwrite(f"./result_images/pipeline/contour.jpg", contour_image)
 save_base64_to_file(svg_base64, './result_images/pipeline/contour.svg')
-
 
 # ----------------------------
 svg_base64_2 = image_to_single_line_svg_base64(alpha)
