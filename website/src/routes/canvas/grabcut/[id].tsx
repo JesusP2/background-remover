@@ -26,7 +26,7 @@ const getImages = async (id: string) => {
     createPresignedUrl(image.result),
     createPresignedUrl(image.source),
     image.mask && createPresignedUrl(image.mask),
-    // createPresignedUrl('contour.svg'),
+    createPresignedUrl('contour.svg'),
   ]);
   image.result =
     imagesResults[0].status === 'fulfilled' ? imagesResults[0].value : '';
@@ -34,8 +34,8 @@ const getImages = async (id: string) => {
     imagesResults[1].status === 'fulfilled' ? imagesResults[1].value : '';
   image.mask =
     imagesResults[2]?.status === 'fulfilled' ? imagesResults[2].value : null;
-  // const contour =
-  //   imagesResults[3]?.status === 'fulfilled' ? imagesResults[3].value : null;
+  const contour =
+    imagesResults[3]?.status === 'fulfilled' ? imagesResults[3].value : null;
   // console.log(contour)
   return image;
 };

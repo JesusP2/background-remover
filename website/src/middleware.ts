@@ -47,7 +47,6 @@ export default createMiddleware({
         lucia.createBlankSessionCookie().serialize(),
       );
     }
-    console.log(session, user)
     event.locals.session = session;
     event.locals.user = user;
     event.locals.userId = session?.userId as string;
