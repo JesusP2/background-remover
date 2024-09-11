@@ -31,6 +31,7 @@ export function Canvases(props: { img: SelectImage }) {
         mask={props.img.mask}
         result={props.img.result}
         canvasLayout={canvasLayout}
+        name={props.img.name}
       />
       <canvas
         hidden={canvasLayout() === 'result'}

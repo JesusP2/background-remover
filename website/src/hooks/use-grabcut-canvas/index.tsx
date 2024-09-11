@@ -477,6 +477,9 @@ export function useGrabcutCanvas({
     sourceCtx.canvas.height = innerHeight;
     destinationCtx.canvas.height = innerHeight;
     dirty = true;
+    // sometimes the canvases need to get ajusted again after resizing
+    sourceCtx.imageSmoothingEnabled = false;
+    destinationCtx.imageSmoothingEnabled = false;
     adjustImagePosition(sourceCtx);
     redrawEverything();
   }
