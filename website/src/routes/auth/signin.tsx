@@ -93,6 +93,7 @@ export default function Signin() {
                 id="username"
                 name="username"
                 placeholder="John Doe"
+                type="text"
                 required
                 minLength={3}
               />

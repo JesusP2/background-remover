@@ -93,7 +93,6 @@ export function useGrabcutCanvas({
     sourceCtx.globalAlpha = 0.5;
     sourceCtx.drawImage(intermediateMask, 0, 0);
     sourceCtx.globalAlpha = 1.0;
-    // sourceCtx.drawImage(svgImg, 0, 0)
 
     destinationCtx.setTransform(1, 0, 0, 1, 0, 0);
     destinationCtx.clearRect(
