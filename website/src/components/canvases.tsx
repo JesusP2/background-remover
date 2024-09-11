@@ -8,29 +8,12 @@ export function Canvases(props: { img: SelectImage }) {
   const [canvasLayout, setCanvasLayout] = createSignal<CanvasLayout>('both');
   return (
     <>
-      <div class="rounded-sm px-2 py-1 bg-white absolute top-0 left-0 flex gap-x-4 items-center">
-        <button
-          type="button"
-          title="result"
-          onClick={() => setCanvasLayout('result')}
-          class="hover:bg-gray-100 rounded-full h-7 w-7 grid place-items-center"
-        >
-          result
-        </button>
-        <button
-          type="button"
-          title="both"
-          onClick={() => setCanvasLayout('both')}
-          class="hover:bg-gray-100 rounded-full h-7 w-7 grid place-items-center"
-        >
-          both
-        </button>
-      </div>
       <ActionsMenu
         source={props.img.source}
         mask={props.img.mask}
         result={props.img.result}
         canvasLayout={canvasLayout}
+        setCanvasLayout={setCanvasLayout}
         name={props.img.name}
       />
       <canvas
