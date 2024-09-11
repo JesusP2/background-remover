@@ -1,21 +1,21 @@
-import { and, eq, isNull, sql } from "drizzle-orm";
-import { getRequestEvent } from "solid-js/web";
-import { db } from "../db";
-import { imageTable } from "../db/schema";
-import { uploadFile } from "../r2";
-import { action, json } from "@solidjs/router";
-import { rateLimit } from "../rate-limiter";
-import { envs } from "../db/env-vars";
+import { action, json } from '@solidjs/router';
+import { and, eq, isNull, sql } from 'drizzle-orm';
+import { getRequestEvent } from 'solid-js/web';
+import { db } from '../db';
+import { envs } from '../db/env-vars';
+import { imageTable } from '../db/schema';
+import { uploadFile } from '../r2';
+import { rateLimit } from '../rate-limiter';
 
 export const createStepAction = action(
   async (image: File, mask: File /*baseMaskImg: File */, id: string) => {
-    "use server";
+    'use server';
     const error = await rateLimit();
     if (error) {
       return error;
     }
     const userId = getRequestEvent()?.locals.userId;
-    if (!userId) return new Error("Unauthorized");
+    if (!userId) return new Error('Unauthorized');
     try {
       const imageRecord = await db
         .select({
@@ -24,25 +24,25 @@ export const createStepAction = action(
         .from(imageTable)
         .where(and(eq(imageTable.id, id), isNull(imageTable.deleted)));
       if (!imageRecord.length || imageRecord[0].userId !== userId) {
-        return new Error("Unauthorized");
+        return new Error('Unauthorized');
       }
 
       const formData = new FormData();
-      formData.append("image_file", image);
-      formData.append("mask_file", mask);
+      formData.append('image_file', image);
+      formData.append('mask_file', mask);
       // formData.append("base_mask_file", baseMaskImg);
       const res = await fetch(`${envs.PYTHON_BACKEND}/mask`, {
-        method: "POST",
+        method: 'POST',
         body: formData,
         headers: {
-          Accept: "application/json",
+          Accept: 'application/json',
         },
       });
       if (!res.ok) {
-        throw new Error("Failed to upload image");
+        throw new Error('Failed to upload image');
       }
       const payload = await res.json();
-      const resultBuffer = Buffer.from(payload.result.slice(22), "base64");
+      const resultBuffer = Buffer.from(payload.result.slice(22), 'base64');
       const maskBuffer = Buffer.from(await mask.arrayBuffer());
 
       await Promise.all([
@@ -58,7 +58,7 @@ export const createStepAction = action(
       return json(payload);
     } catch (err) {
       console.error(err);
-      return new Error("Unexpected Error");
+      return new Error('Unexpected Error');
     }
   },
 );

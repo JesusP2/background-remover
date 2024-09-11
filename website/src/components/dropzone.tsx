@@ -18,7 +18,7 @@ export function DropZone(props: {
     <label
       ref={dropzoneRef}
       class={cn(
-        'grid place-items-center gap-2 p-8 border-2 border-dashed rounded-lg cursor-pointer border-gray-200 hover:border-gray-400 text-zinc-400 hover:text-zinc-500 mb-10 w-full',
+        'grid place-items-center gap-2 p-8 border-2 border-dashed rounded-lg cursor-pointer border-gray-200 hover:border-gray-400 text-zinc-400 hover:text-zinc-500 w-full',
         props.class,
       )}
     >

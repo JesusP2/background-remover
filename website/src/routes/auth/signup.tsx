@@ -1,14 +1,13 @@
 import { useSubmission } from '@solidjs/router';
+import { A } from '@solidjs/router';
 import {
   AiOutlineEye,
   AiOutlineEyeInvisible,
   AiOutlineLoading,
 } from 'solid-icons/ai';
-import { A } from '@solidjs/router';
 import { createSignal } from 'solid-js';
 import { FormInput, FormLabel } from '~/components/form';
 import { Button } from '~/components/ui/button';
-import { signupAction } from '~/lib/actions/signup';
 import {
   Card,
   CardContent,
@@ -16,6 +15,7 @@ import {
   CardHeader,
   CardTitle,
 } from '~/components/ui/card';
+import { signupAction } from '~/lib/actions/signup';
 
 export default function Signup() {
   const signupState = useSubmission(signupAction);
@@ -25,7 +25,9 @@ export default function Signup() {
       <Card class="w-full max-w-sm">
         <CardHeader>
           <CardTitle class="text-2xl text-center">Sign up</CardTitle>
-          <CardDescription class="text-center">Get started by creating an account</CardDescription>
+          <CardDescription class="text-center">
+            Get started by creating an account
+          </CardDescription>
         </CardHeader>
         <CardContent class="grid gap-4">
           <div class="grid gap-2">

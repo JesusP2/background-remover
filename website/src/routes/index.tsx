@@ -1,7 +1,19 @@
+import { toaster } from '@kobalte/core';
+import { DialogTriggerProps } from '@kobalte/core/dialog';
 import { A, useAction, useSubmission } from '@solidjs/router';
 import { DropZone } from '~/components/dropzone';
+import { LoadingScreen } from '~/components/loading-screen';
 import { Navbar } from '~/components/nav';
-import { toaster } from '@kobalte/core';
+import { Button } from '~/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogContentWithoutClose,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '~/components/ui/dialog';
+import { Separator } from '~/components/ui/separator';
 import {
   Toast,
   ToastContent,
@@ -23,37 +35,44 @@ export default function Index() {
           Background Removal App
         </h1>
         <div class="group z-10 w-[153px]">
-          <A href="#dropzone" class="relative h-12">
-            <div class="border-2 border-black bg-white rounded-lg w-36 h-12 relative">
-              <div class="bg-black w-36 h-12 relative top-[-0.7rem] rounded-lg text-white grid place-items-center font-gabarito text-lg group-hover:top-[-0.4rem] group-hover:left-[0.2rem] left-[0.5rem] duration-100">
-                Get Started
-              </div>
-            </div>
-          </A>
+          <Dialog>
+            <DialogTrigger
+              // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+              as={(props: any) => (
+                <button class="relative h-12" {...props}>
+                  <div class="border-2 border-black bg-white rounded-lg w-36 h-12 relative">
+                    <div class="bg-black w-36 h-12 relative top-[-0.7rem] rounded-lg text-white grid place-items-center font-gabarito text-lg group-hover:top-[-0.4rem] group-hover:left-[0.2rem] left-[0.5rem] duration-100">
+                      Get Started
+                    </div>
+                  </div>
+                </button>
+              )}
+            />
+            <DialogContentWithoutClose>
+              <DropZone
+                onFileChange={async (file) => {
+                  const payload = await uploadImage(file);
+                  if (payload instanceof Error) {
+                    toaster.show((props) => (
+                      <Toast toastId={props.toastId}>
+                        <ToastContent>
+                          <ToastTitle>{payload.message}</ToastTitle>
+                        </ToastContent>
+                        <ToastProgress />
+                      </Toast>
+                    ));
+                  }
+                }}
+              />
+            </DialogContentWithoutClose>
+          </Dialog>
         </div>
         <img
           src="/collage.png"
           alt="collage"
           class="relative sm:top-[-130px]"
         />
-        <div id="dropzone" class="w-full">
-          <DropZone
-            onFileChange={async (file) => {
-              const payload = await uploadImage(file);
-              if (payload instanceof Error) {
-                toaster.show((props) => (
-                  <Toast toastId={props.toastId}>
-                    <ToastContent>
-                      <ToastTitle>{payload.message}</ToastTitle>
-                    </ToastContent>
-                    <ToastProgress />
-                  </Toast>
-                ));
-              }
-            }}
-          />
-        </div>
-        <UploadingFileDialog open={uploadImageState.pending} />
+        <LoadingScreen />
       </main>
     </div>
   );

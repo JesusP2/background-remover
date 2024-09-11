@@ -1,27 +1,27 @@
-import { action, redirect } from "@solidjs/router";
-import { eq } from "drizzle-orm";
-import { Argon2id } from "oslo/password";
-import { appendResponseHeader } from "vinxi/http";
-import { lucia } from "../auth";
-import { db } from "../db";
-import { userTable } from "../db/schema";
-import { rateLimit } from "../rate-limiter";
-import { signinSchema } from "../schemas";
+import { action, redirect } from '@solidjs/router';
+import { eq } from 'drizzle-orm';
+import { Argon2id } from 'oslo/password';
+import { appendResponseHeader } from 'vinxi/http';
+import { lucia } from '../auth';
+import { db } from '../db';
+import { userTable } from '../db/schema';
+import { rateLimit } from '../rate-limiter';
+import { signinSchema } from '../schemas';
 
 export const signinAction = action(async (formData: FormData) => {
-  "use server";
+  'use server';
   const error = await rateLimit();
   if (error) {
     return {
       fieldErrors: {
-        form: ["Too many requests"],
+        form: ['Too many requests'],
         username: [],
         password: [],
       },
     };
   }
-  const username = formData.get("username") as string;
-  const password = formData.get("password") as string;
+  const username = formData.get('username') as string;
+  const password = formData.get('password') as string;
   const result = signinSchema.safeParse({ username, password });
   if (!result.success) {
     const errors = result.error.flatten().fieldErrors;
@@ -42,8 +42,8 @@ export const signinAction = action(async (formData: FormData) => {
     return {
       fieldErrors: {
         form: [],
-        username: ["Incorrect username or password"],
-        password: ["Incorrect username or password"],
+        username: ['Incorrect username or password'],
+        password: ['Incorrect username or password'],
       },
     };
   }
@@ -57,16 +57,16 @@ export const signinAction = action(async (formData: FormData) => {
       fieldErrors: {
         form: [],
         username: [],
-        password: ["Invalid password"],
+        password: ['Invalid password'],
       },
     };
   }
 
   const session = await lucia.createSession(existingUser[0].id, {});
   appendResponseHeader(
-    "Set-Cookie",
+    'Set-Cookie',
     lucia.createSessionCookie(session.id).serialize(),
   );
 
-  throw redirect("/");
-}, "signin-action");
+  throw redirect('/');
+}, 'signin-action');

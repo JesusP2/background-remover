@@ -13,17 +13,17 @@ import { IoCutOutline } from 'solid-icons/io';
 import { RiSystemAddFill } from 'solid-icons/ri';
 import { TbFocusCentered } from 'solid-icons/tb';
 import { VsEdit } from 'solid-icons/vs';
+import type { Accessor } from 'solid-js';
 import { useGrabcutCanvas } from '~/hooks/use-grabcut-canvas';
 import { drawStroke } from '~/hooks/use-grabcut-canvas/utils';
-import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
-import type { Accessor } from 'solid-js';
 import type { CanvasLayout } from '~/lib/types';
+import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 
 export function ActionsMenu(props: {
   source: string;
   mask: string | null;
   result: string;
-  canvasLayout: Accessor<CanvasLayout>
+  canvasLayout: Accessor<CanvasLayout>;
 }) {
   const {
     setCurrentMode,

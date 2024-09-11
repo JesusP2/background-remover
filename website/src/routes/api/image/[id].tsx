@@ -6,8 +6,8 @@ import { imageTable } from '~/lib/db/schema';
 
 export const GET: APIHandler = async (event) => {
   const { id } = event.params;
-  const req = getRequestEvent()
-  const userId = req?.locals.userId
+  const req = getRequestEvent();
+  const userId = req?.locals.userId;
   if (!userId) {
     return new Response(null, { status: 401 });
   }
@@ -16,8 +16,7 @@ export const GET: APIHandler = async (event) => {
     .select()
     .from(imageTable)
     .where(eq(imageTable.id, id));
-  if (userId !== images[0].userId)
-    return new Response(null, { status: 401 });
+  if (userId !== images[0].userId) return new Response(null, { status: 401 });
   if (!images.length) return new Response(null, { status: 404 });
   return new Response(JSON.stringify(images[0]), {
     status: 200,

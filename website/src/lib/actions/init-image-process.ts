@@ -1,20 +1,20 @@
-import { createId } from "@paralleldrive/cuid2";
-import { action, redirect } from "@solidjs/router";
-import { getRequestEvent } from "solid-js/web";
-import { db } from "../db";
-import { imageTable } from "../db/schema";
-import { uploadFile } from "../r2";
-import { rateLimit } from "../rate-limiter";
+import { createId } from '@paralleldrive/cuid2';
+import { action, redirect } from '@solidjs/router';
+import { getRequestEvent } from 'solid-js/web';
+import { db } from '../db';
+import { imageTable } from '../db/schema';
+import { uploadFile } from '../r2';
+import { rateLimit } from '../rate-limiter';
 
 export const uploadImageAction = action(async (file: File) => {
-  "use server";
+  'use server';
   try {
     const error = await rateLimit();
     if (error) {
       return error;
     }
     const userId = getRequestEvent()?.locals.userId;
-    if (!userId) return new Error("Unauthorized");
+    if (!userId) return new Error('Unauthorized');
     const sourceBuffer = Buffer.from(await file.arrayBuffer());
     const id = createId();
     await Promise.all([
@@ -34,4 +34,4 @@ export const uploadImageAction = action(async (file: File) => {
   } catch (error) {
     console.error(error);
   }
-}, "upload-image-action");
+}, 'upload-image-action');

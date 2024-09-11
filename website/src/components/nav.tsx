@@ -1,14 +1,10 @@
-import {
-  A,
-  cache,
-  createAsync,
-} from '@solidjs/router';
-import { cn } from '~/lib/utils';
-import { Button, buttonVariants } from './ui/button';
+import { A, cache, createAsync } from '@solidjs/router';
 import { Show, createSignal } from 'solid-js';
 import { getRequestEvent } from 'solid-js/web';
 import { signOutAction } from '~/lib/actions/signout';
 import { rateLimit } from '~/lib/rate-limiter';
+import { cn } from '~/lib/utils';
+import { Button, buttonVariants } from './ui/button';
 
 const getUserId = cache(async () => {
   'use server';
@@ -19,7 +15,7 @@ const getUserId = cache(async () => {
   const req = getRequestEvent();
   if (!req?.locals.userId) return null;
   return req.locals.userId;
-}, 'session')
+}, 'session');
 
 export const route = {
   load: () => getUserId(),

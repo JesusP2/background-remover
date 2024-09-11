@@ -1,1 +1,1 @@
-export type CanvasLayout = 'mask' | 'result' | 'both'
+export type CanvasLayout = 'mask' | 'result' | 'both';

@@ -7,7 +7,6 @@ export function PerfectArrow(props: {
 }) {
   const { p1, p2 } = props;
 
-
   const arrow = getArrow(props.p1.x, p1.y, p2.x, p2.y, {
     padEnd: 1,
   });

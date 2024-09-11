@@ -5,8 +5,7 @@ import type { Output } from 'valibot';
 
 export const imageTable = sqliteTable('image', {
   id: text('id').notNull().primaryKey(),
-  userId: text('user_id')
-    .notNull(),
+  userId: text('user_id').notNull(),
   name: text('name').notNull(),
   source: text('source').notNull(),
   mask: text('mask'),

@@ -1,12 +1,20 @@
+import { toaster } from '@kobalte/core';
 import { createId } from '@paralleldrive/cuid2';
 import { useAction, useParams } from '@solidjs/router';
 import {
-  Accessor,
+  type Accessor,
   createEffect,
   createSignal,
   onCleanup,
   onMount,
 } from 'solid-js';
+import {
+  Toast,
+  ToastContent,
+  ToastProgress,
+  ToastTitle,
+} from '~/components/ui/toast';
+import type { CanvasLayout } from '~/lib/types';
 import { createStepAction } from '../../lib/actions/store-step';
 import {
   base64ToImage,
@@ -16,14 +24,6 @@ import {
   urlToImage,
 } from './utils';
 import type { GrabcutAction, GrabcutActionType } from './utils';
-import { toaster } from '@kobalte/core';
-import {
-  Toast,
-  ToastContent,
-  ToastProgress,
-  ToastTitle,
-} from '~/components/ui/toast';
-import type { CanvasLayout } from '~/lib/types';
 
 export function useGrabcutCanvas({
   sourceUrl,
@@ -48,7 +48,7 @@ export function useGrabcutCanvas({
   const [currentMode, setCurrentMode] =
     createSignal<GrabcutActionType>('draw-green');
   let currentId = createId();
-  let svgImg: HTMLImageElement | null = null;
+  const svgImg: HTMLImageElement | null = null;
   let sourceImg: HTMLImageElement | null = null;
   let destinationImg: HTMLImageElement | null = null;
   let intermediateMask: HTMLCanvasElement | null = null;

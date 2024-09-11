@@ -1,16 +1,16 @@
-import { action, redirect } from "@solidjs/router";
-import { eq } from "drizzle-orm";
-import { generateId } from "lucia";
-import { Argon2id } from "oslo/password";
-import { setCookie } from "vinxi/http";
-import { lucia } from "~/lib/auth";
-import { db } from "~/lib/db";
-import { userTable } from "~/lib/db/schema";
-import { rateLimit } from "../rate-limiter";
-import { signupSchema } from "../schemas";
+import { action, redirect } from '@solidjs/router';
+import { eq } from 'drizzle-orm';
+import { generateId } from 'lucia';
+import { Argon2id } from 'oslo/password';
+import { setCookie } from 'vinxi/http';
+import { lucia } from '~/lib/auth';
+import { db } from '~/lib/db';
+import { userTable } from '~/lib/db/schema';
+import { rateLimit } from '../rate-limiter';
+import { signupSchema } from '../schemas';
 
 export const signupAction = action(async (formData: FormData) => {
-  "use server";
+  'use server';
   const error = await rateLimit();
   if (error) {
     return {
@@ -21,8 +21,8 @@ export const signupAction = action(async (formData: FormData) => {
       },
     };
   }
-  const username = formData.get("username") as string;
-  const password = formData.get("password") as string;
+  const username = formData.get('username') as string;
+  const password = formData.get('password') as string;
   const result = signupSchema.safeParse({ username, password });
   if (!result.success) {
     const errors = result.error.flatten().fieldErrors;
@@ -49,7 +49,7 @@ export const signupAction = action(async (formData: FormData) => {
     return {
       fieldErrors: {
         form: [],
-        username: ["Username already exists"],
+        username: ['Username already exists'],
         password: [],
       },
     };
@@ -64,5 +64,5 @@ export const signupAction = action(async (formData: FormData) => {
   const sessionCookie = lucia.createSessionCookie(session.id);
   setCookie(sessionCookie.name, sessionCookie.value, sessionCookie.attributes);
 
-  throw redirect("/");
+  throw redirect('/');
 });

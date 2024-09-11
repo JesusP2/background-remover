@@ -1,4 +1,5 @@
-export type SamActionType = ''
+export type SamActionType =
+  | ''
   | 'move'
   | 'draw-green'
   | 'draw-red'

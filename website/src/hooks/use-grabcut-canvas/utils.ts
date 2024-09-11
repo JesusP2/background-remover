@@ -1,10 +1,10 @@
 const TRUNCATE_AT = 200;
 export type GrabcutActionType =
-  | "move"
-  | "draw-green"
-  | "draw-red"
-  | "draw-yellow"
-  | "erase";
+  | 'move'
+  | 'draw-green'
+  | 'draw-red'
+  | 'draw-yellow'
+  | 'erase';
 export type GrabcutAction = {
   id: string;
   type: GrabcutActionType;
@@ -17,9 +17,9 @@ export type GrabcutAction = {
 };
 
 export const grabcutColors = {
-  "draw-green": "#41fa5d",
-  "draw-red": "#fa4150",
-  "draw-yellow": "#fafa41",
+  'draw-green': '#41fa5d',
+  'draw-red': '#fa4150',
+  'draw-yellow': '#fafa41',
 } as Record<GrabcutActionType, string>;
 
 export async function urlToImage(url: string): Promise<HTMLImageElement> {
@@ -32,8 +32,8 @@ export async function urlToImage(url: string): Promise<HTMLImageElement> {
       resolve(reader.result);
     };
   });
-  if (typeof base64 !== "string") {
-    throw new Error("Failed to convert blob to base64.");
+  if (typeof base64 !== 'string') {
+    throw new Error('Failed to convert blob to base64.');
   }
   return base64ToImage(base64);
 }
@@ -54,7 +54,7 @@ export function fileToImage(file: File | Blob): Promise<HTMLImageElement> {
     reader.readAsDataURL(file);
     reader.onload = () => {
       const img = new Image();
-      if (typeof reader.result !== "string") return;
+      if (typeof reader.result !== 'string') return;
       img.src = reader.result;
       img.onload = () => {
         resolve(img);
@@ -64,11 +64,11 @@ export function fileToImage(file: File | Blob): Promise<HTMLImageElement> {
 }
 
 export function imageToCanvas(img: HTMLImageElement): HTMLCanvasElement {
-  const canvas = document.createElement("canvas");
+  const canvas = document.createElement('canvas');
   canvas.width = img.width;
   canvas.height = img.height;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) throw new Error("Failed to get 2d context.");
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('Failed to get 2d context.');
   ctx.drawImage(img, 0, 0);
   return canvas;
 }
@@ -81,7 +81,7 @@ export function canvasToFile(
   return new Promise((resolve) => {
     canvas.toBlob((blob) => {
       if (!blob) {
-        throw new Error("Failed to convert canvas to blob.");
+        throw new Error('Failed to convert canvas to blob.');
       }
       const file = new File([blob], fileName, { type: mimeType });
       resolve(file);
@@ -90,13 +90,13 @@ export function canvasToFile(
 }
 
 export function getCanvas() {
-  const sourceCanvas = document.querySelector<HTMLCanvasElement>("#source");
-  const sourceCtx = sourceCanvas?.getContext("2d");
+  const sourceCanvas = document.querySelector<HTMLCanvasElement>('#source');
+  const sourceCtx = sourceCanvas?.getContext('2d');
   const destinationCanvas =
-    document.querySelector<HTMLCanvasElement>("#destination");
-  const destinationCtx = destinationCanvas?.getContext("2d");
+    document.querySelector<HTMLCanvasElement>('#destination');
+  const destinationCtx = destinationCanvas?.getContext('2d');
   if (!sourceCtx || !sourceCanvas || !destinationCanvas || !destinationCtx) {
-    throw new Error("Canvas not found");
+    throw new Error('Canvas not found');
   }
   return { sourceCtx, destinationCtx };
 }
@@ -179,7 +179,7 @@ function bresenhamAlgorithm(
 export function drawStroke(
   action: GrabcutAction,
   ctx: CanvasRenderingContext2D,
-  newMousePosition?: { x: number; y: number; }
+  newMousePosition?: { x: number; y: number },
 ) {
   ctx.fillStyle = grabcutColors[action.type];
   let size: number[] = [];
@@ -201,7 +201,7 @@ export function drawStroke(
     size = [0.5];
   }
 
-  const mousePosition = { x: action.oldX, y: action.oldY }
+  const mousePosition = { x: action.oldX, y: action.oldY };
   if (newMousePosition) {
     mousePosition.x = newMousePosition.x;
     mousePosition.y = newMousePosition.y;
@@ -247,14 +247,14 @@ export function drawStroke(
 
 export function getDataPoints(actions: GrabcutAction[]) {
   const positive_points = actions
-    .filter((action) => action.type === "draw-green")
+    .filter((action) => action.type === 'draw-green')
     .map((action) => {
       const x = action.oldX / action.scale - action.pos.x / action.scale;
       const y = action.oldY / action.scale - action.pos.y / action.scale;
       return [x, y];
     });
   const negative_points = actions
-    .filter((action) => action.type === "draw-red")
+    .filter((action) => action.type === 'draw-red')
     .map((action) => {
       const x = action.oldX / action.scale - action.pos.x / action.scale;
       const y = action.oldY / action.scale - action.pos.y / action.scale;

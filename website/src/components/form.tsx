@@ -1,6 +1,6 @@
 import { type ComponentProps, splitProps } from 'solid-js';
-import { cn } from '~/lib/utils';
 import { TextField, TextFieldRoot } from '~/components/ui/textfield';
+import { cn } from '~/lib/utils';
 
 interface FormLabelProps extends ComponentProps<'label'> {
   error?: boolean;
@@ -10,7 +10,10 @@ export function FormLabel(props: FormLabelProps) {
   const [, rest] = splitProps(props, ['class']);
   return (
     <label
-      class={cn(props.error ? 'text-destructive text-sm' : 'text-sm', props.class)}
+      class={cn(
+        props.error ? 'text-destructive text-sm' : 'text-sm',
+        props.class,
+      )}
       {...rest}
     />
   );

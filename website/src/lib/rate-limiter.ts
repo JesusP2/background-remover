@@ -1,25 +1,25 @@
-import type { LibSQLDatabase } from "drizzle-orm/libsql";
-import type * as schema from "../lib/db/schema";
-import { rateLimitTable } from "./db/schema/rate-limit";
-import { and, count, eq, gt } from "drizzle-orm";
-import { createId } from "@paralleldrive/cuid2";
-import { db } from "./db";
-import { getRequestEvent } from "solid-js/web";
+import { createId } from '@paralleldrive/cuid2';
+import { and, count, eq, gt } from 'drizzle-orm';
+import type { LibSQLDatabase } from 'drizzle-orm/libsql';
+import { getRequestEvent } from 'solid-js/web';
+import type * as schema from '../lib/db/schema';
+import { db } from './db';
+import { rateLimitTable } from './db/schema/rate-limit';
 
 type Sum<A extends number, B extends number> = [
   ...ArrayOfLen<A>,
   ...ArrayOfLen<B>,
-]["length"];
+]['length'];
 type NumberLine<
   A extends number,
   $acc extends unknown[] = [],
-> = A extends $acc["length"]
+> = A extends $acc['length']
   ? $acc[number]
-  : NumberLine<A, [...$acc, Sum<$acc["length"], 1>]>;
-type ArrayOfLen<A, $acc extends unknown[] = []> = A extends $acc["length"]
+  : NumberLine<A, [...$acc, Sum<$acc['length'], 1>]>;
+type ArrayOfLen<A, $acc extends unknown[] = []> = A extends $acc['length']
   ? $acc
   : ArrayOfLen<A, [...$acc, unknown]>;
-type Unit = "s" | "m" | "h";
+type Unit = 's' | 'm' | 'h';
 // NOTE: Could've done `${number}${Unit}` but I wanted to write some types
 type Time = `${NumberLine<60>}${Unit}`;
 
@@ -43,9 +43,9 @@ export class RateLimit {
 
   private parseTime(interval: Time) {
     let multiplier = 1;
-    if (interval.endsWith("s")) {
+    if (interval.endsWith('s')) {
       multiplier = 1000;
-    } else if (interval.endsWith("m")) {
+    } else if (interval.endsWith('m')) {
       multiplier = 1000 * 60;
     } else {
       multiplier = 1000 * 60 * 60;
@@ -84,7 +84,7 @@ export class RateLimit {
 
 const defaultRateLimiter = new RateLimit({
   db: db,
-  interval: "10s",
+  interval: '10s',
   limiter: 20,
 });
 
@@ -92,11 +92,11 @@ export async function rateLimit(rateLimiter = defaultRateLimiter) {
   const event = getRequestEvent();
   const ip = event?.clientAddress;
   if (!ip) {
-    return new Error("Too many requests");
+    return new Error('Too many requests');
   }
   const { success } = await rateLimiter.limit(ip);
   if (!success) {
-    return new Error("Too many requests");
+    return new Error('Too many requests');
   }
   return;
 }
