@@ -14,7 +14,6 @@ export function LoadingScreen() {
   });
   // biome-ignore lint/suspicious/noExplicitAny: <explanation>
   const handleStagger = (e: any) => {
-    console.log('on click');
     const { columns, rows } = state();
     const el = e.target.id;
     anime({

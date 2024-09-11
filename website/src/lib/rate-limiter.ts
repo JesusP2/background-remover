@@ -1,4 +1,4 @@
-import { createId } from '@paralleldrive/cuid2';
+import { ulid } from 'ulidx';
 import { and, count, eq, gt } from 'drizzle-orm';
 import type { LibSQLDatabase } from 'drizzle-orm/libsql';
 import { getRequestEvent } from 'solid-js/web';
@@ -72,7 +72,7 @@ export class RateLimit {
       };
     }
     await this.db.insert(rateLimitTable).values({
-      id: createId(),
+      id: ulid(),
       key: identifier,
       createdAt: new Date().getTime(),
     });

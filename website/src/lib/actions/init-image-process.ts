@@ -1,4 +1,4 @@
-import { createId } from '@paralleldrive/cuid2';
+import { ulid } from 'ulidx';
 import { action, redirect } from '@solidjs/router';
 import { getRequestEvent } from 'solid-js/web';
 import { db } from '../db';
@@ -16,7 +16,7 @@ export const uploadImageAction = action(async (file: File) => {
     const userId = getRequestEvent()?.locals.userId;
     if (!userId) return new Error('Unauthorized');
     const sourceBuffer = Buffer.from(await file.arrayBuffer());
-    const id = createId();
+    const id = ulid();
     await Promise.all([
       uploadFile(sourceBuffer, `${id}-${file.name}`),
       uploadFile(sourceBuffer, `${id}-result.png`),

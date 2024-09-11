@@ -1,5 +1,5 @@
 import { toaster } from '@kobalte/core';
-import { createId } from '@paralleldrive/cuid2';
+import { ulid } from 'ulidx';
 import { useAction, useParams } from '@solidjs/router';
 import {
   type Accessor,
@@ -47,7 +47,7 @@ export function useGrabcutCanvas({
   const createStep = useAction(createStepAction);
   const [currentMode, setCurrentMode] =
     createSignal<GrabcutActionType>('draw-green');
-  let currentId = createId();
+  let currentId = ulid();
   const svgImg: HTMLImageElement | null = null;
   let sourceImg: HTMLImageElement | null = null;
   let destinationImg: HTMLImageElement | null = null;
@@ -323,7 +323,7 @@ export function useGrabcutCanvas({
   function mousedown(event: MouseEvent) {
     event.preventDefault();
     mouse.button = event.button;
-    currentId = createId();
+    currentId = ulid();
     if (eventTrigger === 'mousedown') {
       const { sourceCtx } = getCanvas();
       applyAction(sourceCtx);
