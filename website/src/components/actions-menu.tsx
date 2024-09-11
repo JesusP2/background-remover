@@ -4,9 +4,9 @@ import {
   AiOutlineUndo,
   AiOutlineZoomIn,
   AiOutlineZoomOut,
+  AiOutlineLine,
+  AiOutlineCloudDownload,
 } from 'solid-icons/ai';
-import { AiOutlineLine } from 'solid-icons/ai';
-import { AiOutlineCloudDownload } from 'solid-icons/ai';
 import { BiRegularEraser } from 'solid-icons/bi';
 import { BsArrowsMove } from 'solid-icons/bs';
 import { IoCutOutline } from 'solid-icons/io';

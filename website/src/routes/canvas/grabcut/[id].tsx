@@ -1,7 +1,6 @@
 import { A, Navigate, createAsync, useParams } from '@solidjs/router';
 import { and, eq, isNull } from 'drizzle-orm';
-import { AiOutlineLoading } from 'solid-icons/ai';
-import { AiOutlineClose } from 'solid-icons/ai';
+import { AiOutlineLoading, AiOutlineClose  } from 'solid-icons/ai';
 import { Match, Switch, getRequestEvent } from 'solid-js/web';
 import { Canvases } from '~/components/canvases';
 import { db } from '~/lib/db';
