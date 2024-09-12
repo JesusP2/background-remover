@@ -27,6 +27,7 @@ export const uploadImageAction = action(async (file: File) => {
       name: file.name,
       source: `${id}-${file.name}`,
       result: `${id}-result.png`,
+      mask: `${id}-mask.png`,
       createdAt: Date.now(),
       updatedAt: Date.now(),
     });

@@ -34,7 +34,7 @@ export function useGrabcutCanvas({
   canvasLayout,
 }: {
   sourceUrl: string;
-  maskUrl: string | null;
+  maskUrl: string;
   resultUrl: string;
   eventTrigger: 'mousedown' | 'mousemove';
   canvasLayout: Accessor<CanvasLayout>;
@@ -48,7 +48,6 @@ export function useGrabcutCanvas({
   const [currentMode, setCurrentMode] =
     createSignal<GrabcutActionType>('draw-green');
   let currentId = ulid();
-  const svgImg: HTMLImageElement | null = null;
   let sourceImg: HTMLImageElement | null = null;
   let destinationImg: HTMLImageElement | null = null;
   let intermediateMask: HTMLCanvasElement | null = null;
@@ -282,10 +281,13 @@ export function useGrabcutCanvas({
 
   async function loadImage() {
     const { sourceCtx, destinationCtx } = getCanvas();
-    // svgImg = await urlToImage('https://erased.13e14d558cce799d0040255703bae354.r2.cloudflarestorage.com/contour.svg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=8998abc8cba410ef72731b8554c88f75%2F20240910%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20240910T032307Z&X-Amz-Expires=604800&X-Amz-Signature=76eb2e1919b7d61d03c2b61e96e3ea89239bd3ba00f77be4d6d1c2574206c3cb&X-Amz-SignedHeaders=host&x-id=GetObject')
     sourceImg = await urlToImage(sourceUrl);
     destinationImg = await urlToImage(resultUrl);
-    storedMask = maskUrl ? await urlToImage(maskUrl) : null;
+    storedMask = await urlToImage(maskUrl);
+    if (!sourceImg || !destinationImg) {
+      console.error('Could not load source image')
+      return;
+    }
     saveSnapshot();
     const scale = calculateBaseScale(sourceCtx);
     pos.x = (sourceCtx.canvas.width / scale - sourceImg.width) / 2;

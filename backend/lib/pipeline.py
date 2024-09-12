@@ -101,28 +101,3 @@ def apply_trimap(image, trimap, image_type="RGB"):
         rgba_img = cv2.cvtColor(image, cv2.COLOR_BGR2RGBA)
     rgba_img[:, :, 3] = alpha_uint8
     return alpha_uint8, rgba_img
-
-def split_image(image, tile_size, overlap):
-    height, width = image.shape[:2]
-    tiles = []
-    for y in range(0, height, tile_size - overlap):
-        for x in range(0, width, tile_size - overlap):
-            tile = image[y:y+tile_size, x:x+tile_size]
-            tiles.append((tile, (y, x)))
-    return tiles
-
-def merge_tiles(tiles, original_shape):
-    result = np.zeros(original_shape, dtype=np.float32)
-    weight = np.zeros(original_shape[:2], dtype=np.float32)
-    
-    for tile, (y, x) in tiles:
-        h, w = tile.shape[:2]
-        result[y:y+h, x:x+w] += tile
-        weight[y:y+h, x:x+w] += 1
-    
-    weight = np.dstack([weight] * (3 if len(original_shape) == 3 else 1))
-    return result / weight
-
-def process_tile(tile, trimap):
-    alpha = pymatting.estimate_alpha_cf(tile, trimap)
-    return alpha

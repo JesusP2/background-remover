@@ -118,7 +118,7 @@ from lib.pipeline import (
 ### create a biwise operation so only the noise around the mask remains
 ### create trimap of the remaining noise + base mask
 
-# user uploads image to web sends mask to backend
+# user uploads image the web sends mask to backend
 mask = cv2.imread("./test_images/kojiro_mask.png", cv2.IMREAD_GRAYSCALE)
 image = cv2.imread("./test_images/kojiro.jpg", cv2.IMREAD_COLOR)
 _, mask = cv2.threshold(mask, 127, 255, cv2.THRESH_BINARY)

@@ -8,7 +8,7 @@ export const imageTable = sqliteTable('image', {
   userId: text('user_id').notNull(),
   name: text('name').notNull(),
   source: text('source').notNull(),
-  mask: text('mask'),
+  mask: text('mask').notNull(),
   result: text('result').notNull(),
   createdAt: integer('created_at')
     .notNull()
