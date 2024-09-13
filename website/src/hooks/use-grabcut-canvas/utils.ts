@@ -198,19 +198,15 @@ export function drawStroke(
   let size: number[] = [];
   if (action.type === "draw-yellow") {
     if (action.scale < 0.3) {
-      size = [
-        5, 10, 12, 14, 16, 18, 20, 24, 28, 32, 36, 40, 44, 48, 52, 56, 60,
-      ];
+      size = [60];
     } else if (action.scale < 1) {
-      size = [
-        4, 7, 8, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 24, 28, 32, 36, 40,
-      ];
+      size = [40];
     } else if (action.scale < 2) {
-      size = [3, 5, 6, 7, 8, 9, 10, 12, 14, 16, 18, 20];
+      size = [20];
     } else if (action.scale < 4) {
-      size = [2, 3, 5];
+      size = [5];
     } else if (action.scale < 8) {
-      size = [2, 3];
+      size = [3];
     } else if (action.scale < 12) {
       size = [1];
     } else if (action.scale <= 80) {
@@ -218,15 +214,13 @@ export function drawStroke(
     }
   } else {
     if (action.scale < 0.3) {
-      size = [
-        5, 9, 12, 14, 16, 17, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30,
-      ];
+      size = [30];
     } else if (action.scale < 1) {
-      size = [4, 7, 8, 10, 11, 12, 13, 14, 15];
+      size = [15];
     } else if (action.scale < 2) {
-      size = [3, 5, 6, 7, 8];
+      size = [8];
     } else if (action.scale < 4) {
-      size = [2, 3];
+      size = [3];
     } else if (action.scale < 8) {
       size = [2];
     } else if (action.scale < 12) {
@@ -258,6 +252,12 @@ export function drawStroke(
     }
   } else {
     points = _points;
+  }
+  if (!points.length) {
+    points.push({
+      x: action.x,
+      y: action.y,
+    })
   }
   for (const point of points) {
     const strokePos = {

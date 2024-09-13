@@ -63,7 +63,7 @@ export default function Page() {
                       'Content-Type': file.type,
                     },
                   };
-                  Promise.all([
+                  await Promise.all([
                     fetch(fileUrl, config),
                     fetch(resultUrl, config),
                     uploadImage(id, file.name),
