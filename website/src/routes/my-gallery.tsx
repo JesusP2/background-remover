@@ -43,7 +43,7 @@ const getGallery = cache(async () => {
     image.source =
       imagesResults[1].status === 'fulfilled' ? imagesResults[1].value : '';
     image.mask =
-      imagesResults[2].status === 'fulfilled' ? imagesResults[2].value : null;
+      imagesResults[2].status === 'fulfilled' ? imagesResults[2].value : '';
     return image;
   });
   const userImagesResults = await Promise.allSettled(userImagesPromises);

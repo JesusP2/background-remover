@@ -17,9 +17,9 @@ import {
 import type { CanvasLayout } from '~/lib/types';
 import { createStepAction } from '../../lib/actions/store-step';
 import {
-  base64ToImage,
   canvasToFile,
   eraseStroke,
+  fileToImage,
   getCanvas,
   urlToImage,
 } from './utils';
@@ -77,7 +77,10 @@ export function useGrabcutCanvas({
       update();
     }
     const { sourceCtx, destinationCtx } = getCanvas();
-    if (!sourceImg || !intermediateMask || !destinationImg) return;
+    if (!sourceImg || !intermediateMask || !destinationImg) {
+      console.error('could not execute redraw everything fn');
+      return;
+    }
     sourceCtx.setTransform(1, 0, 0, 1, 0, 0);
     sourceCtx.clearRect(0, 0, sourceCtx.canvas.width, sourceCtx.canvas.height);
     sourceCtx.setTransform(
@@ -238,9 +241,27 @@ export function useGrabcutCanvas({
     const imgCopied = getDataFromSourceCanvas('image');
     const maskCopied = getDataFromSourceCanvas('mask');
     if (!imgCopied || !maskCopied) return;
-    const image = await canvasToFile(imgCopied, 'file.png', 'image/png');
-    const mask = await canvasToFile(maskCopied, 'mask.png', 'image/png');
-    const payload = await createStep(image, mask, id);
+    const [image, mask] = await Promise.all([
+      canvasToFile(imgCopied, 'file.png', 'image/png'),
+      canvasToFile(maskCopied, 'mask.png', 'image/png'),
+    ]);
+    const formData = new FormData();
+    formData.append('image_file', image);
+    formData.append('mask_file', mask);
+    const res = await fetch('http://localhost:8000/mask', {
+      method: 'POST',
+      body: formData,
+    });
+    if (!res.ok) {
+      throw new Error('Failed to upload image');
+    }
+    const resultBlob = await res.blob();
+    const resultFile = new File([resultBlob], 'result.png', {
+      type: 'image/png',
+    });
+    destinationImg = await fileToImage(resultFile);
+    redrawEverything();
+    const payload = await createStep(resultFile, mask, id);
     if (payload instanceof Error) {
       toaster.show((props) => (
         <Toast toastId={props.toastId}>
@@ -252,8 +273,6 @@ export function useGrabcutCanvas({
       ));
       return;
     }
-    destinationImg = await base64ToImage(payload.result);
-    redrawEverything();
   }
 
   function calculateBaseScale(sourceCtx: CanvasRenderingContext2D) {
@@ -277,25 +296,6 @@ export function useGrabcutCanvas({
     pos.y = (sourceCtx.canvas.height / _scale - sourceImg.height) / 2;
     scaleAt({ x: 0, y: 0 }, _scale);
     redrawEverything();
-  }
-
-  async function loadImage() {
-    const { sourceCtx, destinationCtx } = getCanvas();
-    sourceImg = await urlToImage(sourceUrl);
-    destinationImg = await urlToImage(resultUrl);
-    storedMask = await urlToImage(maskUrl);
-    if (!sourceImg || !destinationImg) {
-      console.error('Could not load source image')
-      return;
-    }
-    saveSnapshot();
-    const scale = calculateBaseScale(sourceCtx);
-    pos.x = (sourceCtx.canvas.width / scale - sourceImg.width) / 2;
-    pos.y = (sourceCtx.canvas.height / scale - sourceImg.height) / 2;
-    scaleAt({ x: 0, y: 0 }, scale);
-    redrawEverything();
-    sourceCtx.imageSmoothingEnabled = false;
-    destinationCtx.imageSmoothingEnabled = false;
   }
 
   function getDataFromSourceCanvas(type: 'image' | 'mask' | 'all') {
@@ -488,7 +488,7 @@ export function useGrabcutCanvas({
 
   createEffect(handleResize);
 
-  onMount(() => {
+  onMount(async () => {
     const { sourceCtx, destinationCtx } = getCanvas();
     if (canvasLayout() === 'both') {
       sourceCtx.canvas.width = innerWidth / 2;
@@ -499,10 +499,28 @@ export function useGrabcutCanvas({
     }
     sourceCtx.canvas.height = innerHeight;
     destinationCtx.canvas.height = innerHeight;
+
+    sourceImg = await urlToImage(sourceUrl);
+    destinationImg = await urlToImage(resultUrl);
+    if (maskUrl !== null) {
+      storedMask = await urlToImage(maskUrl);
+    }
+    if (!sourceImg || !destinationImg) {
+      console.error('Could not load source image');
+      return;
+    }
+    saveSnapshot();
+    const scale = calculateBaseScale(sourceCtx);
+    pos.x = (sourceCtx.canvas.width / scale - sourceImg.width) / 2;
+    pos.y = (sourceCtx.canvas.height / scale - sourceImg.height) / 2;
+    scaleAt({ x: 0, y: 0 }, scale);
+    redrawEverything();
+    sourceCtx.imageSmoothingEnabled = false;
+    destinationCtx.imageSmoothingEnabled = false;
+
     setupListeners(sourceCtx.canvas, 'source');
     setupListeners(destinationCtx.canvas, 'destination');
     window.addEventListener('resize', handleResize);
-    loadImage();
     onCleanup(() => {
       window.removeEventListener('resize', handleResize);
     });

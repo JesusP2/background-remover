@@ -6,7 +6,7 @@ import { imageTable } from '../db/schema';
 import { uploadFile } from '../r2';
 import { rateLimit } from '../rate-limiter';
 
-export const uploadImageAction = action(async (file: File) => {
+export const uploadImageAction = action(async (id: string, name: string) => {
   'use server';
   try {
     const error = await rateLimit();
@@ -15,23 +15,17 @@ export const uploadImageAction = action(async (file: File) => {
     }
     const userId = getRequestEvent()?.locals.userId;
     if (!userId) return new Error('Unauthorized');
-    const sourceBuffer = Buffer.from(await file.arrayBuffer());
-    const id = ulid();
-    await Promise.all([
-      uploadFile(sourceBuffer, `${id}-${file.name}`),
-      uploadFile(sourceBuffer, `${id}-result.png`),
-    ]);
     await db.insert(imageTable).values({
       id,
       userId: userId,
-      name: file.name,
-      source: `${id}-${file.name}`,
+      name: name,
+      source: `${id}-${name}`,
       result: `${id}-result.png`,
       mask: `${id}-mask.png`,
       createdAt: Date.now(),
       updatedAt: Date.now(),
     });
-    return redirect(`/canvas/grabcut/${id}`);
+    return;
   } catch (error) {
     console.error(error);
   }

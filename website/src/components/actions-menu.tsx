@@ -22,7 +22,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 
 export function ActionsMenu(props: {
   source: string;
-  mask: string | null;
+  mask: string;
   result: string;
   canvasLayout: Accessor<CanvasLayout>;
   setCanvasLayout: Setter<CanvasLayout>;

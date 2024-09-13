@@ -25,15 +25,18 @@ export const grabcutColors = {
 export async function urlToImage(url: string): Promise<HTMLImageElement | null> {
   const res = await fetch(url);
   if (!res.ok) {
-    return null
+    return null;
   }
   const blob = await res.blob();
-  const base64 = await new Promise<string | ArrayBuffer | null>((resolve) => {
+  const base64 = await new Promise<string | ArrayBuffer | null>((resolve, reject) => {
     const reader = new FileReader();
     reader.readAsDataURL(blob);
     reader.onload = () => {
       resolve(reader.result);
     };
+    reader.onerror = () => {
+      reject('Failed read blob')
+    }
   });
   if (typeof base64 !== "string") {
     throw new Error("Failed to convert blob to base64.");
