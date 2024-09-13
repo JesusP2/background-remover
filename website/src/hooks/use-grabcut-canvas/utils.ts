@@ -22,35 +22,42 @@ export const grabcutColors = {
   "draw-yellow": "#fafa41",
 } as Record<GrabcutActionType, string>;
 
-export async function urlToImage(url: string): Promise<HTMLImageElement | null> {
+export async function urlToImage(
+  url: string,
+): Promise<HTMLImageElement | null> {
   const res = await fetch(url);
   if (!res.ok) {
     return null;
   }
   const blob = await res.blob();
-  const base64 = await new Promise<string | ArrayBuffer | null>((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(blob);
-    reader.onload = () => {
-      resolve(reader.result);
-    };
-    reader.onerror = () => {
-      reject('Failed read blob')
-    }
-  });
+  const base64 = await new Promise<string | ArrayBuffer | null>(
+    (resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(blob);
+      reader.onload = () => {
+        resolve(reader.result);
+      };
+      reader.onerror = () => {
+        reject(null);
+      };
+    },
+  );
   if (typeof base64 !== "string") {
-    throw new Error("Failed to convert blob to base64.");
+    return null
   }
-  return base64ToImage(base64);
+  return base64ToImage(base64).catch(() => null);
 }
 
 export function base64ToImage(base64: string): Promise<HTMLImageElement> {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     const img = new Image();
     img.src = base64;
     img.onload = () => {
       resolve(img);
     };
+    img.onerror = () => {
+      reject(null)
+    }
   });
 }
 

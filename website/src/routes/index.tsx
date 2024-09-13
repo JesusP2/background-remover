@@ -5,13 +5,17 @@ import {
   DialogContentWithoutClose,
   DialogTrigger,
 } from '~/components/ui/dialog';
-import { useNavigate } from "@solidjs/router";
+import { useAction, useNavigate } from '@solidjs/router';
 import initialFileSignal from '~/lib/stores/initial-file';
 import { ulid } from 'ulidx';
+import { createPresignedUrlAction } from '~/lib/actions/create-presigned-url';
+import { uploadImageAction } from '~/lib/actions/init-image-process';
 
 export default function Page() {
   const [_, setInitialFile] = initialFileSignal;
-  const navigate = useNavigate()
+  const createPresignedUrl = useAction(createPresignedUrlAction);
+  const uploadImage = useAction(uploadImageAction);
+  const navigate = useNavigate();
   return (
     <div>
       <Navbar route="/" />
@@ -38,7 +42,32 @@ export default function Page() {
                 onFileChange={async (file) => {
                   const id = ulid();
                   setInitialFile(file);
-                  navigate(`/canvas/grabcut/${id}`)
+                  navigate(`/canvas/grabcut/${id}`);
+                  const [fileUrl, resultUrl] = await Promise.all([
+                    createPresignedUrl(
+                      `${id}-${file.name}`,
+                      file.type,
+                      file.size,
+                    ),
+                    createPresignedUrl(
+                      `${id}-result.png`,
+                      file.type,
+                      file.size,
+                    ),
+                  ]);
+                  if (!fileUrl || !resultUrl) return;
+                  const config = {
+                    method: 'PUT',
+                    body: file,
+                    headers: {
+                      'Content-Type': file.type,
+                    },
+                  };
+                  Promise.all([
+                    fetch(fileUrl, config),
+                    fetch(resultUrl, config),
+                    uploadImage(id, file.name),
+                  ]);
                 }}
               />
             </DialogContentWithoutClose>

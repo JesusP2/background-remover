@@ -1,4 +1,4 @@
-import { action, json } from '@solidjs/router';
+import { action } from '@solidjs/router';
 import { getRequestEvent } from 'solid-js/web';
 import { uploadFile } from '../r2';
 import { rateLimit } from '../rate-limiter';

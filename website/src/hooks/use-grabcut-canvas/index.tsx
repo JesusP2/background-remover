@@ -1,4 +1,3 @@
-import { toaster } from '@kobalte/core';
 import { ulid } from 'ulidx';
 import { useAction, useParams } from '@solidjs/router';
 import {
@@ -8,14 +7,7 @@ import {
   onCleanup,
   onMount,
 } from 'solid-js';
-import {
-  Toast,
-  ToastContent,
-  ToastProgress,
-  ToastTitle,
-} from '~/components/ui/toast';
 import type { CanvasLayout } from '~/lib/types';
-import { createStepAction } from '../../lib/actions/store-step';
 import {
   canvasToFile,
   eraseStroke,
@@ -24,6 +16,7 @@ import {
   urlToImage,
 } from './utils';
 import type { GrabcutAction, GrabcutActionType } from './utils';
+import { createPresignedUrlAction } from '~/lib/actions/create-presigned-url';
 
 export function useGrabcutCanvas({
   sourceUrl,
@@ -44,7 +37,7 @@ export function useGrabcutCanvas({
     newMousePosition?: { x: number; y: number },
   ) => void;
 }) {
-  const createStep = useAction(createStepAction);
+  const createPresignedUrl = useAction(createPresignedUrlAction);
   const [currentMode, setCurrentMode] =
     createSignal<GrabcutActionType>('draw-green');
   let currentId = ulid();
@@ -261,18 +254,27 @@ export function useGrabcutCanvas({
     });
     destinationImg = await fileToImage(resultFile);
     redrawEverything();
-    const payload = await createStep(resultFile, mask, id);
-    if (payload instanceof Error) {
-      toaster.show((props) => (
-        <Toast toastId={props.toastId}>
-          <ToastContent>
-            <ToastTitle>{payload.message}</ToastTitle>
-          </ToastContent>
-          <ToastProgress />
-        </Toast>
-      ));
-      return;
-    }
+    const [maskUrl, resultUrl] = await Promise.all([
+      createPresignedUrl(`${id}-mask.png`, mask.type, mask.size),
+      createPresignedUrl(`${id}-result.png`, resultFile.type, resultFile.size),
+    ]);
+    if (!maskUrl || !resultUrl) return;
+    await Promise.all([
+      fetch(maskUrl, {
+        method: 'PUT',
+        body: mask,
+        headers: {
+          'Content-Type': mask.type,
+        },
+      }),
+      fetch(resultUrl, {
+        method: 'PUT',
+        body: resultFile,
+        headers: {
+          'Content-Type': resultFile.type,
+        },
+      }),
+    ]);
   }
 
   function calculateBaseScale(sourceCtx: CanvasRenderingContext2D) {
