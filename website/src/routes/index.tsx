@@ -42,7 +42,7 @@ export default function Page() {
               <DropZone
                 onFileChange={async (file) => {
                   const id = ulid();
-                  const downscaledImage = await downscaleImage(file)
+                  const downscaledImage = await downscaleImage(file, 3840)
                   setInitialFile(downscaledImage);
                   navigate(`/canvas/grabcut/${id}`);
                   const [fileUrl, resultUrl] = await Promise.all([
