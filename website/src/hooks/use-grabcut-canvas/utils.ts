@@ -198,7 +198,7 @@ export function drawStroke(
   let size: number[] = [];
   if (action.type === "draw-yellow") {
     if (action.scale < 0.3) {
-      size = [60];
+      size = [50];
     } else if (action.scale < 1) {
       size = [40];
     } else if (action.scale < 2) {
@@ -215,6 +215,8 @@ export function drawStroke(
   } else {
     if (action.scale < 0.3) {
       size = [30];
+    } else if (action.scale < 0.5) {
+      size = [20];
     } else if (action.scale < 1) {
       size = [15];
     } else if (action.scale < 2) {

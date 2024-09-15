@@ -10,6 +10,7 @@ import initialFileSignal from '~/lib/stores/initial-file';
 import { ulid } from 'ulidx';
 import { createPresignedUrlAction } from '~/lib/actions/create-presigned-url';
 import { uploadImageAction } from '~/lib/actions/init-image-process';
+import { downscaleImage } from '~/lib/utils/image';
 
 export default function Page() {
   const [_, setInitialFile] = initialFileSignal;
@@ -41,32 +42,33 @@ export default function Page() {
               <DropZone
                 onFileChange={async (file) => {
                   const id = ulid();
-                  setInitialFile(file);
+                  const downscaledImage = await downscaleImage(file)
+                  setInitialFile(downscaledImage);
                   navigate(`/canvas/grabcut/${id}`);
                   const [fileUrl, resultUrl] = await Promise.all([
                     createPresignedUrl(
-                      `${id}-${file.name}`,
-                      file.type,
-                      file.size,
+                      `${id}-${downscaledImage.name}`,
+                      downscaledImage.type,
+                      downscaledImage.size,
                     ),
                     createPresignedUrl(
                       `${id}-result.png`,
-                      file.type,
-                      file.size,
+                      downscaledImage.type,
+                      downscaledImage.size,
                     ),
                   ]);
                   if (!fileUrl || !resultUrl) return;
                   const config = {
                     method: 'PUT',
-                    body: file,
+                    body: downscaledImage,
                     headers: {
-                      'Content-Type': file.type,
+                      'Content-Type': downscaledImage.type,
                     },
                   };
                   await Promise.all([
                     fetch(fileUrl, config),
                     fetch(resultUrl, config),
-                    uploadImage(id, file.name),
+                    uploadImage(id, downscaledImage.name),
                   ]);
                 }}
               />
