@@ -6,7 +6,7 @@ import {
 } from '~/components/ui/dialog';
 import { Separator } from './ui/separator';
 
-export function UploadingFileDialog(props: { open: boolean}) {
+export function UploadingFileDialog(props: { open: boolean }) {
   return (
     <Dialog open={props.open}>
       <DialogContentWithoutClose class="sm:max-w-[425px]">

@@ -1,38 +1,37 @@
-import { action, redirect } from "@solidjs/router";
-import { eq } from "drizzle-orm";
-import { generateId } from "lucia";
-import { Argon2id } from "oslo/password";
-import { setCookie } from "vinxi/http";
-import { lucia } from "~/lib/auth";
-import { db } from "~/lib/db";
-import { userTable } from "~/lib/db/schema";
-import { rateLimit } from "../rate-limiter";
+import { action, redirect } from '@solidjs/router';
+import { eq } from 'drizzle-orm';
+import { generateId } from 'lucia';
+import { Argon2id } from 'oslo/password';
+import { setCookie } from 'vinxi/http';
+import { lucia } from '~/lib/auth';
+import { db } from '~/lib/db';
+import { userTable } from '~/lib/db/schema';
+import { rateLimit } from '../rate-limiter';
+import { signupSchema } from '../schemas';
 
 export const signupAction = action(async (formData: FormData) => {
-  "use server";
+  'use server';
   const error = await rateLimit();
   if (error) {
-    return error;
-  }
-  const username = formData.get("username");
-  if (
-    typeof username !== "string" ||
-    username.length < 3 ||
-    username.length > 31 ||
-    !/^[a-z0-9_-]+$/.test(username)
-  ) {
     return {
-      username: "Invalid username",
+      fieldErrors: {
+        form: ['Too many requests'],
+        username: [],
+        password: [],
+      },
     };
   }
-  const password = formData.get("password");
-  if (
-    typeof password !== "string" ||
-    password.length < 6 ||
-    password.length > 255
-  ) {
+  const username = formData.get('username') as string;
+  const password = formData.get('password') as string;
+  const result = signupSchema.safeParse({ username, password });
+  if (!result.success) {
+    const errors = result.error.flatten().fieldErrors;
     return {
-      password: "Invalid password",
+      fieldErrors: {
+        form: [],
+        username: errors.username,
+        password: errors.password,
+      },
     };
   }
 
@@ -48,7 +47,11 @@ export const signupAction = action(async (formData: FormData) => {
     .limit(1);
   if (user.length > 0) {
     return {
-      username: "Username already taken",
+      fieldErrors: {
+        form: [],
+        username: ['Username already exists'],
+        password: [],
+      },
     };
   }
   await db.insert(userTable).values({
@@ -61,5 +64,5 @@ export const signupAction = action(async (formData: FormData) => {
   const sessionCookie = lucia.createSessionCookie(session.id);
   setCookie(sessionCookie.name, sessionCookie.value, sessionCookie.attributes);
 
-  throw redirect("/");
+  throw redirect('/');
 });

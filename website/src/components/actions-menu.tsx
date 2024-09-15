@@ -4,22 +4,29 @@ import {
   AiOutlineUndo,
   AiOutlineZoomIn,
   AiOutlineZoomOut,
+  AiOutlineLine,
 } from 'solid-icons/ai';
-import { AiOutlineLine } from 'solid-icons/ai';
-import { AiOutlineCloudDownload } from 'solid-icons/ai';
+import { BsWindowSplit } from 'solid-icons/bs'
+import { BsWindow } from 'solid-icons/bs'
 import { BiRegularEraser } from 'solid-icons/bi';
 import { BsArrowsMove } from 'solid-icons/bs';
 import { IoCutOutline } from 'solid-icons/io';
 import { RiSystemAddFill } from 'solid-icons/ri';
 import { TbFocusCentered } from 'solid-icons/tb';
 import { VsEdit } from 'solid-icons/vs';
-import { useCanvas } from '~/lib/canvas';
+import type { Accessor, Setter } from 'solid-js';
+import { useGrabcutCanvas } from '~/hooks/use-grabcut-canvas';
+import { drawStroke } from '~/hooks/use-grabcut-canvas/utils';
+import type { CanvasLayout } from '~/lib/types';
+import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 
 export function ActionsMenu(props: {
   source: string;
-  mask: string | null;
+  mask: string;
   result: string;
-  base_mask: string;
+  canvasLayout: Accessor<CanvasLayout>;
+  setCanvasLayout: Setter<CanvasLayout>;
+  name: string;
 }) {
   const {
     setCurrentMode,
@@ -34,125 +41,213 @@ export function ActionsMenu(props: {
     resetToOriginal,
     currentMode,
     saveResult,
-  } = useCanvas({
+  } = useGrabcutCanvas({
     sourceUrl: props.source,
     maskUrl: props.mask,
     resultUrl: props.result,
-    baseMaskUrl: props.base_mask,
+    drawStroke: drawStroke,
+    eventTrigger: 'mousemove',
+    canvasLayout: props.canvasLayout,
   });
   return (
-    <div class="rounded-sm px-2 py-1 bg-white absolute bottom-0 left-0 flex gap-x-4 items-center">
+    <div class="rounded-sm px-2 bg-white h-10 absolute bottom-0 left-0 flex gap-x-2 items-center">
+      <Tooltip>
+        <TooltipTrigger>
+          <button
+            onClick={() => applyMaskToImage()}
+            type="button"
+            class="p-2 hover:bg-gray-100"
+          >
+            <IoCutOutline size={20} />
+          </button>
+        </TooltipTrigger>
+        <TooltipContent>Cut</TooltipContent>
+      </Tooltip>
+      <Tooltip>
+        <TooltipTrigger>
+          <button
+            type="button"
+            onClick={() => setCurrentMode('draw-green')}
+            class={clsx(
+              'hover:bg-green-500 hover:text-white ease-in-out duration-200 rounded-full h-7 w-7 grid place-items-center',
+              currentMode() === 'draw-green' && 'bg-green-500 text-white',
+            )}
+          >
+            <RiSystemAddFill size={20} />
+          </button>
+        </TooltipTrigger>
+        <TooltipContent>Add foreground</TooltipContent>
+      </Tooltip>
+      <Tooltip>
+        <TooltipTrigger>
+          <button
+            type="button"
+            onClick={() => setCurrentMode('draw-red')}
+            class={clsx(
+              'hover:bg-red-500 hover:text-white ease-in-out duration-200 rounded-full h-7 w-7 grid place-items-center',
+              currentMode() === 'draw-red' && 'bg-red-500 text-white',
+            )}
+          >
+            <AiOutlineLine size={20} />
+          </button>
+        </TooltipTrigger>
+        <TooltipContent>Remove background</TooltipContent>
+      </Tooltip>
+      <Tooltip>
+        <TooltipTrigger>
+          <button
+            type="button"
+            onClick={() => setCurrentMode('draw-yellow')}
+            class={clsx(
+              'hover:bg-yellow-500 hover:text-white ease-in-out duration-200 rounded-full h-7 w-7 grid place-items-center',
+              currentMode() === 'draw-yellow' && 'bg-yellow-500 text-white',
+            )}
+          >
+            <VsEdit size={20} />
+          </button>
+        </TooltipTrigger>
+        <TooltipContent>Alpha matte</TooltipContent>
+      </Tooltip>
+      <Tooltip>
+        <TooltipTrigger>
+          <button
+            onClick={() => setCurrentMode('erase')}
+            class={clsx(
+              'hover:bg-gray-500 hover:text-white rounded-full h-7 w-7 grid place-items-center',
+              currentMode() === 'erase' && 'bg-gray-500 text-white',
+            )}
+          >
+            <BiRegularEraser size={20} />
+          </button>
+        </TooltipTrigger>
+        <TooltipContent>Erase</TooltipContent>
+      </Tooltip>
+      <div class="bg-sky-500 h-10 flex items-center gap-x-2 px-2 flex-center">
+        <Tooltip>
+          <TooltipTrigger>
+            <button
+              type="button"
+              disabled={!actions().length}
+              onClick={undo}
+              class="disabled:text-white/40 rounded-full h-7 w-7 grid place-items-center text-gray-200 hover:text-white"
+            >
+              <AiOutlineUndo size={20} />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent>Undo last action</TooltipContent>
+        </Tooltip>
+        <Tooltip>
+          <TooltipTrigger>
+            <button
+              type="button"
+              disabled={!redoActions().length}
+              onClick={redo}
+              class="disabled:text-white/40 rounded-full h-7 w-7 grid place-items-center text-gray-200 hover:text-white"
+            >
+              <AiOutlineRedo size={20} />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent>Redo previous action</TooltipContent>
+        </Tooltip>
+        <Tooltip>
+          <TooltipTrigger>
+            <button
+              type="button"
+              class="rounded-full h-7 w-7 grid place-items-center text-gray-200 hover:text-white"
+              onMouseDown={() =>
+                zoomIn({
+                  x:
+                    props.canvasLayout() === 'result'
+                      ? window.innerWidth / 2 - 30
+                      : window.innerWidth / 4 - 30,
+                  y: window.innerHeight / 2,
+                })
+              }
+              onMouseUp={() => {
+                isZooming.value = false;
+              }}
+            >
+              <AiOutlineZoomIn size={20} />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent>Zoom in</TooltipContent>
+        </Tooltip>
+        <Tooltip>
+          <TooltipTrigger>
+            <button
+              type="button"
+              class="rounded-full h-7 w-7 grid place-items-center text-gray-200 hover:text-white"
+              onMouseDown={() => zoomOut({ x: 417, y: 494 })}
+              onMouseUp={() => {
+                isZooming.value = false;
+              }}
+            >
+              <AiOutlineZoomOut size={20} />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent>Zoom out</TooltipContent>
+        </Tooltip>
+      </div>
+      <Tooltip>
+        <TooltipTrigger>
+          <button
+            type="button"
+            onClick={resetToOriginal}
+            class="hover:bg-gray-100 rounded-full h-7 w-7 grid place-items-center"
+          >
+            <TbFocusCentered size={20} />
+          </button>
+        </TooltipTrigger>
+        <TooltipContent>Fit and Center</TooltipContent>
+      </Tooltip>
+      <Tooltip>
+        <TooltipTrigger>
+          <button
+            type="button"
+            onClick={() => setCurrentMode('move')}
+            class={clsx(
+              'hover:bg-gray-100 rounded-full h-7 w-7 grid place-items-center',
+              currentMode() === 'move' && 'bg-gray-100',
+            )}
+          >
+            <BsArrowsMove size={15} />
+          </button>
+        </TooltipTrigger>
+        <TooltipContent>Move</TooltipContent>
+      </Tooltip>
+      <Tooltip>
+        <TooltipTrigger>
+          <button
+            type="button"
+            title="result"
+            onClick={() => props.setCanvasLayout('result')}
+            class="hover:bg-gray-100 rounded-full h-7 w-7 grid place-items-center"
+          >
+            <BsWindow size={20} />
+          </button>
+        </TooltipTrigger>
+        <TooltipContent>1 window</TooltipContent>
+      </Tooltip>
+      <Tooltip>
+        <TooltipTrigger>
+          <button
+            type="button"
+            title="both"
+            onClick={() => props.setCanvasLayout('both')}
+            class="hover:bg-gray-100 rounded-full h-7 w-7 grid place-items-center"
+          >
+            <BsWindowSplit size={20} />
+          </button>
+        </TooltipTrigger>
+        <TooltipContent>Split window</TooltipContent>
+      </Tooltip>
       <button
-        onClick={() => applyMaskToImage()}
-        type="button"
-        class="p-2 hover:bg-gray-100"
-      >
-        <IoCutOutline size={20} />
-      </button>
-      <button
-        type="button"
-        title="undo"
-        disabled={!actions().length}
-        onClick={undo}
-        class="hover:bg-gray-100 rounded-full h-7 w-7 grid place-items-center"
-      >
-        <AiOutlineUndo size={20} />
-      </button>
-      <button
-        type="button"
-        title="redo"
-        disabled={!redoActions().length}
-        onClick={redo}
-        class="hover:bg-gray-100 rounded-full h-7 w-7 grid place-items-center"
-      >
-        <AiOutlineRedo size={20} />
-      </button>
-      <button
-        type="button"
-        class="hover:bg-gray-100 rounded-full h-7 w-7 grid place-items-center"
-        title="zoom in"
-        onMouseDown={() => zoomIn({ x: 417, y: 494 })}
-        onMouseUp={() => {
-          isZooming.value = false;
-        }}
-      >
-        <AiOutlineZoomIn size={20} />
-      </button>
-      <button
-        type="button"
-        class="hover:bg-gray-100 rounded-full h-7 w-7 grid place-items-center"
-        title="zoom out"
-        onMouseDown={() => zoomOut({ x: 417, y: 494 })}
-        onMouseUp={() => {
-          isZooming.value = false;
-        }}
-      >
-        <AiOutlineZoomOut size={20} />
-      </button>
-      <button
-        type="button"
-        onClick={resetToOriginal}
-        title="Fit and Center"
-        class="hover:bg-gray-100 rounded-full h-7 w-7 grid place-items-center"
-      >
-        <TbFocusCentered size={20} />
-      </button>
-      <button
-        type="button"
-        onClick={() => setCurrentMode('move')}
+        onClick={() => saveResult(props.name)}
         class={clsx(
-          'hover:bg-gray-100 rounded-full h-7 w-7 grid place-items-center',
-          currentMode() === 'move' && 'bg-gray-100',
+          'hover:bg-gray-100 rounded-lg h-7 bg-sky-500 font-medium text-white px-3 grid place-items-center text-sm hover:bg-sky-600',
         )}
       >
-        <BsArrowsMove size={15} />
-      </button>
-      <button
-        type="button"
-        onClick={() => setCurrentMode('draw-green')}
-        class={clsx(
-          'hover:bg-gray-100 rounded-full h-7 w-7 grid place-items-center',
-          currentMode() === 'draw-green' && 'bg-gray-100',
-        )}
-      >
-        <RiSystemAddFill size={20} />
-      </button>
-      <button
-        type="button"
-        onClick={() => setCurrentMode('draw-red')}
-        class={clsx(
-          'hover:bg-gray-100 rounded-full h-7 w-7 grid place-items-center',
-          currentMode() === 'draw-red' && 'bg-gray-100',
-        )}
-      >
-        <AiOutlineLine size={20} />
-      </button>
-      <button
-        type="button"
-        onClick={() => setCurrentMode('draw-yellow')}
-        class={clsx(
-          'hover:bg-gray-100 rounded-full h-7 w-7 grid place-items-center',
-          currentMode() === 'draw-yellow' && 'bg-gray-100',
-        )}
-      >
-        <VsEdit size={17} />
-      </button>
-      <button
-        onClick={() => setCurrentMode('erase')}
-        class={clsx(
-          'hover:bg-gray-100 rounded-full h-7 w-7 grid place-items-center',
-          currentMode() === 'erase' && 'bg-gray-100',
-        )}
-      >
-        <BiRegularEraser size={20} />
-      </button>
-      <button
-        onClick={() => saveResult(name)}
-        class={clsx(
-          'hover:bg-gray-100 rounded-full h-7 w-7 grid place-items-center',
-        )}
-      >
-        <AiOutlineCloudDownload size={20} />
+        Download
       </button>
     </div>
   );

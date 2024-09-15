@@ -1,15 +1,22 @@
-import { BsArchive } from 'solid-icons/bs';
+import { toaster } from '@kobalte/core';
 import { A, cache, createAsync, useSubmission } from '@solidjs/router';
 import { and, eq, isNull } from 'drizzle-orm';
+import { BsArchive } from 'solid-icons/bs';
 import { Show, createEffect } from 'solid-js';
 import { For, getRequestEvent } from 'solid-js/web';
 import { Navbar } from '~/components/nav';
-import { showToast } from '~/components/ui/toast';
+import {
+  Toast,
+  ToastContent,
+  ToastDescription,
+  ToastProgress,
+  ToastTitle,
+} from '~/components/ui/toast';
 import { deleteImageAction } from '~/lib/actions/delete-image';
 import { db } from '~/lib/db';
 import { imageTable } from '~/lib/db/schema';
-import { rateLimit } from '~/lib/rate-limiter';
 import { createPresignedUrl } from '~/lib/r2';
+import { rateLimit } from '~/lib/rate-limiter';
 
 const getGallery = cache(async () => {
   'use server';
@@ -29,17 +36,14 @@ const getGallery = cache(async () => {
     const imagesResults = await Promise.allSettled([
       createPresignedUrl(image.result),
       createPresignedUrl(image.source),
-      createPresignedUrl(image.base_mask),
       image.mask && createPresignedUrl(image.mask),
     ]);
     image.result =
       imagesResults[0].status === 'fulfilled' ? imagesResults[0].value : '';
     image.source =
       imagesResults[1].status === 'fulfilled' ? imagesResults[1].value : '';
-    image.base_mask =
-      imagesResults[2].status === 'fulfilled' ? imagesResults[2].value : '';
     image.mask =
-      imagesResults[3].status === 'fulfilled' ? imagesResults[3].value : null;
+      imagesResults[2].status === 'fulfilled' ? imagesResults[2].value : '';
     return image;
   });
   const userImagesResults = await Promise.allSettled(userImagesPromises);
@@ -58,12 +62,17 @@ export default function MyGallery() {
 
   createEffect(() => {
     if (deleteImageState.result instanceof Error) {
-      showToast({
-        variant: 'destructive',
-        title: 'Unexpected error',
-        description: deleteImageState.result.message,
-        duration: 10_000,
-      });
+      toaster.show((props) => (
+        <Toast toastId={props.toastId}>
+          <ToastContent>
+            <ToastTitle>Unexpected error</ToastTitle>
+            <ToastDescription>
+              {deleteImageState.result?.message}
+            </ToastDescription>
+          </ToastContent>
+          <ToastProgress />
+        </Toast>
+      ));
     }
   });
   return (

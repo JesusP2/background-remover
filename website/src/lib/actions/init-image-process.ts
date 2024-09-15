@@ -1,63 +1,32 @@
-import { createId } from "@paralleldrive/cuid2";
-import { action, redirect } from "@solidjs/router";
-import { getRequestEvent } from "solid-js/web";
-import { db } from "../db";
-import { imageTable } from "../db/schema";
-import { uploadFile } from "../r2";
-import { rateLimit } from "../rate-limiter";
-import { envs } from "../db/env-vars";
+import { ulid } from 'ulidx';
+import { action, redirect } from '@solidjs/router';
+import { getRequestEvent } from 'solid-js/web';
+import { db } from '../db';
+import { imageTable } from '../db/schema';
+import { uploadFile } from '../r2';
+import { rateLimit } from '../rate-limiter';
 
-export const uploadImageAction = action(async (file: File) => {
-  "use server";
+export const uploadImageAction = action(async (id: string, name: string) => {
+  'use server';
   try {
     const error = await rateLimit();
     if (error) {
       return error;
     }
     const userId = getRequestEvent()?.locals.userId;
-    if (!userId) return new Error("Unauthorized");
-    const formData = new FormData();
-    formData.append("image_file", file);
-    const res = await fetch(`${envs.PYTHON_BACKEND}/start`, {
-      method: "POST",
-      body: formData,
-      headers: {
-        Accept: "application/json",
-      },
-    });
-
-    if (!res.ok) {
-      throw new Error("Failed to upload image");
-    }
-    const { result, base_mask } = await res.json();
-    const resultBuffer = Buffer.from(
-      result.replace(/^data:image\/\w+;base64,/, ""),
-      "base64",
-    );
-    const baseMaskBuffer = Buffer.from(
-      base_mask.replace(/^data:image\/\w+;base64,/, ""),
-      "base64",
-    );
-    const sourceBuffer = Buffer.from(await file.arrayBuffer());
-
-    const id = createId();
-    await Promise.all([
-      uploadFile(resultBuffer, `${id}-result.png`),
-      uploadFile(baseMaskBuffer, `${id}-basemask.png`),
-      uploadFile(sourceBuffer, `${id}-${file.name}`),
-    ]);
+    if (!userId) return new Error('Unauthorized');
     await db.insert(imageTable).values({
       id,
       userId: userId,
-      name: file.name,
-      source: `${id}-${file.name}`,
-      base_mask: `${id}-basemask.png`,
+      name: name,
+      source: `${id}-${name}`,
       result: `${id}-result.png`,
+      mask: `${id}-mask.png`,
       createdAt: Date.now(),
       updatedAt: Date.now(),
     });
-    return redirect(`/canvas/grabcut/${id}`);
+    return;
   } catch (error) {
     console.error(error);
   }
-}, "upload-image-action");
+}, 'upload-image-action');

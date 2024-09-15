@@ -1,12 +1,13 @@
-import { action, redirect } from "@solidjs/router";
-import { getRequestEvent } from "solid-js/web";
-import { lucia } from "../auth";
-import { appendResponseHeader } from "vinxi/http";
-import { rateLimit } from "../rate-limiter";
+import { action, redirect } from '@solidjs/router';
+import { getRequestEvent } from 'solid-js/web';
+import { appendResponseHeader } from 'vinxi/http';
+import { lucia } from '../auth';
+import { rateLimit } from '../rate-limiter';
 
 export const signOutAction = action(async () => {
-  'use server'
+  'use server';
   const error = await rateLimit();
+  console.error(error);
   if (error) {
     return error;
   }
@@ -14,7 +15,10 @@ export const signOutAction = action(async () => {
   const sessionId = req?.locals.session?.id;
   if (sessionId) {
     await lucia.invalidateSession(sessionId);
-    appendResponseHeader('Set-Cookie', lucia.createBlankSessionCookie().serialize())
+    appendResponseHeader(
+      'Set-Cookie',
+      lucia.createBlankSessionCookie().serialize(),
+    );
   }
-  return redirect("/");
+  return redirect('/');
 });
