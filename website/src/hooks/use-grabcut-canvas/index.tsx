@@ -6,6 +6,8 @@ import {
   createSignal,
   onCleanup,
   onMount,
+  Setter,
+  Signal,
 } from 'solid-js';
 import type { CanvasLayout } from '~/lib/types';
 import {
@@ -18,6 +20,171 @@ import {
 import type { GrabcutAction, GrabcutActionType } from './utils';
 import { createPresignedUrlAction } from '~/lib/actions/create-presigned-url';
 
+type Point = {
+  point: [number, number];
+  label: 0 | 1;
+};
+
+function setupWorker({
+  lastPoints,
+  setLastPoints,
+  statusLabel,
+  images,
+  modelStatus,
+}: {
+  lastPoints: Accessor<null | Point[]>;
+  setLastPoints: Setter<null | Point[]>;
+  statusLabel: HTMLElement;
+  images: GrabcutImages;
+  modelStatus: {
+    modelReady: boolean;
+    isDecoding: boolean;
+    isEncoded: boolean;
+    isMultiMaskMode: boolean;
+  };
+}) {
+  const worker = new Worker('/worker.js', {
+    type: 'module',
+  });
+
+  worker.addEventListener('message', (e) => {
+    const { type, data } = e.data;
+    if (type === 'ready') {
+      modelStatus.modelReady = true;
+      statusLabel.textContent = 'Ready';
+    } else if (type === 'decode_result') {
+      modelStatus.isDecoding = false;
+
+      if (!modelStatus.isEncoded || !images?.sourceImg) {
+        return; // We are not ready to decode yet
+      }
+
+      if (!modelStatus.isMultiMaskMode && lastPoints()?.length) {
+        // Perform decoding with the last point
+        decode();
+        setLastPoints([]);
+      }
+
+      const { mask, scores } = data;
+
+      const tempCanvas = new OffscreenCanvas(mask.width, mask.height);
+      const tempContext = tempCanvas.getContext(
+        '2d',
+      ) as OffscreenCanvasRenderingContext2D;
+      tempContext.drawImage(images.sourceImg, 0, 0);
+      const imageData = tempContext.createImageData(
+        tempCanvas.width,
+        tempCanvas.height,
+      );
+      if (!imageData) {
+        console.error('could not get image data from mask canvas');
+        return;
+      }
+
+      // Select best mask
+      const numMasks = scores.length; // 3
+      let bestIndex = 0;
+      for (let i = 1; i < numMasks; ++i) {
+        if (scores[i] > scores[bestIndex]) {
+          bestIndex = i;
+        }
+      }
+      statusLabel.textContent = `Segment score: ${scores[bestIndex].toFixed(2)}`;
+
+      // Fill mask with colour
+      const pixelData = imageData.data;
+      for (let i = 0; i < pixelData.length; ++i) {
+        // TODO: we need to take into consideration the grabcut + alpha matting mask too
+        if (mask.data[numMasks * i + bestIndex] !== 1) {
+          const offset = 4 * i;
+          pixelData[offset + 3] = 0; // alpha
+        }
+      }
+      tempContext.putImageData(imageData, 0, 0);
+      tempCanvas
+        .convertToBlob()
+        .then((blob) => {
+          const file = new File([blob], 'result.png', { type: 'image/png' });
+          return fileToImage(file);
+        })
+        .then((img) => {
+          images.destinationImg = img;
+        });
+    } else if (type === 'segment_result') {
+      if (data === 'start') {
+        statusLabel.textContent = 'Extracting image embedding...';
+      } else {
+        statusLabel.textContent = 'Embedding extracted!';
+        modelStatus.isEncoded = true;
+      }
+    }
+  });
+
+  function decode() {
+    modelStatus.isDecoding = true;
+    worker.postMessage({ type: 'decode', data: lastPoints() });
+  }
+
+  function segment(data: string) {
+    // Update state
+    modelStatus.isEncoded = false;
+    if (!modelStatus.modelReady) {
+      statusLabel.textContent = 'Loading model...';
+    }
+
+    // Update UI
+    // TODO: update to the destinationCanvas
+    // imageContainer.style.backgroundImage = `url(${data})`;
+    // uploadButton.style.display = 'none';
+    // cutButton.disabled = true;
+
+    // Instruct worker to segment the image
+    worker.postMessage({ type: 'segment', data });
+  }
+  return { segment, decode, lastPoints };
+}
+
+export function useSam({ images }: { images: GrabcutImages }) {
+  const [lastPoints, setLastPoints] = createSignal<null | Point[]>(null);
+  const modelStatus = {
+    isEncoded: false,
+    isDecoding: false,
+    isMultiMaskMode: false,
+    modelReady: false,
+  };
+
+  const BASE_URL =
+    'https://huggingface.co/datasets/Xenova/transformers.js-docs/resolve/main';
+
+  // Preload star and cross images to avoid lag on first click
+  const star = new Image();
+  star.src = `${BASE_URL}/star-icon.png`;
+  star.className = 'icon';
+
+  const cross = new Image();
+  cross.src = `${BASE_URL}/cross-icon.png`;
+  cross.className = 'icon';
+
+  // function addIcon({ point, label }: Point) {
+  //   const icon = (label === 1 ? star : cross).cloneNode();
+  //   icon.style.left = `${point[0] * 100}%`;
+  //   icon.style.top = `${point[1] * 100}%`;
+  //   imageContainer?.appendChild(icon);
+  // }
+
+  let { segment, decode } = setupWorker({
+    lastPoints,
+    setLastPoints,
+    modelStatus,
+  });
+}
+
+type GrabcutImages = {
+  sourceImg: null | HTMLImageElement;
+  destinationImg: null | HTMLImageElement;
+  intermediateMask: null | HTMLCanvasElement;
+  storedMask: null | HTMLImageElement;
+};
 export function useGrabcutCanvas({
   sourceUrl,
   maskUrl,
@@ -41,10 +208,12 @@ export function useGrabcutCanvas({
   const [currentMode, setCurrentMode] =
     createSignal<GrabcutActionType>('draw-green');
   let currentId = ulid();
-  let sourceImg: HTMLImageElement | null = null;
-  let destinationImg: HTMLImageElement | null = null;
-  let intermediateMask: HTMLCanvasElement | null = null;
-  let storedMask: HTMLImageElement | null = null;
+  const images = {
+    sourceImg: null,
+    destinationImg: null,
+    intermediateMask: null,
+    storedMask: null,
+  } as GrabcutImages;
   const isZooming = {
     value: false,
   };
@@ -70,7 +239,11 @@ export function useGrabcutCanvas({
       update();
     }
     const { sourceCtx, destinationCtx } = getCanvas();
-    if (!sourceImg || !intermediateMask || !destinationImg) {
+    if (
+      !images.sourceImg ||
+      !images.intermediateMask ||
+      !images.destinationImg
+    ) {
       console.error('could not execute redraw everything fn');
       return;
     }
@@ -84,9 +257,9 @@ export function useGrabcutCanvas({
       matrix[4],
       matrix[5],
     );
-    sourceCtx.drawImage(sourceImg, 0, 0);
+    sourceCtx.drawImage(images.sourceImg, 0, 0);
     sourceCtx.globalAlpha = 0.5;
-    sourceCtx.drawImage(intermediateMask, 0, 0);
+    sourceCtx.drawImage(images.intermediateMask, 0, 0);
     sourceCtx.globalAlpha = 1.0;
 
     destinationCtx.setTransform(1, 0, 0, 1, 0, 0);
@@ -104,14 +277,14 @@ export function useGrabcutCanvas({
       matrix[4],
       matrix[5],
     );
-    destinationCtx.drawImage(destinationImg, 0, 0);
+    destinationCtx.drawImage(images.destinationImg, 0, 0);
     destinationCtx.strokeStyle = 'black';
     destinationCtx.lineWidth = 1 / scale;
     destinationCtx.strokeRect(
       0,
       0,
-      destinationImg.width,
-      destinationImg.height,
+      images.destinationImg.width,
+      images.destinationImg.height,
     );
   }
 
@@ -128,7 +301,7 @@ export function useGrabcutCanvas({
     if (dirty) {
       update();
     }
-    if (!sourceImg) return;
+    if (!images.sourceImg) return;
     pos.x += amount.x;
     pos.y += amount.y;
     adjustImagePosition(sourceCtx);
@@ -136,12 +309,12 @@ export function useGrabcutCanvas({
   }
 
   function adjustImagePosition(ctx: CanvasRenderingContext2D) {
-    if (!sourceImg) return;
+    if (!images.sourceImg) return;
     // the right side of the image should always end at the middle of the canvas
-    const leftBoundary = ctx.canvas.width / 2 - sourceImg.width * scale;
+    const leftBoundary = ctx.canvas.width / 2 - images.sourceImg.width * scale;
     // the left side of the image should always end at the middle of the canvas
     const rightBoundary = ctx.canvas.width / 2;
-    const topBoundary = ctx.canvas.height / 2 - sourceImg.height * scale;
+    const topBoundary = ctx.canvas.height / 2 - images.sourceImg.height * scale;
     const bottomBoundary = ctx.canvas.height / 2;
 
     // after moving/resizing, we perform boundary checks
@@ -208,7 +381,7 @@ export function useGrabcutCanvas({
   function saveSnapshot() {
     const maskCopied = getDataFromSourceCanvas('mask');
     if (!maskCopied) return;
-    intermediateMask = maskCopied;
+    images.intermediateMask = maskCopied;
   }
 
   function redrawActions(
@@ -224,8 +397,8 @@ export function useGrabcutCanvas({
             action.type === 'draw-yellow'))
       ) {
         drawStroke(action, ctx);
-      } else if (action.type === 'erase' && sourceImg) {
-        eraseStroke(sourceImg, action, ctx);
+      } else if (action.type === 'erase' && images.sourceImg) {
+        eraseStroke(images.sourceImg, action, ctx);
       }
     }
   }
@@ -252,7 +425,7 @@ export function useGrabcutCanvas({
     const resultFile = new File([resultBlob], 'result.png', {
       type: 'image/png',
     });
-    destinationImg = await fileToImage(resultFile);
+    images.destinationImg = await fileToImage(resultFile);
     redrawEverything();
     const [maskUrl, resultUrl] = await Promise.all([
       createPresignedUrl(`${id}-mask.png`, mask.type, mask.size),
@@ -278,12 +451,12 @@ export function useGrabcutCanvas({
   }
 
   function calculateBaseScale(sourceCtx: CanvasRenderingContext2D) {
-    if (!sourceImg) return 1;
+    if (!images.sourceImg) return 1;
     let scale = 1;
-    if (sourceImg?.width > sourceImg?.height) {
-      scale = sourceCtx.canvas.width / sourceImg.width;
+    if (images.sourceImg?.width > images.sourceImg?.height) {
+      scale = sourceCtx.canvas.width / images.sourceImg.width;
     } else {
-      scale = sourceCtx.canvas.height / sourceImg.height;
+      scale = sourceCtx.canvas.height / images.sourceImg.height;
     }
     scale -= scale / 10;
     return scale;
@@ -291,11 +464,11 @@ export function useGrabcutCanvas({
 
   function resetToOriginal() {
     const { sourceCtx } = getCanvas();
-    if (!sourceImg) return;
+    if (!images.sourceImg) return;
     scale = 1;
     const _scale = calculateBaseScale(sourceCtx);
-    pos.x = (sourceCtx.canvas.width / _scale - sourceImg.width) / 2;
-    pos.y = (sourceCtx.canvas.height / _scale - sourceImg.height) / 2;
+    pos.x = (sourceCtx.canvas.width / _scale - images.sourceImg.width) / 2;
+    pos.y = (sourceCtx.canvas.height / _scale - images.sourceImg.height) / 2;
     scaleAt({ x: 0, y: 0 }, _scale);
     redrawEverything();
   }
@@ -303,15 +476,15 @@ export function useGrabcutCanvas({
   function getDataFromSourceCanvas(type: 'image' | 'mask' | 'all') {
     const copy = document.createElement('canvas');
     const copyCtx = copy.getContext('2d');
-    if (!copyCtx || !sourceImg) return;
-    copy.width = sourceImg.width;
-    copy.height = sourceImg.height;
+    if (!copyCtx || !images.sourceImg) return;
+    copy.width = images.sourceImg.width;
+    copy.height = images.sourceImg.height;
     if (type === 'image' || type === 'all') {
-      copyCtx.drawImage(sourceImg, 0, 0);
+      copyCtx.drawImage(images.sourceImg, 0, 0);
     }
     if (type === 'mask' || type === 'all') {
-      if (storedMask) {
-        copyCtx.drawImage(storedMask, 0, 0);
+      if (images.storedMask) {
+        copyCtx.drawImage(images.storedMask, 0, 0);
       }
       redrawActions(copyCtx, 'mask');
     }
@@ -330,7 +503,7 @@ export function useGrabcutCanvas({
     currentId = ulid();
     if (eventTrigger === 'mousedown') {
       const { sourceCtx } = getCanvas();
-      applyAction(sourceCtx);
+      executeDrawingAction(sourceCtx);
     }
   }
 
@@ -353,13 +526,14 @@ export function useGrabcutCanvas({
       return;
     }
     if (eventTrigger === 'mousemove') {
-      applyAction(sourceCtx);
+      executeDrawingAction(sourceCtx);
     }
   }
 
-  function applyAction(sourceCtx: CanvasRenderingContext2D) {
-    const intermediateMaskCtx = intermediateMask?.getContext('2d');
-    if (!sourceImg || !intermediateMask || !intermediateMaskCtx) return;
+  function executeDrawingAction(sourceCtx: CanvasRenderingContext2D) {
+    const intermediateMaskCtx = images.intermediateMask?.getContext('2d');
+    if (!images.sourceImg || !images.intermediateMask || !intermediateMaskCtx)
+      return;
     const action = {
       id: currentId,
       type: currentMode(),
@@ -377,15 +551,16 @@ export function useGrabcutCanvas({
     if (redoActions().length > 0) {
       setRedoActions([]);
     }
-    if (
-      currentMode() !== 'erase' &&
-      sourceImg &&
+    if (currentMode() === 'erase') {
+      eraseStroke(images.sourceImg, action, sourceCtx);
+    } else if (
+      images.sourceImg &&
       action.oldX / action.scale - action.pos.x / action.scale > -10 &&
       action.oldX / action.scale - action.pos.x / action.scale <
-        sourceImg.width + 2 &&
+        images.sourceImg.width + 2 &&
       action.oldY / action.scale - action.pos.y / action.scale > -10 &&
       action.oldY / action.scale - action.pos.y / action.scale <
-        sourceImg.height + 2
+        images.sourceImg.height + 2
     ) {
       intermediateMaskCtx.setTransform(1, 0, 0, 1, 0, 0);
       drawStroke(action, intermediateMaskCtx);
@@ -395,12 +570,10 @@ export function useGrabcutCanvas({
         sourceCtx.canvas.width,
         sourceCtx.canvas.height,
       );
-      sourceCtx.drawImage(sourceImg, 0, 0);
+      sourceCtx.drawImage(images.sourceImg, 0, 0);
       sourceCtx.globalAlpha = 0.5;
-      sourceCtx.drawImage(intermediateMask, 0, 0);
+      sourceCtx.drawImage(images.intermediateMask, 0, 0);
       sourceCtx.globalAlpha = 1.0;
-    } else if (currentMode() === 'erase') {
-      eraseStroke(sourceImg, action, sourceCtx);
     }
   }
 
@@ -462,10 +635,10 @@ export function useGrabcutCanvas({
   }
 
   async function saveResult(name: string) {
-    if (!destinationImg) return;
+    if (!images.destinationImg) return;
     const anchor = document.createElement('a');
     anchor.download = `${name.split('.')[0]}.png`;
-    anchor.href = destinationImg.src;
+    anchor.href = images.destinationImg.src;
     anchor.click();
   }
 
@@ -502,19 +675,19 @@ export function useGrabcutCanvas({
     sourceCtx.canvas.height = innerHeight;
     destinationCtx.canvas.height = innerHeight;
 
-    sourceImg = await urlToImage(sourceUrl);
-    destinationImg = await urlToImage(resultUrl);
+    images.sourceImg = await urlToImage(sourceUrl);
+    images.destinationImg = await urlToImage(resultUrl);
     if (maskUrl !== null) {
-      storedMask = await urlToImage(maskUrl);
+      images.storedMask = await urlToImage(maskUrl);
     }
-    if (!sourceImg || !destinationImg) {
+    if (!images.sourceImg || !images.destinationImg) {
       console.error('Could not load source image');
       return;
     }
     saveSnapshot();
     const scale = calculateBaseScale(sourceCtx);
-    pos.x = (sourceCtx.canvas.width / scale - sourceImg.width) / 2;
-    pos.y = (sourceCtx.canvas.height / scale - sourceImg.height) / 2;
+    pos.x = (sourceCtx.canvas.width / scale - images.sourceImg.width) / 2;
+    pos.y = (sourceCtx.canvas.height / scale - images.sourceImg.height) / 2;
     scaleAt({ x: 0, y: 0 }, scale);
     redrawEverything();
     sourceCtx.imageSmoothingEnabled = false;
