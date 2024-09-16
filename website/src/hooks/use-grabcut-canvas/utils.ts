@@ -4,6 +4,8 @@ export type GrabcutActionType =
   | "draw-green"
   | "draw-red"
   | "draw-yellow"
+  | "SAM-add-area"
+  | "SAM-remove-area"
   | "erase";
 export type GrabcutAction = {
   id: string;
@@ -43,7 +45,7 @@ export async function urlToImage(
     },
   );
   if (typeof base64 !== "string") {
-    return null
+    return null;
   }
   return base64ToImage(base64).catch(() => null);
 }
@@ -56,8 +58,8 @@ export function base64ToImage(base64: string): Promise<HTMLImageElement> {
       resolve(img);
     };
     img.onerror = () => {
-      reject(null)
-    }
+      reject(null);
+    };
   });
 }
 
@@ -86,20 +88,14 @@ export function imageToCanvas(img: HTMLImageElement): HTMLCanvasElement {
   return canvas;
 }
 
-export function canvasToFile(
-  canvas: HTMLCanvasElement,
+export async function canvasToFile(
+  canvas: OffscreenCanvas,
   fileName: string,
   mimeType: string,
 ): Promise<File> {
-  return new Promise((resolve) => {
-    canvas.toBlob((blob) => {
-      if (!blob) {
-        throw new Error("Failed to convert canvas to blob.");
-      }
-      const file = new File([blob], fileName, { type: mimeType });
-      resolve(file);
-    }, mimeType);
-  });
+  const blob = await canvas.convertToBlob();
+  const file = new File([blob], fileName, { type: mimeType });
+  return file;
 }
 
 export function getCanvas() {
@@ -117,7 +113,7 @@ export function getCanvas() {
 export function eraseStroke(
   sourceImg: HTMLImageElement,
   action: GrabcutAction,
-  ctx: CanvasRenderingContext2D,
+  ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
 ) {
   let size = 0;
   if (action.scale < 0.3) {
@@ -259,7 +255,7 @@ export function drawStroke(
     points.push({
       x: action.x,
       y: action.y,
-    })
+    });
   }
   for (const point of points) {
     const strokePos = {

@@ -46,7 +46,6 @@ export function ActionsMenu(props: {
     maskUrl: props.mask,
     resultUrl: props.result,
     drawStroke: drawStroke,
-    eventTrigger: 'mousemove',
     canvasLayout: props.canvasLayout,
   });
   return (
@@ -77,6 +76,36 @@ export function ActionsMenu(props: {
           </button>
         </TooltipTrigger>
         <TooltipContent>Add foreground</TooltipContent>
+      </Tooltip>
+      <Tooltip>
+        <TooltipTrigger>
+          <button
+            type="button"
+            onClick={() => setCurrentMode('SAM-add-area')}
+            class={clsx(
+              'hover:bg-red-500 hover:text-white ease-in-out duration-200 rounded-full h-7 w-7 grid place-items-center',
+              currentMode() === 'draw-red' && 'bg-red-500 text-white',
+            )}
+          >
+            Add
+          </button>
+        </TooltipTrigger>
+        <TooltipContent>Add area</TooltipContent>
+      </Tooltip>
+      <Tooltip>
+        <TooltipTrigger>
+          <button
+            type="button"
+            onClick={() => setCurrentMode('SAM-remove-area')}
+            class={clsx(
+              'hover:bg-red-500 hover:text-white ease-in-out duration-200 rounded-full h-7 w-7 grid place-items-center',
+              currentMode() === 'draw-red' && 'bg-red-500 text-white',
+            )}
+          >
+            Rem
+          </button>
+        </TooltipTrigger>
+        <TooltipContent>Remove area</TooltipContent>
       </Tooltip>
       <Tooltip>
         <TooltipTrigger>
