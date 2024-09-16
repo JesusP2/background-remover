@@ -10,6 +10,7 @@ import {
 } from 'solid-js';
 import type { CanvasLayout } from '~/lib/types';
 import {
+  base64ToImage,
   canvasToFile,
   eraseStroke,
   fileToImage,
@@ -18,31 +19,41 @@ import {
 } from './utils';
 import type { GrabcutAction, GrabcutActionType } from './utils';
 import { createPresignedUrlAction } from '~/lib/actions/create-presigned-url';
+import { blobToBase64 } from '../use-sam-canvas/utils';
 
 type Point = {
   point: [number, number];
   label: 0 | 1;
 };
 
+type ModelStatus = {
+  modelReady: boolean;
+  isDecoding: boolean;
+  isEncoded: boolean;
+  isMultiMaskMode: boolean;
+};
+
+type GrabcutImages = {
+  sourceImg: null | HTMLImageElement;
+  destinationImg: null | HTMLImageElement;
+  strokesCanvas: null | OffscreenCanvas;
+  storedMask: null | HTMLImageElement;
+};
+
 function setupWorker({
   lastPoints,
   setLastPoints,
-  statusLabel,
   images,
   modelStatus,
+  setIsDownloadingModelOrEmbeddingImage,
 }: {
   lastPoints: Accessor<null | Point[]>;
   setLastPoints: Setter<null | Point[]>;
-  statusLabel: HTMLElement;
   images: GrabcutImages;
-  modelStatus: {
-    modelReady: boolean;
-    isDecoding: boolean;
-    isEncoded: boolean;
-    isMultiMaskMode: boolean;
-  };
+  modelStatus: ModelStatus;
+  setIsDownloadingModelOrEmbeddingImage: Setter<boolean>;
 }) {
-  const worker = new Worker('/worker.js', {
+  const worker = new Worker('/transformer.js', {
     type: 'module',
   });
 
@@ -50,7 +61,8 @@ function setupWorker({
     const { type, data } = e.data;
     if (type === 'ready') {
       modelStatus.modelReady = true;
-      statusLabel.textContent = 'Ready';
+      // not needed, ugly flash that removes loading screen for a split second
+      // setIsDownloadingModelOrEmbeddingImage(false);
     } else if (type === 'decode_result') {
       modelStatus.isDecoding = false;
 
@@ -60,7 +72,9 @@ function setupWorker({
 
       if (!modelStatus.isMultiMaskMode && lastPoints()?.length) {
         // Perform decoding with the last point
-        decode();
+        // decode();
+        modelStatus.isDecoding = true;
+        worker.postMessage({ type: 'decode', data: lastPoints() });
         setLastPoints([]);
       }
 
@@ -80,7 +94,6 @@ function setupWorker({
         return;
       }
 
-      // Select best mask
       const numMasks = scores.length; // 3
       let bestIndex = 0;
       for (let i = 1; i < numMasks; ++i) {
@@ -88,7 +101,6 @@ function setupWorker({
           bestIndex = i;
         }
       }
-      statusLabel.textContent = `Segment score: ${scores[bestIndex].toFixed(2)}`;
 
       // Fill mask with colour
       const pixelData = imageData.data;
@@ -111,24 +123,44 @@ function setupWorker({
         });
     } else if (type === 'segment_result') {
       if (data === 'start') {
-        statusLabel.textContent = 'Extracting image embedding...';
+        setIsDownloadingModelOrEmbeddingImage(true);
       } else {
-        statusLabel.textContent = 'Embedding extracted!';
+        setIsDownloadingModelOrEmbeddingImage(false);
         modelStatus.isEncoded = true;
       }
     }
   });
 
+  return { worker };
+}
+
+export function useSam({
+  images,
+  sourceImgBase64,
+}: { images: GrabcutImages; sourceImgBase64: Accessor<string | null> }) {
+  const [worker, setWorker] = createSignal<null | Worker>(null);
+  const [lastPoints, setLastPoints] = createSignal<null | Point[]>(null);
+  const [
+    isDownloadingModelOrEmbeddingImage,
+    setIsDownloadingModelOrEmbeddingImage,
+  ] = createSignal(false);
+  const modelStatus = {
+    isEncoded: false,
+    isDecoding: false,
+    isMultiMaskMode: false,
+    modelReady: false,
+  };
+
   function decode() {
     modelStatus.isDecoding = true;
-    worker.postMessage({ type: 'decode', data: lastPoints() });
+    worker()?.postMessage({ type: 'decode', data: lastPoints() });
   }
 
   function segment(data: string) {
     // Update state
     modelStatus.isEncoded = false;
     if (!modelStatus.modelReady) {
-      statusLabel.textContent = 'Loading model...';
+      setIsDownloadingModelOrEmbeddingImage(true);
     }
 
     // Update UI
@@ -138,52 +170,31 @@ function setupWorker({
     // cutButton.disabled = true;
 
     // Instruct worker to segment the image
-    worker.postMessage({ type: 'segment', data });
+    worker()?.postMessage({ type: 'segment', data });
   }
-  return { segment, decode, lastPoints };
-}
 
-export function useSam({ images }: { images: GrabcutImages }) {
-  const [lastPoints, setLastPoints] = createSignal<null | Point[]>(null);
-  const modelStatus = {
-    isEncoded: false,
-    isDecoding: false,
-    isMultiMaskMode: false,
-    modelReady: false,
-  };
-
-  const BASE_URL =
-    'https://huggingface.co/datasets/Xenova/transformers.js-docs/resolve/main';
-
-  // Preload star and cross images to avoid lag on first click
-  const star = new Image();
-  star.src = `${BASE_URL}/star-icon.png`;
-  star.className = 'icon';
-
-  const cross = new Image();
-  cross.src = `${BASE_URL}/cross-icon.png`;
-  cross.className = 'icon';
-
-  // function addIcon({ point, label }: Point) {
-  //   const icon = (label === 1 ? star : cross).cloneNode();
-  //   icon.style.left = `${point[0] * 100}%`;
-  //   icon.style.top = `${point[1] * 100}%`;
-  //   imageContainer?.appendChild(icon);
-  // }
-
-  let { segment, decode } = setupWorker({
-    lastPoints,
-    setLastPoints,
-    modelStatus,
+  onMount(() => {
+    if (!worker()) {
+      const { worker } = setupWorker({
+        lastPoints,
+        setLastPoints,
+        modelStatus,
+        setIsDownloadingModelOrEmbeddingImage,
+        images,
+      });
+      setWorker(worker);
+    }
   });
+
+  createEffect(() => {
+    const img = sourceImgBase64();
+    if (typeof img !== 'string') return;
+    console.log('segmenting image');
+    segment(img);
+  });
+  return { decode, modelStatus, isDownloadingModelOrEmbeddingImage };
 }
 
-type GrabcutImages = {
-  sourceImg: null | HTMLImageElement;
-  destinationImg: null | HTMLImageElement;
-  strokesCanvas: null | OffscreenCanvas;
-  storedMask: null | HTMLImageElement;
-};
 export function useGrabcutCanvas({
   sourceUrl,
   maskUrl,
@@ -230,6 +241,13 @@ export function useGrabcutCanvas({
     equals: false,
   });
   const [redoActions, setRedoActions] = createSignal<GrabcutAction[]>([]);
+  const [sourceImgBase64, setSourceImgBase64] = createSignal<null | string>(
+    null,
+  );
+  const { modelStatus, isDownloadingModelOrEmbeddingImage } = useSam({
+    images,
+    sourceImgBase64,
+  });
 
   function redrawEverything() {
     if (dirty) {
@@ -390,7 +408,7 @@ export function useGrabcutCanvas({
       ) {
         drawStroke(action, ctx);
       } else if (actionsType === 'mask' && action.type.startsWith('SAM')) {
-        console.log('sam redrawing action');
+        console.log('TEMP LOG - sam redrawing action');
       } else if (action.type === 'erase' && images.sourceImg) {
         eraseStroke(images.sourceImg, action, ctx);
       }
@@ -529,7 +547,7 @@ export function useGrabcutCanvas({
     }
     // extra check just to not trigger SAM actions on mousemove
     if (!currentMode().startsWith('SAM')) {
-      console.log('executing mousemove');
+      console.log('why am I printing!!!')
       executeDrawingAction(sourceCtx);
     }
   }
@@ -557,7 +575,7 @@ export function useGrabcutCanvas({
     if (currentMode() === 'erase') {
       eraseStroke(images.sourceImg, action, sourceCtx);
     } else if (currentMode().startsWith('SAM')) {
-      console.log('sam');
+      console.log('TEMP LOG - SAM');
     } else if (
       images.sourceImg &&
       action.oldX / action.scale - action.pos.x / action.scale > -10 &&
@@ -680,8 +698,17 @@ export function useGrabcutCanvas({
     sourceCtx.canvas.height = innerHeight;
     destinationCtx.canvas.height = innerHeight;
 
-    images.sourceImg = await urlToImage(sourceUrl);
+    // --------- does the same as urlToImage
+    const res = await fetch(sourceUrl);
+    const blob = await res.blob();
+    const base64 = await blobToBase64(blob);
+    setSourceImgBase64(base64 as string);
+    if (typeof base64 !== 'string') {
+      throw new Error('Failed to convert blob to base64.');
+    }
+    images.sourceImg = await base64ToImage(base64);
     images.destinationImg = await urlToImage(resultUrl);
+    // ---------
     if (maskUrl !== null) {
       images.storedMask = await urlToImage(maskUrl);
     }
@@ -719,5 +746,6 @@ export function useGrabcutCanvas({
     resetToOriginal,
     currentMode,
     saveResult,
+    isDownloadingModelOrEmbeddingImage,
   };
 }

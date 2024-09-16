@@ -6,8 +6,8 @@ import {
   AiOutlineZoomOut,
   AiOutlineLine,
 } from 'solid-icons/ai';
-import { BsWindowSplit } from 'solid-icons/bs'
-import { BsWindow } from 'solid-icons/bs'
+import { BsWindowSplit } from 'solid-icons/bs';
+import { BsWindow } from 'solid-icons/bs';
 import { BiRegularEraser } from 'solid-icons/bi';
 import { BsArrowsMove } from 'solid-icons/bs';
 import { IoCutOutline } from 'solid-icons/io';
@@ -19,6 +19,16 @@ import { useGrabcutCanvas } from '~/hooks/use-grabcut-canvas';
 import { drawStroke } from '~/hooks/use-grabcut-canvas/utils';
 import type { CanvasLayout } from '~/lib/types';
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
+import {
+  Dialog,
+  DialogContent,
+  DialogContentWithoutClose,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from './ui/dialog';
 
 export function ActionsMenu(props: {
   source: string;
@@ -41,6 +51,7 @@ export function ActionsMenu(props: {
     resetToOriginal,
     currentMode,
     saveResult,
+    isDownloadingModelOrEmbeddingImage,
   } = useGrabcutCanvas({
     sourceUrl: props.source,
     maskUrl: props.mask,
@@ -50,6 +61,11 @@ export function ActionsMenu(props: {
   });
   return (
     <div class="rounded-sm px-2 bg-white h-10 absolute bottom-0 left-0 flex gap-x-2 items-center">
+      <Dialog open={isDownloadingModelOrEmbeddingImage()}>
+        <DialogContentWithoutClose class="sm:max-w-[425px]">
+          <div class="grid gap-4 py-4">Loading...</div>
+        </DialogContentWithoutClose>
+      </Dialog>
       <Tooltip>
         <TooltipTrigger>
           <button
@@ -83,8 +99,8 @@ export function ActionsMenu(props: {
             type="button"
             onClick={() => setCurrentMode('SAM-add-area')}
             class={clsx(
-              'hover:bg-red-500 hover:text-white ease-in-out duration-200 rounded-full h-7 w-7 grid place-items-center',
-              currentMode() === 'draw-red' && 'bg-red-500 text-white',
+              'hover:bg-red-500 hover:text-white ease-in-out duration-200 rounded-full h-7 w-24 grid place-items-center',
+              currentMode() === 'SAM-add-area' && 'bg-red-500 text-white',
             )}
           >
             Add
@@ -99,7 +115,7 @@ export function ActionsMenu(props: {
             onClick={() => setCurrentMode('SAM-remove-area')}
             class={clsx(
               'hover:bg-red-500 hover:text-white ease-in-out duration-200 rounded-full h-7 w-7 grid place-items-center',
-              currentMode() === 'draw-red' && 'bg-red-500 text-white',
+              currentMode() === 'SAM-remove-area' && 'bg-red-500 text-white',
             )}
           >
             Rem

@@ -24,17 +24,21 @@ export const SamColors = {
 export async function urlToImage(url: string): Promise<HTMLImageElement> {
   const res = await fetch(url);
   const blob = await res.blob();
-  const base64 = await new Promise<string | ArrayBuffer | null>((resolve) => {
+  const base64 = await blobToBase64(blob)
+  if (typeof base64 !== 'string') {
+    throw new Error('Failed to convert blob to base64.');
+  }
+  return base64ToImage(base64);
+}
+
+export function blobToBase64(blob: Blob) {
+  return new Promise<string | ArrayBuffer | null>((resolve) => {
     const reader = new FileReader();
     reader.readAsDataURL(blob);
     reader.onload = () => {
       resolve(reader.result);
     };
   });
-  if (typeof base64 !== 'string') {
-    throw new Error('Failed to convert blob to base64.');
-  }
-  return base64ToImage(base64);
 }
 
 export function base64ToImage(base64: string): Promise<HTMLImageElement> {

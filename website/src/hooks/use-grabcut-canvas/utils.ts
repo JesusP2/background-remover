@@ -187,7 +187,7 @@ function bresenhamAlgorithm(
 
 export function drawStroke(
   action: GrabcutAction,
-  ctx: CanvasRenderingContext2D,
+  ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
   newMousePosition?: { x: number; y: number },
 ) {
   ctx.fillStyle = grabcutColors[action.type];
