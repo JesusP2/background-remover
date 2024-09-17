@@ -542,7 +542,7 @@ export function useGrabcutCanvas({
     mouse.button = event.button;
     currentId = ulid();
     // extra check just to not trigger SAM actions on mousemove
-    if (currentMode().startsWith('SAM')) {
+    if (currentMode().startsWith('SAM') && event.button === 0) {
       const { sourceCtx } = getCanvas();
       executeDrawingAction(sourceCtx);
     }
