@@ -121,9 +121,7 @@ export async function removeBackground(
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
   const data = imageData.data;
 
-  const maskCanvas = document.createElement("canvas");
-  maskCanvas.width = maskImage.width;
-  maskCanvas.height = maskImage.height;
+  const maskCanvas = new OffscreenCanvas(maskImage.width, maskImage.height);
   const maskCtx = maskCanvas.getContext("2d");
 
   if (!maskCtx) {

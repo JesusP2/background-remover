@@ -46,12 +46,14 @@ function setupWorker({
   images,
   modelStatus,
   setIsDownloadingModelOrEmbeddingImage,
+  redrawEverything,
 }: {
   lastPoints: Accessor<null | Point[]>;
   setLastPoints: Setter<null | Point[]>;
   images: GrabcutImages;
   modelStatus: ModelStatus;
   setIsDownloadingModelOrEmbeddingImage: Setter<boolean>;
+  redrawEverything: () => void;
 }) {
   const worker = new Worker('/transformer.js', {
     type: 'module',
@@ -85,7 +87,9 @@ function setupWorker({
         '2d',
       ) as OffscreenCanvasRenderingContext2D;
       tempContext.drawImage(images.sourceImg, 0, 0);
-      const imageData = tempContext.createImageData(
+      const imageData = tempContext.getImageData(
+        0,
+        0,
         tempCanvas.width,
         tempCanvas.height,
       );
@@ -102,13 +106,11 @@ function setupWorker({
         }
       }
 
-      // Fill mask with colour
-      const pixelData = imageData.data;
-      for (let i = 0; i < pixelData.length; ++i) {
+      for (let i = 0; i < imageData.data.length; ++i) {
         // TODO: we need to take into consideration the grabcut + alpha matting mask too
         if (mask.data[numMasks * i + bestIndex] !== 1) {
           const offset = 4 * i;
-          pixelData[offset + 3] = 0; // alpha
+          imageData.data[offset + 3] = 0; // alpha
         }
       }
       tempContext.putImageData(imageData, 0, 0);
@@ -120,6 +122,7 @@ function setupWorker({
         })
         .then((img) => {
           images.destinationImg = img;
+          redrawEverything();
         });
     } else if (type === 'segment_result') {
       if (data === 'start') {
@@ -137,7 +140,12 @@ function setupWorker({
 export function useSam({
   images,
   sourceImgBase64,
-}: { images: GrabcutImages; sourceImgBase64: Accessor<string | null> }) {
+  redrawEverything,
+}: {
+  images: GrabcutImages;
+  sourceImgBase64: Accessor<string | null>;
+  redrawEverything: () => void;
+}) {
   const [worker, setWorker] = createSignal<null | Worker>(null);
   const [lastPoints, setLastPoints] = createSignal<null | Point[]>(null);
   const [
@@ -180,6 +188,7 @@ export function useSam({
         setLastPoints,
         modelStatus,
         setIsDownloadingModelOrEmbeddingImage,
+        redrawEverything,
         images,
       });
       setWorker(worker);
@@ -189,10 +198,15 @@ export function useSam({
   createEffect(() => {
     const img = sourceImgBase64();
     if (typeof img !== 'string') return;
-    console.log('segmenting image');
     segment(img);
   });
-  return { decode, modelStatus, isDownloadingModelOrEmbeddingImage };
+  return {
+    decode,
+    modelStatus,
+    isDownloadingModelOrEmbeddingImage,
+    lastPoints,
+    setLastPoints,
+  };
 }
 
 export function useGrabcutCanvas({
@@ -244,9 +258,16 @@ export function useGrabcutCanvas({
   const [sourceImgBase64, setSourceImgBase64] = createSignal<null | string>(
     null,
   );
-  const { modelStatus, isDownloadingModelOrEmbeddingImage } = useSam({
+  const {
+    decode,
+    modelStatus,
+    lastPoints,
+    setLastPoints,
+    isDownloadingModelOrEmbeddingImage,
+  } = useSam({
     images,
     sourceImgBase64,
+    redrawEverything,
   });
 
   function redrawEverything() {
@@ -408,7 +429,7 @@ export function useGrabcutCanvas({
       ) {
         drawStroke(action, ctx);
       } else if (actionsType === 'mask' && action.type.startsWith('SAM')) {
-        console.log('TEMP LOG - sam redrawing action');
+        console.log('TEMP LOG - sam redrawing action / probably not needed');
       } else if (action.type === 'erase' && images.sourceImg) {
         eraseStroke(images.sourceImg, action, ctx);
       }
@@ -547,7 +568,6 @@ export function useGrabcutCanvas({
     }
     // extra check just to not trigger SAM actions on mousemove
     if (!currentMode().startsWith('SAM')) {
-      console.log('why am I printing!!!')
       executeDrawingAction(sourceCtx);
     }
   }
@@ -575,7 +595,33 @@ export function useGrabcutCanvas({
     if (currentMode() === 'erase') {
       eraseStroke(images.sourceImg, action, sourceCtx);
     } else if (currentMode().startsWith('SAM')) {
-      console.log('TEMP LOG - SAM');
+      if (!modelStatus.isEncoded) {
+        return; // Ignore if not encoded yet
+      }
+
+      function clamp(x: number, min = 0, max = 1) {
+        return Math.max(Math.min(x, max), min);
+      }
+      if (!modelStatus.isMultiMaskMode) {
+        setLastPoints([]);
+        modelStatus.isMultiMaskMode = true;
+      }
+
+      const mouseX =
+        (action.oldX / action.scale - action.pos.x / action.scale) /
+        images.sourceImg.width;
+      const mouseY =
+        (action.oldY / action.scale - action.pos.y / action.scale) /
+        images.sourceImg.height;
+      const point = {
+        point: [mouseX, mouseY],
+        label: currentMode() === 'SAM-add-area' ? 1 : 0,
+      } as Point;
+      setLastPoints((prev) => {
+        if (!prev) return [];
+        return [...prev, point];
+      });
+      decode();
     } else if (
       images.sourceImg &&
       action.oldX / action.scale - action.pos.x / action.scale > -10 &&

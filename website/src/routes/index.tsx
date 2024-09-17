@@ -48,9 +48,6 @@ export default function Page() {
                 onFileChange={async (file) => {
                   const id = ulid();
                   const downscaledImage = await downscaleImage(file, 3840);
-                  // const pipe = await pipeline('sentiment-analysis');
-                  // const out = await pipe('I love transformers!');
-                  // console.log('out:', out)
                   setInitialFile(downscaledImage);
                   navigate(`/canvas/grabcut/${id}`);
                   const [fileUrl, resultUrl] = await Promise.all([
