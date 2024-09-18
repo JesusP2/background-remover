@@ -211,8 +211,7 @@ export function GrabcutActionsMenu(props: {
         <TooltipTrigger>
           <button
             type="button"
-            title="result"
-            onClick={() => props.setCanvasLayout('result')}
+            onClick={() => props.setCanvasLayout('mask')}
             class="hover:bg-gray-100 rounded-full h-7 w-7 grid place-items-center"
           >
             <BsWindow size={20} />
@@ -224,7 +223,6 @@ export function GrabcutActionsMenu(props: {
         <TooltipTrigger>
           <button
             type="button"
-            title="both"
             onClick={() => props.setCanvasLayout('both')}
             class="hover:bg-gray-100 rounded-full h-7 w-7 grid place-items-center"
           >

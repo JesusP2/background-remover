@@ -1,4 +1,4 @@
-import { createSignal, Match, Switch } from 'solid-js';
+import { createSignal, Match, Show, Switch } from 'solid-js';
 import { GrabcutActionsMenu } from '~/components/grabcut-actions-menu';
 import { useGrabcutCanvas } from '~/hooks/use-grabcut-canvas';
 import type { SelectImage } from '~/lib/db/schema';
@@ -24,7 +24,7 @@ export function Canvases(props: { img: SelectImage }) {
     currentMode,
     saveResult,
     isDownloadingModelOrEmbeddingImage,
-    canvasStep
+    canvasStep,
   } = useGrabcutCanvas({
     sourceUrl: props.img.source,
     strokesUrl: props.img.mask,
@@ -85,6 +85,19 @@ export function Canvases(props: { img: SelectImage }) {
           />
         </Match>
       </Switch>
+      <Show when={canvasLayout() !== 'both'}>
+      <button
+        onmouseenter={() =>
+          canvasLayout() !== 'both' && setCanvasLayout('result')
+        }
+        onmouseleave={() =>
+          canvasLayout() !== 'both' && setCanvasLayout('mask')
+        }
+        class="absolute top-14 right-2 text-white bg-blue-500 py-1 px-4 rounded-sm w-20 hover:bg-blue-600 hover:w-28 duration-100 ease-in-out"
+      >
+        {canvasLayout() === 'mask' ? 'Source' : 'Result'}
+      </button>
+      </Show>
       <canvas
         hidden={canvasLayout() === 'result'}
         class={cn('h-screen svg-bg')}

@@ -38,9 +38,7 @@ export function useGrabcutCanvas({
     newMousePosition?: { x: number; y: number },
   ) => void;
 }) {
-  const [canvasStep, setCanvasStep] = createSignal<'SAM' | 'GRABCUT'>(
-    'SAM',
-  );
+  const [canvasStep, setCanvasStep] = createSignal<'SAM' | 'GRABCUT'>('SAM');
   const createPresignedUrl = useAction(createPresignedUrlAction);
   const [currentMode, setCurrentMode] =
     createSignal<GrabcutActionType>('SAM-add-area');
@@ -207,7 +205,7 @@ export function useGrabcutCanvas({
         points.pop();
         return [...points];
       });
-      decode()
+      decode();
     }
     setRedoActions((prev) => prev.concat(lastStroke));
     saveSnapshot();
@@ -216,7 +214,6 @@ export function useGrabcutCanvas({
 
   function redo() {
     const lastAction = redoActions()[redoActions().length - 1];
-    console.log(lastAction)
     const lastStroke: GrabcutAction[] = [];
     setRedoActions((prev) =>
       prev.filter((a) => {
@@ -233,10 +230,12 @@ export function useGrabcutCanvas({
     });
     if (canvasStep() === 'SAM' && images.sourceImg) {
       const mouseX =
-        (lastAction.oldX / lastAction.scale - lastAction.pos.x / lastAction.scale) /
+        (lastAction.oldX / lastAction.scale -
+          lastAction.pos.x / lastAction.scale) /
         images.sourceImg.width;
       const mouseY =
-        (lastAction.oldY / lastAction.scale - lastAction.pos.y / lastAction.scale) /
+        (lastAction.oldY / lastAction.scale -
+          lastAction.pos.y / lastAction.scale) /
         images.sourceImg.height;
       const point = {
         point: [mouseX, mouseY],
@@ -244,10 +243,10 @@ export function useGrabcutCanvas({
       } as Point;
       setSamLastPoints((points) => {
         if (!points) return points;
-        points.push(point)
-        return [...points]
+        points.push(point);
+        return [...points];
       });
-      decode()
+      decode();
     }
     saveSnapshot();
     redrawEverything();
