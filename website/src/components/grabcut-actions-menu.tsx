@@ -15,61 +15,37 @@ import { RiSystemAddFill } from 'solid-icons/ri';
 import { TbFocusCentered } from 'solid-icons/tb';
 import { VsEdit } from 'solid-icons/vs';
 import type { Accessor, Setter } from 'solid-js';
-import { useGrabcutCanvas } from '~/hooks/use-grabcut-canvas';
-import { drawStroke } from '~/hooks/use-grabcut-canvas/utils';
 import type { CanvasLayout } from '~/lib/types';
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
-import {
-  Dialog,
-  DialogContent,
-  DialogContentWithoutClose,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from './ui/dialog';
+import type {
+  GrabcutAction,
+  GrabcutActionType,
+} from '~/hooks/use-grabcut-canvas/utils';
 
-export function ActionsMenu(props: {
-  source: string;
-  mask: string;
-  result: string;
+export function GrabcutActionsMenu(props: {
+  setCurrentMode: Setter<GrabcutActionType>;
+  applyMaskToImage: () => Promise<void>;
+  undo: () => void;
+  redo: () => void;
+  actions: Accessor<GrabcutAction[]>;
+  redoActions: Accessor<GrabcutAction[]>;
+  zoomIn: (pos: { x: number; y: number }) => void;
+  zoomOut: (pos: { x: number; y: number }) => void;
+  isZooming: { value: boolean };
+  resetToOriginal: () => void;
+  currentMode: Accessor<GrabcutActionType>;
+  saveResult: (name: string) => Promise<void>;
+  isDownloadingModelOrEmbeddingImage: Accessor<boolean>;
   canvasLayout: Accessor<CanvasLayout>;
   setCanvasLayout: Setter<CanvasLayout>;
   name: string;
 }) {
-  const {
-    setCurrentMode,
-    applyMaskToImage,
-    undo,
-    redo,
-    actions,
-    redoActions,
-    zoomIn,
-    zoomOut,
-    isZooming,
-    resetToOriginal,
-    currentMode,
-    saveResult,
-    isDownloadingModelOrEmbeddingImage,
-  } = useGrabcutCanvas({
-    sourceUrl: props.source,
-    strokesUrl: props.mask,
-    resultUrl: props.result,
-    drawStroke: drawStroke,
-    canvasLayout: props.canvasLayout,
-  });
   return (
-    <div class="rounded-sm px-2 bg-white h-10 absolute bottom-0 left-0 flex gap-x-2 items-center">
-      <Dialog open={isDownloadingModelOrEmbeddingImage()}>
-        <DialogContentWithoutClose class="sm:max-w-[425px]">
-          <div class="grid gap-4 py-4">Loading...</div>
-        </DialogContentWithoutClose>
-      </Dialog>
+    <div class="rounded-sm px-2 bg-white h-10 absolute bottom-2 left-2 flex gap-x-2 items-center shadow-xl">
       <Tooltip>
         <TooltipTrigger>
           <button
-            onClick={() => applyMaskToImage()}
+            onClick={() => props.applyMaskToImage()}
             type="button"
             class="p-2 hover:bg-gray-100"
           >
@@ -82,10 +58,10 @@ export function ActionsMenu(props: {
         <TooltipTrigger>
           <button
             type="button"
-            onClick={() => setCurrentMode('draw-green')}
+            onClick={() => props.setCurrentMode('draw-green')}
             class={clsx(
               'hover:bg-green-500 hover:text-white ease-in-out duration-200 rounded-full h-7 w-7 grid place-items-center',
-              currentMode() === 'draw-green' && 'bg-green-500 text-white',
+              props.currentMode() === 'draw-green' && 'bg-green-500 text-white',
             )}
           >
             <RiSystemAddFill size={20} />
@@ -97,40 +73,10 @@ export function ActionsMenu(props: {
         <TooltipTrigger>
           <button
             type="button"
-            onClick={() => setCurrentMode('SAM-add-area')}
-            class={clsx(
-              'hover:bg-red-500 hover:text-white ease-in-out duration-200 rounded-full h-7 w-24 grid place-items-center',
-              currentMode() === 'SAM-add-area' && 'bg-red-500 text-white',
-            )}
-          >
-            Add
-          </button>
-        </TooltipTrigger>
-        <TooltipContent>Add area</TooltipContent>
-      </Tooltip>
-      <Tooltip>
-        <TooltipTrigger>
-          <button
-            type="button"
-            onClick={() => setCurrentMode('SAM-remove-area')}
+            onClick={() => props.setCurrentMode('draw-red')}
             class={clsx(
               'hover:bg-red-500 hover:text-white ease-in-out duration-200 rounded-full h-7 w-7 grid place-items-center',
-              currentMode() === 'SAM-remove-area' && 'bg-red-500 text-white',
-            )}
-          >
-            Rem
-          </button>
-        </TooltipTrigger>
-        <TooltipContent>Remove area</TooltipContent>
-      </Tooltip>
-      <Tooltip>
-        <TooltipTrigger>
-          <button
-            type="button"
-            onClick={() => setCurrentMode('draw-red')}
-            class={clsx(
-              'hover:bg-red-500 hover:text-white ease-in-out duration-200 rounded-full h-7 w-7 grid place-items-center',
-              currentMode() === 'draw-red' && 'bg-red-500 text-white',
+              props.currentMode() === 'draw-red' && 'bg-red-500 text-white',
             )}
           >
             <AiOutlineLine size={20} />
@@ -142,10 +88,11 @@ export function ActionsMenu(props: {
         <TooltipTrigger>
           <button
             type="button"
-            onClick={() => setCurrentMode('draw-yellow')}
+            onClick={() => props.setCurrentMode('draw-yellow')}
             class={clsx(
               'hover:bg-yellow-500 hover:text-white ease-in-out duration-200 rounded-full h-7 w-7 grid place-items-center',
-              currentMode() === 'draw-yellow' && 'bg-yellow-500 text-white',
+              props.currentMode() === 'draw-yellow' &&
+                'bg-yellow-500 text-white',
             )}
           >
             <VsEdit size={20} />
@@ -156,10 +103,10 @@ export function ActionsMenu(props: {
       <Tooltip>
         <TooltipTrigger>
           <button
-            onClick={() => setCurrentMode('erase')}
+            onClick={() => props.setCurrentMode('erase')}
             class={clsx(
               'hover:bg-gray-500 hover:text-white rounded-full h-7 w-7 grid place-items-center',
-              currentMode() === 'erase' && 'bg-gray-500 text-white',
+              props.currentMode() === 'erase' && 'bg-gray-500 text-white',
             )}
           >
             <BiRegularEraser size={20} />
@@ -172,8 +119,8 @@ export function ActionsMenu(props: {
           <TooltipTrigger>
             <button
               type="button"
-              disabled={!actions().length}
-              onClick={undo}
+              disabled={!props.actions().length}
+              onClick={props.undo}
               class="disabled:text-white/40 rounded-full h-7 w-7 grid place-items-center text-gray-200 hover:text-white"
             >
               <AiOutlineUndo size={20} />
@@ -185,8 +132,8 @@ export function ActionsMenu(props: {
           <TooltipTrigger>
             <button
               type="button"
-              disabled={!redoActions().length}
-              onClick={redo}
+              disabled={!props.redoActions().length}
+              onClick={props.redo}
               class="disabled:text-white/40 rounded-full h-7 w-7 grid place-items-center text-gray-200 hover:text-white"
             >
               <AiOutlineRedo size={20} />
@@ -200,7 +147,7 @@ export function ActionsMenu(props: {
               type="button"
               class="rounded-full h-7 w-7 grid place-items-center text-gray-200 hover:text-white"
               onMouseDown={() =>
-                zoomIn({
+                props.zoomIn({
                   x:
                     props.canvasLayout() === 'result'
                       ? window.innerWidth / 2 - 30
@@ -209,7 +156,7 @@ export function ActionsMenu(props: {
                 })
               }
               onMouseUp={() => {
-                isZooming.value = false;
+                props.isZooming.value = false;
               }}
             >
               <AiOutlineZoomIn size={20} />
@@ -222,9 +169,9 @@ export function ActionsMenu(props: {
             <button
               type="button"
               class="rounded-full h-7 w-7 grid place-items-center text-gray-200 hover:text-white"
-              onMouseDown={() => zoomOut({ x: 417, y: 494 })}
+              onMouseDown={() => props.zoomOut({ x: 417, y: 494 })}
               onMouseUp={() => {
-                isZooming.value = false;
+                props.isZooming.value = false;
               }}
             >
               <AiOutlineZoomOut size={20} />
@@ -237,7 +184,7 @@ export function ActionsMenu(props: {
         <TooltipTrigger>
           <button
             type="button"
-            onClick={resetToOriginal}
+            onClick={props.resetToOriginal}
             class="hover:bg-gray-100 rounded-full h-7 w-7 grid place-items-center"
           >
             <TbFocusCentered size={20} />
@@ -249,10 +196,10 @@ export function ActionsMenu(props: {
         <TooltipTrigger>
           <button
             type="button"
-            onClick={() => setCurrentMode('move')}
+            onClick={() => props.setCurrentMode('move')}
             class={clsx(
               'hover:bg-gray-100 rounded-full h-7 w-7 grid place-items-center',
-              currentMode() === 'move' && 'bg-gray-100',
+              props.currentMode() === 'move' && 'bg-gray-100',
             )}
           >
             <BsArrowsMove size={15} />
@@ -287,7 +234,7 @@ export function ActionsMenu(props: {
         <TooltipContent>Split window</TooltipContent>
       </Tooltip>
       <button
-        onClick={() => saveResult(props.name)}
+        onClick={() => props.saveResult(props.name)}
         class={clsx(
           'hover:bg-gray-100 rounded-lg h-7 bg-sky-500 font-medium text-white px-3 grid place-items-center text-sm hover:bg-sky-600',
         )}

@@ -50,6 +50,16 @@ export async function urlToImage(
   return base64ToImage(base64).catch(() => null);
 }
 
+export function blobToBase64(blob: Blob) {
+  return new Promise<string | ArrayBuffer | null>((resolve) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(blob);
+    reader.onload = () => {
+      resolve(reader.result);
+    };
+  });
+}
+
 export function base64ToImage(base64: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const img = new Image();
