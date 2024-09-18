@@ -38,10 +38,12 @@ export function useGrabcutCanvas({
     newMousePosition?: { x: number; y: number },
   ) => void;
 }) {
-  const [canvasStep, setCanvasStep] = createSignal<'SAM' | 'GRABCUT'>('SAM')
+  const [canvasStep, setCanvasStep] = createSignal<'SAM' | 'GRABCUT'>(
+    'SAM',
+  );
   const createPresignedUrl = useAction(createPresignedUrlAction);
   const [currentMode, setCurrentMode] =
-    createSignal<GrabcutActionType>('draw-green');
+    createSignal<GrabcutActionType>('SAM-add-area');
   let currentId = ulid();
   const images = {
     sourceImg: null,
@@ -189,7 +191,7 @@ export function useGrabcutCanvas({
   function undo() {
     const lastAction = actions()[actions().length - 1];
     const lastStroke: GrabcutAction[] = [];
-    
+
     setActions((prev) =>
       prev.filter((a) => {
         if (a.id === lastAction.id) {
@@ -199,6 +201,14 @@ export function useGrabcutCanvas({
         return true;
       }),
     );
+    if (canvasStep() === 'SAM') {
+      setSamLastPoints((points) => {
+        if (!points) return points;
+        points.pop();
+        return [...points];
+      });
+      decode()
+    }
     setRedoActions((prev) => prev.concat(lastStroke));
     saveSnapshot();
     redrawEverything();
@@ -206,6 +216,7 @@ export function useGrabcutCanvas({
 
   function redo() {
     const lastAction = redoActions()[redoActions().length - 1];
+    console.log(lastAction)
     const lastStroke: GrabcutAction[] = [];
     setRedoActions((prev) =>
       prev.filter((a) => {
@@ -220,6 +231,24 @@ export function useGrabcutCanvas({
       prev.push(lastAction);
       return prev;
     });
+    if (canvasStep() === 'SAM' && images.sourceImg) {
+      const mouseX =
+        (lastAction.oldX / lastAction.scale - lastAction.pos.x / lastAction.scale) /
+        images.sourceImg.width;
+      const mouseY =
+        (lastAction.oldY / lastAction.scale - lastAction.pos.y / lastAction.scale) /
+        images.sourceImg.height;
+      const point = {
+        point: [mouseX, mouseY],
+        label: currentMode() === 'SAM-add-area' ? 1 : 0,
+      } as Point;
+      setSamLastPoints((points) => {
+        if (!points) return points;
+        points.push(point)
+        return [...points]
+      });
+      decode()
+    }
     saveSnapshot();
     redrawEverything();
   }
@@ -398,7 +427,7 @@ export function useGrabcutCanvas({
       y: mouse.y,
       pos: { x: pos.x, y: pos.y },
       scale,
-    };
+    } as GrabcutAction;
     setActions((prev) => {
       prev.push(action);
       return prev;
@@ -428,6 +457,7 @@ export function useGrabcutCanvas({
         point: [mouseX, mouseY],
         label: currentMode() === 'SAM-add-area' ? 1 : 0,
       } as Point;
+      action.label = point.label;
       setSamLastPoints((prev) => {
         if (!prev) return [];
         return [...prev, point];

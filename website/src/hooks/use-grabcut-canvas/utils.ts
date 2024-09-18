@@ -14,6 +14,7 @@ export type GrabcutAction = {
   oldY: number;
   x: number;
   y: number;
+  label?: 0 | 1;
   pos: { x: number; y: number };
   scale: number;
 };
