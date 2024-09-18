@@ -54,7 +54,7 @@ export function ActionsMenu(props: {
     isDownloadingModelOrEmbeddingImage,
   } = useGrabcutCanvas({
     sourceUrl: props.source,
-    maskUrl: props.mask,
+    strokesUrl: props.mask,
     resultUrl: props.result,
     drawStroke: drawStroke,
     canvasLayout: props.canvasLayout,

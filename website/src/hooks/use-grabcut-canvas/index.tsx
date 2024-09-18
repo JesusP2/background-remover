@@ -36,8 +36,8 @@ type ModelStatus = {
 type GrabcutImages = {
   sourceImg: null | HTMLImageElement;
   destinationImg: null | HTMLImageElement;
+  strokesImg: null | HTMLImageElement;
   strokesCanvas: null | OffscreenCanvas;
-  storedMask: null | HTMLImageElement;
 };
 
 function setupWorker({
@@ -170,14 +170,6 @@ export function useSam({
     if (!modelStatus.modelReady) {
       setIsDownloadingModelOrEmbeddingImage(true);
     }
-
-    // Update UI
-    // TODO: update to the destinationCanvas
-    // imageContainer.style.backgroundImage = `url(${data})`;
-    // uploadButton.style.display = 'none';
-    // cutButton.disabled = true;
-
-    // Instruct worker to segment the image
     worker()?.postMessage({ type: 'segment', data });
   }
 
@@ -211,13 +203,13 @@ export function useSam({
 
 export function useGrabcutCanvas({
   sourceUrl,
-  maskUrl,
+  strokesUrl,
   resultUrl,
   drawStroke,
   canvasLayout,
 }: {
   sourceUrl: string;
-  maskUrl: string;
+  strokesUrl: string;
   resultUrl: string;
   canvasLayout: Accessor<CanvasLayout>;
   drawStroke: <T extends GrabcutAction>(
@@ -234,7 +226,7 @@ export function useGrabcutCanvas({
     sourceImg: null,
     destinationImg: null,
     strokesCanvas: null,
-    storedMask: null,
+    strokesImg: null,
   } as GrabcutImages;
   const isZooming = {
     value: false,
@@ -411,24 +403,24 @@ export function useGrabcutCanvas({
   }
 
   function saveSnapshot() {
-    const maskCopied = getDataFromSourceCanvas('mask');
-    if (!maskCopied) return;
-    images.strokesCanvas = maskCopied;
+    const strokesCanvasCopied = getDataFromSourceCanvas('strokes');
+    if (!strokesCanvasCopied) return;
+    images.strokesCanvas = strokesCanvasCopied;
   }
 
   function redrawActions(
     ctx: OffscreenCanvasRenderingContext2D,
-    actionsType: 'mask',
+    actionsType: 'strokes',
   ) {
     for (const action of actions()) {
       if (
-        actionsType === 'mask' &&
+        actionsType === 'strokes' &&
         (action.type === 'draw-red' ||
           action.type === 'draw-green' ||
           action.type === 'draw-yellow')
       ) {
         drawStroke(action, ctx);
-      } else if (actionsType === 'mask' && action.type.startsWith('SAM')) {
+      } else if (actionsType === 'strokes' && action.type.startsWith('SAM')) {
         console.log('TEMP LOG - sam redrawing action / probably not needed');
       } else if (action.type === 'erase' && images.sourceImg) {
         eraseStroke(images.sourceImg, action, ctx);
@@ -437,12 +429,12 @@ export function useGrabcutCanvas({
   }
 
   async function applyMaskToImage() {
-    const imgCopied = getDataFromSourceCanvas('image');
-    const maskCopied = getDataFromSourceCanvas('mask');
-    if (!imgCopied || !maskCopied) return;
+    const imgCanvasCopied = getDataFromSourceCanvas('image');
+    const strokesCanvasCopied = getDataFromSourceCanvas('strokes');
+    if (!imgCanvasCopied || !strokesCanvasCopied) return;
     const [image, mask] = await Promise.all([
-      canvasToFile(imgCopied, 'file.png', 'image/png'),
-      canvasToFile(maskCopied, 'mask.png', 'image/png'),
+      canvasToFile(imgCanvasCopied, 'file.png', 'image/png'),
+      canvasToFile(strokesCanvasCopied, 'mask.png', 'image/png'),
     ]);
     const formData = new FormData();
     formData.append('image_file', image);
@@ -460,13 +452,13 @@ export function useGrabcutCanvas({
     });
     images.destinationImg = await fileToImage(resultFile);
     redrawEverything();
-    const [maskUrl, resultUrl] = await Promise.all([
+    const [strokesUrl, resultUrl] = await Promise.all([
       createPresignedUrl(`${id}-mask.png`, mask.type, mask.size),
       createPresignedUrl(`${id}-result.png`, resultFile.type, resultFile.size),
     ]);
-    if (!maskUrl || !resultUrl) return;
+    if (!strokesUrl || !resultUrl) return;
     await Promise.all([
-      fetch(maskUrl, {
+      fetch(strokesUrl, {
         method: 'PUT',
         body: mask,
         headers: {
@@ -506,7 +498,7 @@ export function useGrabcutCanvas({
     redrawEverything();
   }
 
-  function getDataFromSourceCanvas(type: 'image' | 'mask' | 'all') {
+  function getDataFromSourceCanvas(type: 'image' | 'strokes' | 'all') {
     if (!images.sourceImg) {
       console.error('could not get source image');
       return;
@@ -522,11 +514,11 @@ export function useGrabcutCanvas({
     if (type === 'image' || type === 'all') {
       canvasCtx.drawImage(images.sourceImg, 0, 0);
     }
-    if (type === 'mask' || type === 'all') {
-      if (images.storedMask) {
-        canvasCtx.drawImage(images.storedMask, 0, 0);
+    if (type === 'strokes' || type === 'all') {
+      if (images.strokesImg) {
+        canvasCtx.drawImage(images.strokesImg, 0, 0);
       }
-      redrawActions(canvasCtx, 'mask');
+      redrawActions(canvasCtx, 'strokes');
     }
     return canvas;
   }
@@ -599,9 +591,6 @@ export function useGrabcutCanvas({
         return; // Ignore if not encoded yet
       }
 
-      function clamp(x: number, min = 0, max = 1) {
-        return Math.max(Math.min(x, max), min);
-      }
       if (!modelStatus.isMultiMaskMode) {
         setLastPoints([]);
         modelStatus.isMultiMaskMode = true;
@@ -755,8 +744,8 @@ export function useGrabcutCanvas({
     images.sourceImg = await base64ToImage(base64);
     images.destinationImg = await urlToImage(resultUrl);
     // ---------
-    if (maskUrl !== null) {
-      images.storedMask = await urlToImage(maskUrl);
+    if (strokesUrl !== null) {
+      images.strokesImg = await urlToImage(strokesUrl);
     }
     if (!images.sourceImg || !images.destinationImg) {
       console.error('Could not load source image');

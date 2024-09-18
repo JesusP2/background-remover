@@ -106,29 +106,13 @@ export async function removeBackground(
   originalImage: HTMLImageElement,
   maskImage: HTMLImageElement,
 ) {
-  // const canvas = document.createElement("canvas");
   const canvas = new OffscreenCanvas(originalImage.width, originalImage.height);
-  canvas.width = originalImage.width;
-  canvas.height = originalImage.height;
-  const ctx = canvas.getContext("2d");
-
-  if (!ctx) {
-    throw new Error("Unable to get 2D context");
-  }
-
+  const ctx = canvas.getContext("2d") as OffscreenCanvasRenderingContext2D;
   ctx.drawImage(originalImage, 0, 0);
-
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  const data = imageData.data;
 
   const maskCanvas = new OffscreenCanvas(maskImage.width, maskImage.height);
-  const maskCtx = maskCanvas.getContext("2d");
-
-  if (!maskCtx) {
-    throw new Error("Unable to get 2D context for mask");
-  }
-
-  // Draw the mask
+  const maskCtx = maskCanvas.getContext("2d") as OffscreenCanvasRenderingContext2D;
   maskCtx.drawImage(maskImage, 0, 0);
   const maskData = maskCtx.getImageData(
     0,
@@ -137,9 +121,9 @@ export async function removeBackground(
     maskCanvas.height,
   ).data;
 
-  for (let i = 0; i < data.length; i += 4) {
+  for (let i = 0; i < imageData.data.length; i += 4) {
     // The mask is grayscale, so we can use any of R, G, or B channel. We'll use R.
-    data[i + 3] = maskData[i]; // Set alpha to the mask value
+     imageData.data[i + 3] = maskData[i]; // Set alpha to the mask value
   }
 
   // Put the modified image data back to the canvas
