@@ -15,7 +15,7 @@ import {
 import { deleteImageAction } from '~/lib/actions/delete-image';
 import { db } from '~/lib/db';
 import { imageTable } from '~/lib/db/schema';
-import { createPresignedUrl } from '~/lib/r2';
+import { createReadPresignedUrl } from '~/lib/r2';
 import { rateLimit } from '~/lib/rate-limiter';
 
 const getGallery = cache(async () => {
@@ -34,9 +34,9 @@ const getGallery = cache(async () => {
 
   const userImagesPromises = userImages.map(async (image) => {
     const imagesResults = await Promise.allSettled([
-      createPresignedUrl(image.result),
-      createPresignedUrl(image.source),
-      image.mask && createPresignedUrl(image.mask),
+      createReadPresignedUrl(image.result),
+      createReadPresignedUrl(image.source),
+      image.mask && createReadPresignedUrl(image.mask),
     ]);
     image.result =
       imagesResults[0].status === 'fulfilled' ? imagesResults[0].value : '';

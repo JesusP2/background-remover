@@ -48,6 +48,7 @@ export function useGrabcutCanvas({
     destinationImg: null,
     strokesCanvas: null,
     strokesImg: null,
+    samMask: null,
   } as GrabcutImages;
   const isZooming = {
     value: false,
@@ -82,6 +83,17 @@ export function useGrabcutCanvas({
     sourceImgBase64,
     redrawEverything,
   });
+
+  function changeCanvasStep(step: 'SAM' | 'GRABCUT') {
+    setActions([])
+    setRedoActions([])
+    if (canvasStep() === 'SAM') {
+      // save SAM mask
+    } else if (canvasStep() === 'GRABCUT') {
+      // delete SAM mask
+    }
+    setCanvasStep(step)
+  }
 
   function redrawEverything() {
     if (dirty) {
@@ -621,7 +633,6 @@ export function useGrabcutCanvas({
 
   return {
     canvasStep,
-    setCanvasStep,
     setCurrentMode,
     applyMaskToImage,
     undo,

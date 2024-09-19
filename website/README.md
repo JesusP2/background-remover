@@ -18,6 +18,7 @@
 
 - changing canvasStep
  - should remove actions
- - redo list
- - undo list
- - mask image
+ - remove redo list
+ - remove undo list
+ - remove grabcut (going from grabcut to sam(if any)) mask image
+ - add sam mask image

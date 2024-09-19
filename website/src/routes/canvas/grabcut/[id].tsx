@@ -12,7 +12,7 @@ import { Canvases } from '~/components/canvases';
 import { buttonVariants } from '~/components/ui/button';
 import { db } from '~/lib/db';
 import { type SelectImage, imageTable } from '~/lib/db/schema';
-import { createPresignedUrl } from '~/lib/r2';
+import { createReadPresignedUrl } from '~/lib/r2';
 import { rateLimit } from '~/lib/rate-limiter';
 import { cn } from '~/lib/utils';
 import initialFileSignal from '~/lib/stores/initial-file';
@@ -31,9 +31,9 @@ const getImages = async (id: string) => {
     .where(and(eq(imageTable.id, id), isNull(imageTable.deleted)));
   if (userId !== image?.userId) return null;
   const imagesResults = await Promise.allSettled([
-    createPresignedUrl(image.result),
-    createPresignedUrl(image.source),
-    createPresignedUrl(image.mask),
+    createReadPresignedUrl(image.result),
+    createReadPresignedUrl(image.source),
+    createReadPresignedUrl(image.mask),
   ]);
   image.result =
     imagesResults[0].status === 'fulfilled' ? imagesResults[0].value : '';
@@ -66,6 +66,7 @@ export default function Page() {
     } as SelectImage);
     setInitialFile(null)
   }
+
   return (
     <main class="flex">
       <Switch>
