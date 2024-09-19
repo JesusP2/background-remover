@@ -20,6 +20,7 @@ import {
 import type { GrabcutAction, GrabcutActionType } from './utils';
 import { createPresignedUrlAction } from '~/lib/actions/create-presigned-url';
 import { useSam } from '../use-sam';
+import { imageNames } from '~/lib/constants';
 
 export function useGrabcutCanvas({
   sourceUrl,
@@ -309,14 +310,14 @@ export function useGrabcutCanvas({
       throw new Error('Failed to upload image');
     }
     const resultBlob = await res.blob();
-    const resultFile = new File([resultBlob], 'result.png', {
+    const resultFile = new File([resultBlob], imageNames.result, {
       type: 'image/png',
     });
     images.destinationImg = await fileToImage(resultFile);
     redrawEverything();
     const [strokesUrl, resultUrl] = await Promise.all([
-      createPresignedUrl(`${id}-mask.png`, mask.type, mask.size),
-      createPresignedUrl(`${id}-result.png`, resultFile.type, resultFile.size),
+      createPresignedUrl(`${id}-${imageNames.mask}`, mask.type, mask.size),
+      createPresignedUrl(`${id}-${imageNames.result}`, resultFile.type, resultFile.size),
     ]);
     if (!strokesUrl || !resultUrl) return;
     await Promise.all([

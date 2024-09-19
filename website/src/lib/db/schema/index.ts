@@ -7,9 +7,6 @@ export const imageTable = sqliteTable('image', {
   id: text('id').notNull().primaryKey(),
   userId: text('user_id').notNull(),
   name: text('name').notNull(),
-  source: text('source').notNull(),
-  mask: text('mask').notNull(),
-  result: text('result').notNull(),
   createdAt: integer('created_at')
     .notNull()
     .$defaultFn(() => Date.now()),

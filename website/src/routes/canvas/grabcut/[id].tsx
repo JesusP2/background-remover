@@ -16,6 +16,7 @@ import { createReadPresignedUrl } from '~/lib/r2';
 import { rateLimit } from '~/lib/rate-limiter';
 import { cn } from '~/lib/utils';
 import initialFileSignal from '~/lib/stores/initial-file';
+import { imageNames } from '~/lib/constants';
 
 const getImages = async (id: string) => {
   'use server';
@@ -28,12 +29,12 @@ const getImages = async (id: string) => {
   const [image] = await db
     .select()
     .from(imageTable)
-    .where(and(eq(imageTable.id, id), isNull(imageTable.deleted)));
+    .where(and(eq(imageTable.id, id), isNull(imageTable.deleted))) as [SelectImage];
   if (userId !== image?.userId) return null;
   const imagesResults = await Promise.allSettled([
-    createReadPresignedUrl(image.result),
-    createReadPresignedUrl(image.source),
-    createReadPresignedUrl(image.mask),
+    createReadPresignedUrl(`${id}-${imageNames.result}`),
+    createReadPresignedUrl(`${id}-${image.name}`),
+    createReadPresignedUrl(`${id}-${imageNames.mask}`),
   ]);
   image.result =
     imagesResults[0].status === 'fulfilled' ? imagesResults[0].value : '';

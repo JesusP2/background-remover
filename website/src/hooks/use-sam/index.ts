@@ -1,6 +1,13 @@
-import { createEffect, createSignal, onMount, type Accessor, type Setter } from "solid-js";
+import {
+  createEffect,
+  createSignal,
+  onMount,
+  type Accessor,
+  type Setter,
+} from "solid-js";
 import type { GrabcutImages, ModelStatus, Point } from "~/lib/types";
 import { fileToImage } from "../use-grabcut-canvas/utils";
+import { imageNames } from "~/lib/constants";
 
 function setupWorker({
   lastPoints,
@@ -17,17 +24,17 @@ function setupWorker({
   setIsDownloadingModelOrEmbeddingImage: Setter<boolean>;
   redrawEverything: () => void;
 }) {
-  const worker = new Worker('/transformer.js', {
-    type: 'module',
+  const worker = new Worker("/transformer.js", {
+    type: "module",
   });
 
-  worker.addEventListener('message', (e) => {
+  worker.addEventListener("message", (e) => {
     const { type, data } = e.data;
-    if (type === 'ready') {
+    if (type === "ready") {
       modelStatus.modelReady = true;
       // not needed, ugly flash that removes loading screen for a split second
       // setIsDownloadingModelOrEmbeddingImage(false);
-    } else if (type === 'decode_result') {
+    } else if (type === "decode_result") {
       modelStatus.isDecoding = false;
 
       if (!modelStatus.isEncoded || !images?.sourceImg) {
@@ -38,25 +45,35 @@ function setupWorker({
         // Perform decoding with the last point
         // decode();
         modelStatus.isDecoding = true;
-        worker.postMessage({ type: 'decode', data: lastPoints() });
+        worker.postMessage({ type: "decode", data: lastPoints() });
         setLastPoints([]);
       }
 
       const { mask, scores } = data;
 
+      const maskCanvas = new OffscreenCanvas(mask.width, mask.height);
+      const maskContext = maskCanvas.getContext(
+        "2d",
+      ) as OffscreenCanvasRenderingContext2D;
       const tempCanvas = new OffscreenCanvas(mask.width, mask.height);
       const tempContext = tempCanvas.getContext(
-        '2d',
+        "2d",
       ) as OffscreenCanvasRenderingContext2D;
       tempContext.drawImage(images.sourceImg, 0, 0);
-      const imageData = tempContext.getImageData(
+      const maskImageData = maskContext.getImageData(
+        0,
+        0,
+        maskCanvas.width,
+        maskCanvas.height,
+      );
+      const tempImageData = tempContext.getImageData(
         0,
         0,
         tempCanvas.width,
         tempCanvas.height,
       );
-      if (!imageData) {
-        console.error('could not get image data from mask canvas');
+      if (!tempImageData || !maskImageData) {
+        console.error("could not get image data from mask canvas");
         return;
       }
 
@@ -68,26 +85,46 @@ function setupWorker({
         }
       }
 
-      for (let i = 0; i < imageData.data.length; ++i) {
+      for (let i = 0; i < tempImageData.data.length; ++i) {
         // TODO: we need to take into consideration the grabcut + alpha matting mask too
+        // realization: it's not possible
+        const offset = 4 * i;
         if (mask.data[numMasks * i + bestIndex] !== 1) {
-          const offset = 4 * i;
-          imageData.data[offset + 3] = 0; // alpha
+          tempImageData.data[offset + 3] = 0; // alpha
+          maskImageData.data[offset] = 0;
+          maskImageData.data[offset + 1] = 0;
+          maskImageData.data[offset + 2] = 0;
+          maskImageData.data[offset + 3] = 255;
+        } else {
+          maskImageData.data[offset] = 255;
+          maskImageData.data[offset + 1] = 255;
+          maskImageData.data[offset + 2] = 255;
+          maskImageData.data[offset + 3] = 255;
         }
       }
-      tempContext.putImageData(imageData, 0, 0);
+      maskContext.putImageData(maskImageData, 0, 0);
+      maskCanvas
+        .convertToBlob()
+        .then((blob) => {
+          const file = new File([blob], imageNames.samMask, { type: "image/jpeg" });
+          return fileToImage(file);
+        })
+        .then((img) => {
+          images.samMask = img;
+        });
+      tempContext.putImageData(tempImageData, 0, 0);
       tempCanvas
         .convertToBlob()
         .then((blob) => {
-          const file = new File([blob], 'result.png', { type: 'image/png' });
+          const file = new File([blob], imageNames.result, { type: "image/png" });
           return fileToImage(file);
         })
         .then((img) => {
           images.destinationImg = img;
           redrawEverything();
         });
-    } else if (type === 'segment_result') {
-      if (data === 'start') {
+    } else if (type === "segment_result") {
+      if (data === "start") {
         setIsDownloadingModelOrEmbeddingImage(true);
       } else {
         setIsDownloadingModelOrEmbeddingImage(false);
@@ -123,7 +160,7 @@ export function useSam({
 
   function decode() {
     modelStatus.isDecoding = true;
-    worker()?.postMessage({ type: 'decode', data: lastPoints() });
+    worker()?.postMessage({ type: "decode", data: lastPoints() });
   }
 
   function segment(data: string) {
@@ -132,7 +169,7 @@ export function useSam({
     if (!modelStatus.modelReady) {
       setIsDownloadingModelOrEmbeddingImage(true);
     }
-    worker()?.postMessage({ type: 'segment', data });
+    worker()?.postMessage({ type: "segment", data });
   }
 
   onMount(() => {
@@ -151,7 +188,7 @@ export function useSam({
 
   createEffect(() => {
     const img = sourceImgBase64();
-    if (typeof img !== 'string') return;
+    if (typeof img !== "string") return;
     segment(img);
   });
   return {
@@ -162,5 +199,3 @@ export function useSam({
     setLastPoints,
   };
 }
-
-
