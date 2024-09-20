@@ -149,7 +149,6 @@ export function useGrabcutCanvas({
           },
         }),
       ]);
-      console.log('am I even reaxhing this');
       redrawEverything();
     } else if (step === 'GRABCUT') {
       setCurrentMode('draw-green');
@@ -385,7 +384,8 @@ export function useGrabcutCanvas({
       ) {
         drawStroke(action, ctx);
       } else if (actionsType === 'strokes' && action.type.startsWith('SAM')) {
-        console.log('TEMP LOG - sam redrawing action / probably not needed');
+        // console.log('no idea what to do here');
+        return;
       } else if (action.type === 'erase' && images.sourceImg) {
         eraseStroke(images.sourceImg, action, ctx);
       }
