@@ -12,7 +12,7 @@ import { BiRegularEraser } from 'solid-icons/bi';
 import { BsArrowsMove } from 'solid-icons/bs';
 import { IoCutOutline } from 'solid-icons/io';
 import { RiSystemAddFill } from 'solid-icons/ri';
-import { TbFocusCentered } from 'solid-icons/tb';
+import { TbFocusCentered, TbPlayerTrackNext } from 'solid-icons/tb';
 import { VsEdit } from 'solid-icons/vs';
 import type { Accessor, Setter } from 'solid-js';
 import type { CanvasLayout } from '~/lib/types';
@@ -38,6 +38,7 @@ export function GrabcutActionsMenu(props: {
   isDownloadingModelOrEmbeddingImage: Accessor<boolean>;
   canvasLayout: Accessor<CanvasLayout>;
   setCanvasLayout: Setter<CanvasLayout>;
+  changeToCanvasMethod: (step: 'SAM' | 'GRABCUT') => void;
   name: string;
 }) {
   return (
@@ -230,6 +231,19 @@ export function GrabcutActionsMenu(props: {
           </button>
         </TooltipTrigger>
         <TooltipContent>Split window</TooltipContent>
+      </Tooltip>
+      <Tooltip>
+        <TooltipTrigger>
+          <button
+            type="button"
+            title="result"
+            onClick={() => props.changeToCanvasMethod('SAM')}
+            class="hover:bg-gray-100 rounded-full h-7 w-7 grid place-items-center"
+          >
+            <TbPlayerTrackNext />
+          </button>
+        </TooltipTrigger>
+        <TooltipContent>Previous</TooltipContent>
       </Tooltip>
       <button
         onClick={() => props.saveResult(props.name)}

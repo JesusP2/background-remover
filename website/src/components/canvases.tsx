@@ -24,11 +24,13 @@ export function Canvases(props: { img: SelectImage }) {
     currentMode,
     saveResult,
     isDownloadingModelOrEmbeddingImage,
-    canvasStep,
+    canvasMethod,
+    changeToCanvasMethod,
   } = useGrabcutCanvas({
     sourceUrl: props.img.source,
     strokesUrl: props.img.mask,
     resultUrl: props.img.result,
+    samMaskUrl: props.img.samMask,
     drawStroke: drawStroke,
     canvasLayout: canvasLayout,
   });
@@ -40,7 +42,7 @@ export function Canvases(props: { img: SelectImage }) {
         </DialogContentWithoutClose>
       </Dialog>
       <Switch>
-        <Match when={canvasStep() === 'SAM'}>
+        <Match when={canvasMethod() === 'SAM'}>
           <SAMActionsMenu
             setCurrentMode={setCurrentMode}
             applyMaskToImage={applyMaskToImage}
@@ -59,10 +61,11 @@ export function Canvases(props: { img: SelectImage }) {
             }
             canvasLayout={canvasLayout}
             setCanvasLayout={setCanvasLayout}
+            changeToCanvasMethod={changeToCanvasMethod}
             name={props.img.name}
           />
         </Match>
-        <Match when={canvasStep() === 'GRABCUT'}>
+        <Match when={canvasMethod() === 'GRABCUT'}>
           <GrabcutActionsMenu
             setCurrentMode={setCurrentMode}
             applyMaskToImage={applyMaskToImage}
@@ -81,6 +84,7 @@ export function Canvases(props: { img: SelectImage }) {
             }
             canvasLayout={canvasLayout}
             setCanvasLayout={setCanvasLayout}
+            changeToCanvasMethod={changeToCanvasMethod}
             name={props.img.name}
           />
         </Match>

@@ -15,10 +15,14 @@ import {
   eraseStroke,
   fileToImage,
   getCanvas,
+  imageToCanvas,
   urlToImage,
 } from './utils';
 import type { GrabcutAction, GrabcutActionType } from './utils';
-import { createPresignedUrlAction } from '~/lib/actions/create-presigned-url';
+import {
+  createDeletePresignedUrlAction,
+  createWritePresignedUrlAction,
+} from '~/lib/actions/create-presigned-url';
 import { useSam } from '../use-sam';
 import { imageNames } from '~/lib/constants';
 
@@ -26,12 +30,14 @@ export function useGrabcutCanvas({
   sourceUrl,
   strokesUrl,
   resultUrl,
+  samMaskUrl,
   drawStroke,
   canvasLayout,
 }: {
   sourceUrl: string;
-  strokesUrl: string;
+  strokesUrl: string | null;
   resultUrl: string;
+  samMaskUrl: string | null;
   canvasLayout: Accessor<CanvasLayout>;
   drawStroke: <T extends GrabcutAction>(
     action: T,
@@ -39,8 +45,11 @@ export function useGrabcutCanvas({
     newMousePosition?: { x: number; y: number },
   ) => void;
 }) {
-  const [canvasStep, setCanvasStep] = createSignal<'SAM' | 'GRABCUT'>('SAM');
-  const createPresignedUrl = useAction(createPresignedUrlAction);
+  const [canvasMethod, setCanvasMethod] = createSignal<'SAM' | 'GRABCUT'>(
+    'SAM',
+  );
+  const createWritePresignedUrl = useAction(createWritePresignedUrlAction);
+  const createDeletePresignedUrl = useAction(createDeletePresignedUrlAction);
   const [currentMode, setCurrentMode] =
     createSignal<GrabcutActionType>('SAM-add-area');
   let currentId = ulid();
@@ -76,7 +85,7 @@ export function useGrabcutCanvas({
   const {
     decode,
     modelStatus,
-    lastPoints: samLastPoints,
+    // lastPoints: samLastPoints,
     setLastPoints: setSamLastPoints,
     isDownloadingModelOrEmbeddingImage,
   } = useSam({
@@ -85,15 +94,107 @@ export function useGrabcutCanvas({
     redrawEverything,
   });
 
-  function changeCanvasStep(step: 'SAM' | 'GRABCUT') {
-    setActions([])
-    setRedoActions([])
-    if (canvasStep() === 'SAM') {
-      // save SAM mask
-    } else if (canvasStep() === 'GRABCUT') {
-      // delete SAM mask
+  async function changeToCanvasMethod(step: 'SAM' | 'GRABCUT') {
+    setActions([]);
+    setRedoActions([]);
+    setCanvasMethod(step);
+    if (step === 'SAM') {
+      setCurrentMode('SAM-add-area');
+      // this should never be true
+      if (!images.samMask || !images.sourceImg) {
+        console.error('this should never happen');
+        return;
+      }
+      images.samMask = null;
+      images.strokesImg = null;
+      images.strokesCanvas
+        ?.getContext('2d')
+        ?.clearRect(
+          0,
+          0,
+          images.strokesCanvas.width,
+          images.strokesCanvas.height,
+        );
+      images.destinationImg = images.sourceImg;
+      const destinationFile = await canvasToFile(
+        imageToCanvas(images.sourceImg),
+        'result.png',
+        'image/png',
+      );
+      const [samMaskUrl, strokesUrl, destinationUrl] = await Promise.all([
+        createDeletePresignedUrl(`${id}-${imageNames.samMask}`),
+        createDeletePresignedUrl(`${id}-${imageNames.mask}`),
+        createWritePresignedUrl(
+          `${id}-${imageNames.result}`,
+          destinationFile.type,
+          destinationFile.size,
+        ),
+      ]);
+      if (!samMaskUrl || !strokesUrl || !destinationUrl) {
+        console.error('Could not create SAM-mask url');
+        return;
+      }
+      await Promise.allSettled([
+        fetch(samMaskUrl, {
+          method: 'DELETE',
+        }),
+        fetch(strokesUrl, {
+          method: 'DELETE',
+        }),
+        fetch(destinationUrl, {
+          method: 'PUT',
+          body: destinationFile,
+          headers: {
+            'Content-Type': destinationFile.type,
+          },
+        }),
+      ]);
+      console.log('am I even reaxhing this');
+      redrawEverything();
+    } else if (step === 'GRABCUT') {
+      setCurrentMode('draw-green');
+      if (!images.samMask || !images.destinationImg) {
+        console.error('this should never happen');
+        return;
+      }
+      const destinationFile = await canvasToFile(
+        imageToCanvas(images.destinationImg),
+        'result.png',
+        'image/png',
+      );
+      const [destinationUrl, samMaskUrl] = await Promise.all([
+        createWritePresignedUrl(
+          `${id}-${imageNames.result}`,
+          destinationFile.type,
+          destinationFile.size,
+        ),
+        createWritePresignedUrl(
+          `${id}-${imageNames.samMask}`,
+          images.samMask.type,
+          images.samMask.size,
+        ),
+      ]);
+      if (!samMaskUrl || !destinationUrl) {
+        console.error('Could not create urls');
+        return;
+      }
+      await Promise.allSettled([
+        fetch(samMaskUrl, {
+          method: 'PUT',
+          body: images.samMask,
+          headers: {
+            'Content-Type': images.samMask.type,
+          },
+        }),
+        fetch(destinationUrl, {
+          method: 'PUT',
+          body: destinationFile,
+          headers: {
+            'Content-Type': destinationFile.type,
+          },
+        }),
+      ]);
     }
-    setCanvasStep(step)
   }
 
   function redrawEverything() {
@@ -212,7 +313,7 @@ export function useGrabcutCanvas({
         return true;
       }),
     );
-    if (canvasStep() === 'SAM') {
+    if (canvasMethod() === 'SAM') {
       setSamLastPoints((points) => {
         if (!points) return points;
         points.pop();
@@ -241,7 +342,7 @@ export function useGrabcutCanvas({
       prev.push(lastAction);
       return prev;
     });
-    if (canvasStep() === 'SAM' && images.sourceImg) {
+    if (canvasMethod() === 'SAM' && images.sourceImg) {
       const mouseX =
         (lastAction.oldX / lastAction.scale -
           lastAction.pos.x / lastAction.scale) /
@@ -302,6 +403,9 @@ export function useGrabcutCanvas({
     const formData = new FormData();
     formData.append('image_file', image);
     formData.append('mask_file', mask);
+    if (images.samMask) {
+      formData.append('sammask_file', images.samMask);
+    }
     const res = await fetch('http://localhost:8000/mask', {
       method: 'POST',
       body: formData,
@@ -316,8 +420,12 @@ export function useGrabcutCanvas({
     images.destinationImg = await fileToImage(resultFile);
     redrawEverything();
     const [strokesUrl, resultUrl] = await Promise.all([
-      createPresignedUrl(`${id}-${imageNames.mask}`, mask.type, mask.size),
-      createPresignedUrl(`${id}-${imageNames.result}`, resultFile.type, resultFile.size),
+      createWritePresignedUrl(`${id}-${imageNames.mask}`, mask.type, mask.size),
+      createWritePresignedUrl(
+        `${id}-${imageNames.result}`,
+        resultFile.type,
+        resultFile.size,
+      ),
     ]);
     if (!strokesUrl || !resultUrl) return;
     await Promise.all([
@@ -611,6 +719,18 @@ export function useGrabcutCanvas({
     if (strokesUrl !== null) {
       images.strokesImg = await urlToImage(strokesUrl);
     }
+    if (samMaskUrl !== null) {
+      const _samMask = await urlToImage(samMaskUrl);
+      if (_samMask) {
+        setCanvasMethod('GRABCUT');
+        setCurrentMode('draw-green');
+        images.samMask = await canvasToFile(
+          imageToCanvas(_samMask),
+          imageNames.samMask,
+          'image/jpeg',
+        );
+      }
+    }
     if (!images.sourceImg || !images.destinationImg) {
       console.error('Could not load source image');
       return;
@@ -633,7 +753,8 @@ export function useGrabcutCanvas({
   });
 
   return {
-    canvasStep,
+    canvasMethod,
+    changeToCanvasMethod,
     setCurrentMode,
     applyMaskToImage,
     undo,

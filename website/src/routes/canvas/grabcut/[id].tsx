@@ -35,6 +35,7 @@ const getImages = async (id: string) => {
     createReadPresignedUrl(`${id}-${imageNames.result}`),
     createReadPresignedUrl(`${id}-${image.name}`),
     createReadPresignedUrl(`${id}-${imageNames.mask}`),
+    createReadPresignedUrl(`${id}-${imageNames.samMask}`),
   ]);
   image.result =
     imagesResults[0].status === 'fulfilled' ? imagesResults[0].value : '';
@@ -42,6 +43,8 @@ const getImages = async (id: string) => {
     imagesResults[1].status === 'fulfilled' ? imagesResults[1].value : '';
   image.mask =
     imagesResults[2]?.status === 'fulfilled' ? imagesResults[2].value : '';
+  image.samMask =
+    imagesResults[3]?.status === 'fulfilled' ? imagesResults[3].value : '';
   return image;
 };
 
@@ -61,8 +64,8 @@ export default function Page() {
     setInitialFileState({
       source: url,
       result: url,
-      // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-      mask: null as any,
+      mask: null,
+      samMask: null,
       name: file.name,
     } as SelectImage);
     setInitialFile(null)

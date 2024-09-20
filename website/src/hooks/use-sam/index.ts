@@ -103,20 +103,19 @@ function setupWorker({
         }
       }
       maskContext.putImageData(maskImageData, 0, 0);
-      maskCanvas
-        .convertToBlob()
-        .then((blob) => {
-          const file = new File([blob], imageNames.samMask, { type: "image/jpeg" });
-          return fileToImage(file);
-        })
-        .then((img) => {
-          images.samMask = img;
+      maskCanvas.convertToBlob().then((blob) => {
+        const file = new File([blob], imageNames.samMask, {
+          type: "image/jpeg",
         });
+        images.samMask = file;
+      });
       tempContext.putImageData(tempImageData, 0, 0);
       tempCanvas
         .convertToBlob()
         .then((blob) => {
-          const file = new File([blob], imageNames.result, { type: "image/png" });
+          const file = new File([blob], imageNames.result, {
+            type: "image/png",
+          });
           return fileToImage(file);
         })
         .then((img) => {

@@ -17,5 +17,5 @@ export type GrabcutImages = {
   destinationImg: null | HTMLImageElement;
   strokesImg: null | HTMLImageElement;
   strokesCanvas: null | OffscreenCanvas;
-  samMask: null | HTMLImageElement;
+  samMask: null | File;
 };

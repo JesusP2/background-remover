@@ -22,3 +22,4 @@
  - remove undo list
  - remove grabcut (going from grabcut to sam(if any)) mask image
  - add sam mask image
+ - add dialog that asks them to confirm if they want to change canvas step

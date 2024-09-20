@@ -6,6 +6,7 @@ import {
   AiOutlineZoomOut,
   AiOutlineLine,
 } from 'solid-icons/ai';
+import { TbPlayerTrackNext } from 'solid-icons/tb'
 import { BsWindowSplit } from 'solid-icons/bs';
 import { BsWindow } from 'solid-icons/bs';
 import { BsArrowsMove } from 'solid-icons/bs';
@@ -35,6 +36,7 @@ export function SAMActionsMenu(props: {
   isDownloadingModelOrEmbeddingImage: Accessor<boolean>;
   canvasLayout: Accessor<CanvasLayout>;
   setCanvasLayout: Setter<CanvasLayout>;
+  changeToCanvasMethod: (step: 'SAM' | 'GRABCUT') => void;
   name: string;
 }) {
   return (
@@ -166,7 +168,6 @@ export function SAMActionsMenu(props: {
         <TooltipTrigger>
           <button
             type="button"
-            title="result"
             onClick={() => props.setCanvasLayout('mask')}
             class="hover:bg-gray-100 rounded-full h-7 w-7 grid place-items-center"
           >
@@ -179,7 +180,6 @@ export function SAMActionsMenu(props: {
         <TooltipTrigger>
           <button
             type="button"
-            title="both"
             onClick={() => props.setCanvasLayout('both')}
             class="hover:bg-gray-100 rounded-full h-7 w-7 grid place-items-center"
           >
@@ -187,6 +187,18 @@ export function SAMActionsMenu(props: {
           </button>
         </TooltipTrigger>
         <TooltipContent>Split window</TooltipContent>
+      </Tooltip>
+      <Tooltip>
+        <TooltipTrigger>
+          <button
+            type="button"
+            onClick={() => props.changeToCanvasMethod('GRABCUT')}
+            class="hover:bg-gray-100 rounded-full h-7 w-7 grid place-items-center"
+          >
+            <TbPlayerTrackNext />
+          </button>
+        </TooltipTrigger>
+        <TooltipContent>Next</TooltipContent>
       </Tooltip>
       <button
         onClick={() => props.saveResult(props.name)}

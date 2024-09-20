@@ -8,14 +8,14 @@ import {
 import { useAction, useNavigate } from '@solidjs/router';
 import initialFileSignal from '~/lib/stores/initial-file';
 import { ulid } from 'ulidx';
-import { createPresignedUrlAction } from '~/lib/actions/create-presigned-url';
+import { createWritePresignedUrlAction } from '~/lib/actions/create-presigned-url';
 import { uploadImageAction } from '~/lib/actions/init-image-process';
 import { downscaleImage } from '~/lib/utils/image';
 
 
 export default function Page() {
   const [_, setInitialFile] = initialFileSignal;
-  const createPresignedUrl = useAction(createPresignedUrlAction);
+  const createWritePresignedUrl = useAction(createWritePresignedUrlAction);
   const uploadImage = useAction(uploadImageAction);
   const navigate = useNavigate();
 
@@ -51,12 +51,12 @@ export default function Page() {
                   setInitialFile(downscaledImage);
                   navigate(`/canvas/grabcut/${id}`);
                   const [fileUrl, resultUrl] = await Promise.all([
-                    createPresignedUrl(
+                    createWritePresignedUrl(
                       `${id}-${downscaledImage.name}`,
                       downscaledImage.type,
                       downscaledImage.size,
                     ),
-                    createPresignedUrl(
+                    createWritePresignedUrl(
                       `${id}-result.png`,
                       downscaledImage.type,
                       downscaledImage.size,
