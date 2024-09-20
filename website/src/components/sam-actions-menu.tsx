@@ -1,17 +1,10 @@
 import clsx from 'clsx';
-import {
-  AiOutlineRedo,
-  AiOutlineUndo,
-  AiOutlineZoomIn,
-  AiOutlineZoomOut,
-  AiOutlineLine,
-} from 'solid-icons/ai';
-import { TbPlayerTrackNext } from 'solid-icons/tb'
+import { TbZoomInArea, TbZoomOutArea,  TbFocusCentered, TbArrowsMove  } from 'solid-icons/tb'
+import { CgAddR, CgRemoveR, CgUndo, CgRedo } from 'solid-icons/cg'
+import { TbPlayerTrackNext } from 'solid-icons/tb';
 import { BsWindowSplit } from 'solid-icons/bs';
 import { BsWindow } from 'solid-icons/bs';
 import { BsArrowsMove } from 'solid-icons/bs';
-import { RiSystemAddFill } from 'solid-icons/ri';
-import { TbFocusCentered } from 'solid-icons/tb';
 import type { Accessor, Setter } from 'solid-js';
 import type { CanvasLayout } from '~/lib/types';
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
@@ -19,6 +12,7 @@ import type {
   GrabcutAction,
   GrabcutActionType,
 } from '~/hooks/use-grabcut-canvas/utils';
+import { cn } from '~/lib/utils';
 
 export function SAMActionsMenu(props: {
   setCurrentMode: Setter<GrabcutActionType>;
@@ -40,47 +34,51 @@ export function SAMActionsMenu(props: {
   name: string;
 }) {
   return (
-    <div class="rounded-sm px-2 bg-white h-10 absolute bottom-2 left-2 flex gap-x-2 items-center shadow-xl">
-      <Tooltip>
-        <TooltipTrigger>
-          <button
-            type="button"
-            onClick={() => props.setCurrentMode('SAM-add-area')}
-            class={clsx(
-              'hover:bg-green-500 hover:text-white ease-in-out duration-200 rounded-full h-7 w-7 grid place-items-center',
-              props.currentMode() === 'SAM-add-area' && 'bg-green-500 text-white',
-            )}
-          >
-            <RiSystemAddFill size={20} />
-          </button>
-        </TooltipTrigger>
-        <TooltipContent>Add foreground</TooltipContent>
-      </Tooltip>
-      <Tooltip>
-        <TooltipTrigger>
-          <button
-            type="button"
-            onClick={() => props.setCurrentMode('SAM-remove-area')}
-            class={clsx(
-              'hover:bg-red-500 hover:text-white ease-in-out duration-200 rounded-full h-7 w-7 grid place-items-center',
-              props.currentMode() === 'SAM-remove-area' && 'bg-red-500 text-white',
-            )}
-          >
-            <AiOutlineLine size={20} />
-          </button>
-        </TooltipTrigger>
-        <TooltipContent>Remove background</TooltipContent>
-      </Tooltip>
-      <div class="bg-sky-500 h-10 flex items-center gap-x-2 px-2 flex-center">
+    <div class="bg-white rounded-lg p-2 flex flex-col gap-y-2">
+      <div class="border-[2px] border-stone-300 p-3 flex gap-x-3 rounded-md">
+        <Tooltip>
+          <TooltipTrigger>
+            <button
+              type="button"
+              onClick={() => props.setCurrentMode('SAM-add-area')}
+              class={cn(
+                'hover:text-blue-600 text-stone-300 text-sm ease-in-out duration-200 rounded-full grid place-items-center font-semibold',
+                props.currentMode() === 'SAM-add-area' && 'text-blue-600',
+              )}
+            >
+              <CgAddR size={24} />
+              Add Mask
+            </button>
+          </TooltipTrigger>
+          <TooltipContent>Add Mask</TooltipContent>
+        </Tooltip>
+        <Tooltip>
+          <TooltipTrigger>
+            <button
+              type="button"
+              onClick={() => props.setCurrentMode('SAM-remove-area')}
+              class={cn(
+                'hover:text-red-500 text-stone-300 text-sm ease-in-out duration-200 rounded-full grid place-items-center font-semibold',
+                props.currentMode() === 'SAM-remove-area' && 'text-red-500',
+              )}
+            >
+              <CgRemoveR size={24} />
+              Remove area
+            </button>
+          </TooltipTrigger>
+          <TooltipContent>Remove area</TooltipContent>
+        </Tooltip>
+      </div>
+      <div class="h-10 flex items-center justify-between px-4 rounded-full bg-gray-100">
         <Tooltip>
           <TooltipTrigger>
             <button
               type="button"
               disabled={!props.actions().length}
               onClick={props.undo}
-              class="disabled:text-white/40 rounded-full h-7 w-7 grid place-items-center text-gray-200 hover:text-white"
+              class="disabled:text-zinc-300 h-7 w-7 grid place-items-center text-zinc-500 hover:text-zinc-700"
             >
-              <AiOutlineUndo size={20} />
+              Undo
             </button>
           </TooltipTrigger>
           <TooltipContent>Undo last action</TooltipContent>
@@ -91,9 +89,9 @@ export function SAMActionsMenu(props: {
               type="button"
               disabled={!props.redoActions().length}
               onClick={props.redo}
-              class="disabled:text-white/40 rounded-full h-7 w-7 grid place-items-center text-gray-200 hover:text-white"
+              class="disabled:text-zinc-300 h-7 w-7 grid place-items-center text-zinc-500 hover:text-zinc-700"
             >
-              <AiOutlineRedo size={20} />
+              Redo
             </button>
           </TooltipTrigger>
           <TooltipContent>Redo previous action</TooltipContent>
@@ -102,7 +100,7 @@ export function SAMActionsMenu(props: {
           <TooltipTrigger>
             <button
               type="button"
-              class="rounded-full h-7 w-7 grid place-items-center text-gray-200 hover:text-white"
+              class="h-7 w-7 grid place-items-center text-zinc-500 hover:text-zinc-700"
               onMouseDown={() =>
                 props.zoomIn({
                   x:
@@ -116,7 +114,7 @@ export function SAMActionsMenu(props: {
                 props.isZooming.value = false;
               }}
             >
-              <AiOutlineZoomIn size={20} />
+              <TbZoomInArea size={24} />
             </button>
           </TooltipTrigger>
           <TooltipContent>Zoom in</TooltipContent>
@@ -125,13 +123,13 @@ export function SAMActionsMenu(props: {
           <TooltipTrigger>
             <button
               type="button"
-              class="rounded-full h-7 w-7 grid place-items-center text-gray-200 hover:text-white"
+              class="h-7 w-7 grid place-items-center text-zinc-500 hover:text-zinc-700"
               onMouseDown={() => props.zoomOut({ x: 417, y: 494 })}
               onMouseUp={() => {
                 props.isZooming.value = false;
               }}
             >
-              <AiOutlineZoomOut size={20} />
+              <TbZoomOutArea size={24} />
             </button>
           </TooltipTrigger>
           <TooltipContent>Zoom out</TooltipContent>
@@ -159,7 +157,7 @@ export function SAMActionsMenu(props: {
               props.currentMode() === 'move' && 'bg-gray-100',
             )}
           >
-            <BsArrowsMove size={15} />
+            <TbArrowsMove size={24} />
           </button>
         </TooltipTrigger>
         <TooltipContent>Move</TooltipContent>
