@@ -13,6 +13,7 @@ import {
   ToastTitle,
 } from '~/components/ui/toast';
 import { deleteImageAction } from '~/lib/actions/delete-image';
+import { imageNames } from '~/lib/constants';
 import { db } from '~/lib/db';
 import { imageTable } from '~/lib/db/schema';
 import { createReadPresignedUrl } from '~/lib/r2';
@@ -34,17 +35,16 @@ const getGallery = cache(async () => {
 
   const userImagesPromises = userImages.map(async (image) => {
     const imagesResults = await Promise.allSettled([
-      createReadPresignedUrl(image.result),
-      createReadPresignedUrl(image.source),
-      image.mask && createReadPresignedUrl(image.mask),
+      createReadPresignedUrl(`${image.id}-${imageNames.result}`),
+      createReadPresignedUrl(`${image.id}-${image.name}`),
     ]);
-    image.result =
-      imagesResults[0].status === 'fulfilled' ? imagesResults[0].value : '';
-    image.source =
-      imagesResults[1].status === 'fulfilled' ? imagesResults[1].value : '';
-    image.mask =
-      imagesResults[2].status === 'fulfilled' ? imagesResults[2].value : '';
-    return image;
+    return {
+      name: image.name,
+      result:
+        imagesResults[0].status === 'fulfilled' ? imagesResults[0].value : '',
+      source:
+        imagesResults[1].status === 'fulfilled' ? imagesResults[1].value : '',
+    };
   });
   const userImagesResults = await Promise.allSettled(userImagesPromises);
   return userImagesResults
@@ -90,7 +90,7 @@ export default function MyGallery() {
             </div>
           </div>
         </Show>
-        <div class="grid md:grid-cols-[repeat(auto-fill,_minmax(16rem,_1fr))] max-w-7xl mx-4 md:mx-10 xl:mx-auto gap-8">
+        <div class="grid md:grid-cols-[repeat(auto-fill,_minmax(16rem,_1fr))] max-w-7xl mx-4 md:mx-10 xl:mx-auto gap-10">
           <For each={gallery()}>
             {(image) => (
               <div class="md:w-64 max-md:w-full mx-auto mb-4 md:mb-0">
