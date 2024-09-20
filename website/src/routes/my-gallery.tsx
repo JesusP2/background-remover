@@ -39,6 +39,7 @@ const getGallery = cache(async () => {
       createReadPresignedUrl(`${image.id}-${image.name}`),
     ]);
     return {
+      id: image.id,
       name: image.name,
       result:
         imagesResults[0].status === 'fulfilled' ? imagesResults[0].value : '',
