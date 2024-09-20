@@ -19,9 +19,6 @@ export const uploadImageAction = action(async (id: string, name: string) => {
       id,
       userId: userId,
       name: name,
-      source: `${id}-${name}`,
-      result: `${id}-result.png`,
-      mask: `${id}-mask.png`,
       createdAt: Date.now(),
       updatedAt: Date.now(),
     });

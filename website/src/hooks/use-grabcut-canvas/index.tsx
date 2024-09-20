@@ -7,44 +7,59 @@ import {
   onCleanup,
   onMount,
 } from 'solid-js';
-import type { CanvasLayout } from '~/lib/types';
+import type { CanvasLayout, GrabcutImages, Point } from '~/lib/types';
 import {
+  base64ToImage,
+  blobToBase64,
   canvasToFile,
   eraseStroke,
   fileToImage,
   getCanvas,
+  imageToCanvas,
   urlToImage,
 } from './utils';
 import type { GrabcutAction, GrabcutActionType } from './utils';
-import { createPresignedUrlAction } from '~/lib/actions/create-presigned-url';
+import {
+  createDeletePresignedUrlAction,
+  createWritePresignedUrlAction,
+} from '~/lib/actions/create-presigned-url';
+import { useSam } from '../use-sam';
+import { imageNames } from '~/lib/constants';
 
 export function useGrabcutCanvas({
   sourceUrl,
-  maskUrl,
+  strokesUrl,
   resultUrl,
+  samMaskUrl,
   drawStroke,
-  eventTrigger,
   canvasLayout,
 }: {
   sourceUrl: string;
-  maskUrl: string;
+  strokesUrl: string | null;
   resultUrl: string;
-  eventTrigger: 'mousedown' | 'mousemove';
+  samMaskUrl: string | null;
   canvasLayout: Accessor<CanvasLayout>;
   drawStroke: <T extends GrabcutAction>(
     action: T,
-    ctx: CanvasRenderingContext2D,
+    ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
     newMousePosition?: { x: number; y: number },
   ) => void;
 }) {
-  const createPresignedUrl = useAction(createPresignedUrlAction);
+  const [canvasMethod, setCanvasMethod] = createSignal<'SAM' | 'GRABCUT'>(
+    'SAM',
+  );
+  const createWritePresignedUrl = useAction(createWritePresignedUrlAction);
+  const createDeletePresignedUrl = useAction(createDeletePresignedUrlAction);
   const [currentMode, setCurrentMode] =
-    createSignal<GrabcutActionType>('draw-green');
+    createSignal<GrabcutActionType>('SAM-add-area');
   let currentId = ulid();
-  let sourceImg: HTMLImageElement | null = null;
-  let destinationImg: HTMLImageElement | null = null;
-  let intermediateMask: HTMLCanvasElement | null = null;
-  let storedMask: HTMLImageElement | null = null;
+  const images = {
+    sourceImg: null,
+    destinationImg: null,
+    strokesCanvas: null,
+    strokesImg: null,
+    samMask: null,
+  } as GrabcutImages;
   const isZooming = {
     value: false,
   };
@@ -64,13 +79,129 @@ export function useGrabcutCanvas({
     equals: false,
   });
   const [redoActions, setRedoActions] = createSignal<GrabcutAction[]>([]);
+  const [sourceImgBase64, setSourceImgBase64] = createSignal<null | string>(
+    null,
+  );
+  const {
+    decode,
+    modelStatus,
+    // lastPoints: samLastPoints,
+    setLastPoints: setSamLastPoints,
+    isDownloadingModelOrEmbeddingImage,
+  } = useSam({
+    images,
+    sourceImgBase64,
+    redrawEverything,
+  });
+
+  async function changeToCanvasMethod(step: 'SAM' | 'GRABCUT') {
+    setActions([]);
+    setRedoActions([]);
+    setCanvasMethod(step);
+    if (step === 'SAM') {
+      setCurrentMode('SAM-add-area');
+      // this should never be true
+      if (!images.samMask || !images.sourceImg) {
+        console.error('this should never happen');
+        return;
+      }
+      images.samMask = null;
+      images.strokesImg = null;
+      images.strokesCanvas
+        ?.getContext('2d')
+        ?.clearRect(
+          0,
+          0,
+          images.strokesCanvas.width,
+          images.strokesCanvas.height,
+        );
+      images.destinationImg = images.sourceImg;
+      const destinationFile = await canvasToFile(
+        imageToCanvas(images.sourceImg),
+        'result.png',
+        'image/png',
+      );
+      const [samMaskUrl, strokesUrl, destinationUrl] = await Promise.all([
+        createDeletePresignedUrl(`${id}-${imageNames.samMask}`),
+        createDeletePresignedUrl(`${id}-${imageNames.mask}`),
+        createWritePresignedUrl(
+          `${id}-${imageNames.result}`,
+          destinationFile.type,
+          destinationFile.size,
+        ),
+      ]);
+      if (!samMaskUrl || !strokesUrl || !destinationUrl) {
+        console.error('Could not create SAM-mask url');
+        return;
+      }
+      await Promise.allSettled([
+        fetch(samMaskUrl, {
+          method: 'DELETE',
+        }),
+        fetch(strokesUrl, {
+          method: 'DELETE',
+        }),
+        fetch(destinationUrl, {
+          method: 'PUT',
+          body: destinationFile,
+          headers: {
+            'Content-Type': destinationFile.type,
+          },
+        }),
+      ]);
+      redrawEverything();
+    } else if (step === 'GRABCUT') {
+      setCurrentMode('draw-green');
+      if (!images.samMask || !images.destinationImg) {
+        console.error('this should never happen');
+        return;
+      }
+      const destinationFile = await canvasToFile(
+        imageToCanvas(images.destinationImg),
+        'result.png',
+        'image/png',
+      );
+      const [destinationUrl, samMaskUrl] = await Promise.all([
+        createWritePresignedUrl(
+          `${id}-${imageNames.result}`,
+          destinationFile.type,
+          destinationFile.size,
+        ),
+        createWritePresignedUrl(
+          `${id}-${imageNames.samMask}`,
+          images.samMask.type,
+          images.samMask.size,
+        ),
+      ]);
+      if (!samMaskUrl || !destinationUrl) {
+        console.error('Could not create urls');
+        return;
+      }
+      await Promise.allSettled([
+        fetch(samMaskUrl, {
+          method: 'PUT',
+          body: images.samMask,
+          headers: {
+            'Content-Type': images.samMask.type,
+          },
+        }),
+        fetch(destinationUrl, {
+          method: 'PUT',
+          body: destinationFile,
+          headers: {
+            'Content-Type': destinationFile.type,
+          },
+        }),
+      ]);
+    }
+  }
 
   function redrawEverything() {
     if (dirty) {
       update();
     }
     const { sourceCtx, destinationCtx } = getCanvas();
-    if (!sourceImg || !intermediateMask || !destinationImg) {
+    if (!images.sourceImg || !images.strokesCanvas || !images.destinationImg) {
       console.error('could not execute redraw everything fn');
       return;
     }
@@ -84,9 +215,9 @@ export function useGrabcutCanvas({
       matrix[4],
       matrix[5],
     );
-    sourceCtx.drawImage(sourceImg, 0, 0);
+    sourceCtx.drawImage(images.sourceImg, 0, 0);
     sourceCtx.globalAlpha = 0.5;
-    sourceCtx.drawImage(intermediateMask, 0, 0);
+    sourceCtx.drawImage(images.strokesCanvas, 0, 0);
     sourceCtx.globalAlpha = 1.0;
 
     destinationCtx.setTransform(1, 0, 0, 1, 0, 0);
@@ -104,14 +235,14 @@ export function useGrabcutCanvas({
       matrix[4],
       matrix[5],
     );
-    destinationCtx.drawImage(destinationImg, 0, 0);
+    destinationCtx.drawImage(images.destinationImg, 0, 0);
     destinationCtx.strokeStyle = 'black';
     destinationCtx.lineWidth = 1 / scale;
     destinationCtx.strokeRect(
       0,
       0,
-      destinationImg.width,
-      destinationImg.height,
+      images.destinationImg.width,
+      images.destinationImg.height,
     );
   }
 
@@ -128,7 +259,7 @@ export function useGrabcutCanvas({
     if (dirty) {
       update();
     }
-    if (!sourceImg) return;
+    if (!images.sourceImg) return;
     pos.x += amount.x;
     pos.y += amount.y;
     adjustImagePosition(sourceCtx);
@@ -136,12 +267,12 @@ export function useGrabcutCanvas({
   }
 
   function adjustImagePosition(ctx: CanvasRenderingContext2D) {
-    if (!sourceImg) return;
+    if (!images.sourceImg) return;
     // the right side of the image should always end at the middle of the canvas
-    const leftBoundary = ctx.canvas.width / 2 - sourceImg.width * scale;
+    const leftBoundary = ctx.canvas.width / 2 - images.sourceImg.width * scale;
     // the left side of the image should always end at the middle of the canvas
     const rightBoundary = ctx.canvas.width / 2;
-    const topBoundary = ctx.canvas.height / 2 - sourceImg.height * scale;
+    const topBoundary = ctx.canvas.height / 2 - images.sourceImg.height * scale;
     const bottomBoundary = ctx.canvas.height / 2;
 
     // after moving/resizing, we perform boundary checks
@@ -171,6 +302,7 @@ export function useGrabcutCanvas({
   function undo() {
     const lastAction = actions()[actions().length - 1];
     const lastStroke: GrabcutAction[] = [];
+
     setActions((prev) =>
       prev.filter((a) => {
         if (a.id === lastAction.id) {
@@ -180,6 +312,14 @@ export function useGrabcutCanvas({
         return true;
       }),
     );
+    if (canvasMethod() === 'SAM') {
+      setSamLastPoints((points) => {
+        if (!points) return points;
+        points.pop();
+        return [...points];
+      });
+      decode();
+    }
     setRedoActions((prev) => prev.concat(lastStroke));
     saveSnapshot();
     redrawEverything();
@@ -201,46 +341,71 @@ export function useGrabcutCanvas({
       prev.push(lastAction);
       return prev;
     });
+    if (canvasMethod() === 'SAM' && images.sourceImg) {
+      const mouseX =
+        (lastAction.oldX / lastAction.scale -
+          lastAction.pos.x / lastAction.scale) /
+        images.sourceImg.width;
+      const mouseY =
+        (lastAction.oldY / lastAction.scale -
+          lastAction.pos.y / lastAction.scale) /
+        images.sourceImg.height;
+      const point = {
+        point: [mouseX, mouseY],
+        label: currentMode() === 'SAM-add-area' ? 1 : 0,
+      } as Point;
+      setSamLastPoints((points) => {
+        if (!points) return points;
+        points.push(point);
+        return [...points];
+      });
+      decode();
+    }
     saveSnapshot();
     redrawEverything();
   }
 
   function saveSnapshot() {
-    const maskCopied = getDataFromSourceCanvas('mask');
-    if (!maskCopied) return;
-    intermediateMask = maskCopied;
+    const strokesCanvasCopied = getDataFromSourceCanvas('strokes');
+    if (!strokesCanvasCopied) return;
+    images.strokesCanvas = strokesCanvasCopied;
   }
 
   function redrawActions(
-    ctx: CanvasRenderingContext2D,
-    actionsType: 'all' | 'mask',
+    ctx: OffscreenCanvasRenderingContext2D,
+    actionsType: 'strokes',
   ) {
     for (const action of actions()) {
       if (
-        actionsType === 'all' ||
-        (actionsType === 'mask' &&
-          (action.type === 'draw-red' ||
-            action.type === 'draw-green' ||
-            action.type === 'draw-yellow'))
+        actionsType === 'strokes' &&
+        (action.type === 'draw-red' ||
+          action.type === 'draw-green' ||
+          action.type === 'draw-yellow')
       ) {
         drawStroke(action, ctx);
-      } else if (action.type === 'erase' && sourceImg) {
-        eraseStroke(sourceImg, action, ctx);
+      } else if (actionsType === 'strokes' && action.type.startsWith('SAM')) {
+        // console.log('no idea what to do here');
+        return;
+      } else if (action.type === 'erase' && images.sourceImg) {
+        eraseStroke(images.sourceImg, action, ctx);
       }
     }
   }
 
   async function applyMaskToImage() {
-    const imgCopied = getDataFromSourceCanvas('image');
-    const maskCopied = getDataFromSourceCanvas('mask');
-    if (!imgCopied || !maskCopied) return;
+    const imgCanvasCopied = getDataFromSourceCanvas('image');
+    const strokesCanvasCopied = getDataFromSourceCanvas('strokes');
+    if (!imgCanvasCopied || !strokesCanvasCopied) return;
     const [image, mask] = await Promise.all([
-      canvasToFile(imgCopied, 'file.png', 'image/png'),
-      canvasToFile(maskCopied, 'mask.png', 'image/png'),
+      canvasToFile(imgCanvasCopied, 'file.png', 'image/png'),
+      canvasToFile(strokesCanvasCopied, 'mask.png', 'image/png'),
     ]);
     const formData = new FormData();
     formData.append('image_file', image);
     formData.append('mask_file', mask);
+    if (images.samMask) {
+      formData.append('sammask_file', images.samMask);
+    }
     const res = await fetch('http://localhost:8000/mask', {
       method: 'POST',
       body: formData,
@@ -249,18 +414,22 @@ export function useGrabcutCanvas({
       throw new Error('Failed to upload image');
     }
     const resultBlob = await res.blob();
-    const resultFile = new File([resultBlob], 'result.png', {
+    const resultFile = new File([resultBlob], imageNames.result, {
       type: 'image/png',
     });
-    destinationImg = await fileToImage(resultFile);
+    images.destinationImg = await fileToImage(resultFile);
     redrawEverything();
-    const [maskUrl, resultUrl] = await Promise.all([
-      createPresignedUrl(`${id}-mask.png`, mask.type, mask.size),
-      createPresignedUrl(`${id}-result.png`, resultFile.type, resultFile.size),
+    const [strokesUrl, resultUrl] = await Promise.all([
+      createWritePresignedUrl(`${id}-${imageNames.mask}`, mask.type, mask.size),
+      createWritePresignedUrl(
+        `${id}-${imageNames.result}`,
+        resultFile.type,
+        resultFile.size,
+      ),
     ]);
-    if (!maskUrl || !resultUrl) return;
+    if (!strokesUrl || !resultUrl) return;
     await Promise.all([
-      fetch(maskUrl, {
+      fetch(strokesUrl, {
         method: 'PUT',
         body: mask,
         headers: {
@@ -278,12 +447,12 @@ export function useGrabcutCanvas({
   }
 
   function calculateBaseScale(sourceCtx: CanvasRenderingContext2D) {
-    if (!sourceImg) return 1;
+    if (!images.sourceImg) return 1;
     let scale = 1;
-    if (sourceImg?.width > sourceImg?.height) {
-      scale = sourceCtx.canvas.width / sourceImg.width;
+    if (images.sourceImg?.width > images.sourceImg?.height) {
+      scale = sourceCtx.canvas.width / images.sourceImg.width;
     } else {
-      scale = sourceCtx.canvas.height / sourceImg.height;
+      scale = sourceCtx.canvas.height / images.sourceImg.height;
     }
     scale -= scale / 10;
     return scale;
@@ -291,31 +460,38 @@ export function useGrabcutCanvas({
 
   function resetToOriginal() {
     const { sourceCtx } = getCanvas();
-    if (!sourceImg) return;
+    if (!images.sourceImg) return;
     scale = 1;
     const _scale = calculateBaseScale(sourceCtx);
-    pos.x = (sourceCtx.canvas.width / _scale - sourceImg.width) / 2;
-    pos.y = (sourceCtx.canvas.height / _scale - sourceImg.height) / 2;
+    pos.x = (sourceCtx.canvas.width / _scale - images.sourceImg.width) / 2;
+    pos.y = (sourceCtx.canvas.height / _scale - images.sourceImg.height) / 2;
     scaleAt({ x: 0, y: 0 }, _scale);
     redrawEverything();
   }
 
-  function getDataFromSourceCanvas(type: 'image' | 'mask' | 'all') {
-    const copy = document.createElement('canvas');
-    const copyCtx = copy.getContext('2d');
-    if (!copyCtx || !sourceImg) return;
-    copy.width = sourceImg.width;
-    copy.height = sourceImg.height;
+  function getDataFromSourceCanvas(type: 'image' | 'strokes' | 'all') {
+    if (!images.sourceImg) {
+      console.error('could not get source image');
+      return;
+    }
+    const canvas = new OffscreenCanvas(
+      images.sourceImg.width,
+      images.sourceImg.height,
+    );
+    const canvasCtx = canvas.getContext('2d');
+    if (!canvasCtx) return;
+    canvas.width = images.sourceImg.width;
+    canvas.height = images.sourceImg.height;
     if (type === 'image' || type === 'all') {
-      copyCtx.drawImage(sourceImg, 0, 0);
+      canvasCtx.drawImage(images.sourceImg, 0, 0);
     }
-    if (type === 'mask' || type === 'all') {
-      if (storedMask) {
-        copyCtx.drawImage(storedMask, 0, 0);
+    if (type === 'strokes' || type === 'all') {
+      if (images.strokesImg) {
+        canvasCtx.drawImage(images.strokesImg, 0, 0);
       }
-      redrawActions(copyCtx, 'mask');
+      redrawActions(canvasCtx, 'strokes');
     }
-    return copy;
+    return canvas;
   }
 
   function mouseup(event: MouseEvent) {
@@ -328,9 +504,10 @@ export function useGrabcutCanvas({
     event.preventDefault();
     mouse.button = event.button;
     currentId = ulid();
-    if (eventTrigger === 'mousedown') {
+    // extra check just to not trigger SAM actions on mousemove
+    if (currentMode().startsWith('SAM') && event.button === 0) {
       const { sourceCtx } = getCanvas();
-      applyAction(sourceCtx);
+      executeDrawingAction(sourceCtx);
     }
   }
 
@@ -352,14 +529,15 @@ export function useGrabcutCanvas({
       redrawEverything();
       return;
     }
-    if (eventTrigger === 'mousemove') {
-      applyAction(sourceCtx);
+    // extra check just to not trigger SAM actions on mousemove
+    if (!currentMode().startsWith('SAM')) {
+      executeDrawingAction(sourceCtx);
     }
   }
 
-  function applyAction(sourceCtx: CanvasRenderingContext2D) {
-    const intermediateMaskCtx = intermediateMask?.getContext('2d');
-    if (!sourceImg || !intermediateMask || !intermediateMaskCtx) return;
+  function executeDrawingAction(sourceCtx: CanvasRenderingContext2D) {
+    const strokesCanvasCtx = images.strokesCanvas?.getContext('2d');
+    if (!images.sourceImg || !images.strokesCanvas || !strokesCanvasCtx) return;
     const action = {
       id: currentId,
       type: currentMode(),
@@ -369,7 +547,7 @@ export function useGrabcutCanvas({
       y: mouse.y,
       pos: { x: pos.x, y: pos.y },
       scale,
-    };
+    } as GrabcutAction;
     setActions((prev) => {
       prev.push(action);
       return prev;
@@ -377,30 +555,55 @@ export function useGrabcutCanvas({
     if (redoActions().length > 0) {
       setRedoActions([]);
     }
-    if (
-      currentMode() !== 'erase' &&
-      sourceImg &&
+    if (currentMode() === 'erase') {
+      eraseStroke(images.sourceImg, action, sourceCtx);
+    } else if (currentMode().startsWith('SAM')) {
+      if (!modelStatus.isEncoded) {
+        return; // Ignore if not encoded yet
+      }
+
+      if (!modelStatus.isMultiMaskMode) {
+        setSamLastPoints([]);
+        modelStatus.isMultiMaskMode = true;
+      }
+
+      const mouseX =
+        (action.oldX / action.scale - action.pos.x / action.scale) /
+        images.sourceImg.width;
+      const mouseY =
+        (action.oldY / action.scale - action.pos.y / action.scale) /
+        images.sourceImg.height;
+      const point = {
+        point: [mouseX, mouseY],
+        label: currentMode() === 'SAM-add-area' ? 1 : 0,
+      } as Point;
+      action.label = point.label;
+      setSamLastPoints((prev) => {
+        if (!prev) return [];
+        return [...prev, point];
+      });
+      decode();
+    } else if (
+      images.sourceImg &&
       action.oldX / action.scale - action.pos.x / action.scale > -10 &&
       action.oldX / action.scale - action.pos.x / action.scale <
-        sourceImg.width + 2 &&
+        images.sourceImg.width + 2 &&
       action.oldY / action.scale - action.pos.y / action.scale > -10 &&
       action.oldY / action.scale - action.pos.y / action.scale <
-        sourceImg.height + 2
+        images.sourceImg.height + 2
     ) {
-      intermediateMaskCtx.setTransform(1, 0, 0, 1, 0, 0);
-      drawStroke(action, intermediateMaskCtx);
+      strokesCanvasCtx.setTransform(1, 0, 0, 1, 0, 0);
+      drawStroke(action, strokesCanvasCtx);
       sourceCtx.clearRect(
         0,
         0,
         sourceCtx.canvas.width,
         sourceCtx.canvas.height,
       );
-      sourceCtx.drawImage(sourceImg, 0, 0);
+      sourceCtx.drawImage(images.sourceImg, 0, 0);
       sourceCtx.globalAlpha = 0.5;
-      sourceCtx.drawImage(intermediateMask, 0, 0);
+      sourceCtx.drawImage(images.strokesCanvas, 0, 0);
       sourceCtx.globalAlpha = 1.0;
-    } else if (currentMode() === 'erase') {
-      eraseStroke(sourceImg, action, sourceCtx);
     }
   }
 
@@ -462,10 +665,10 @@ export function useGrabcutCanvas({
   }
 
   async function saveResult(name: string) {
-    if (!destinationImg) return;
+    if (!images.destinationImg) return;
     const anchor = document.createElement('a');
     anchor.download = `${name.split('.')[0]}.png`;
-    anchor.href = destinationImg.src;
+    anchor.href = images.destinationImg.src;
     anchor.click();
   }
 
@@ -502,19 +705,40 @@ export function useGrabcutCanvas({
     sourceCtx.canvas.height = innerHeight;
     destinationCtx.canvas.height = innerHeight;
 
-    sourceImg = await urlToImage(sourceUrl);
-    destinationImg = await urlToImage(resultUrl);
-    if (maskUrl !== null) {
-      storedMask = await urlToImage(maskUrl);
+    // --------- does the same as urlToImage
+    const res = await fetch(sourceUrl);
+    const blob = await res.blob();
+    const base64 = await blobToBase64(blob);
+    setSourceImgBase64(base64 as string);
+    if (typeof base64 !== 'string') {
+      throw new Error('Failed to convert blob to base64.');
     }
-    if (!sourceImg || !destinationImg) {
+    images.sourceImg = await base64ToImage(base64);
+    images.destinationImg = await urlToImage(resultUrl);
+    // ---------
+    if (strokesUrl !== null) {
+      images.strokesImg = await urlToImage(strokesUrl);
+    }
+    if (samMaskUrl !== null) {
+      const _samMask = await urlToImage(samMaskUrl);
+      if (_samMask) {
+        setCanvasMethod('GRABCUT');
+        setCurrentMode('draw-green');
+        images.samMask = await canvasToFile(
+          imageToCanvas(_samMask),
+          imageNames.samMask,
+          'image/jpeg',
+        );
+      }
+    }
+    if (!images.sourceImg || !images.destinationImg) {
       console.error('Could not load source image');
       return;
     }
     saveSnapshot();
     const scale = calculateBaseScale(sourceCtx);
-    pos.x = (sourceCtx.canvas.width / scale - sourceImg.width) / 2;
-    pos.y = (sourceCtx.canvas.height / scale - sourceImg.height) / 2;
+    pos.x = (sourceCtx.canvas.width / scale - images.sourceImg.width) / 2;
+    pos.y = (sourceCtx.canvas.height / scale - images.sourceImg.height) / 2;
     scaleAt({ x: 0, y: 0 }, scale);
     redrawEverything();
     sourceCtx.imageSmoothingEnabled = false;
@@ -529,6 +753,8 @@ export function useGrabcutCanvas({
   });
 
   return {
+    canvasMethod,
+    changeToCanvasMethod,
     setCurrentMode,
     applyMaskToImage,
     undo,
@@ -541,5 +767,6 @@ export function useGrabcutCanvas({
     resetToOriginal,
     currentMode,
     saveResult,
+    isDownloadingModelOrEmbeddingImage,
   };
 }

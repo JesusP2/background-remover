@@ -12,10 +12,11 @@ import { Canvases } from '~/components/canvases';
 import { buttonVariants } from '~/components/ui/button';
 import { db } from '~/lib/db';
 import { type SelectImage, imageTable } from '~/lib/db/schema';
-import { createPresignedUrl } from '~/lib/r2';
+import { createReadPresignedUrl } from '~/lib/r2';
 import { rateLimit } from '~/lib/rate-limiter';
 import { cn } from '~/lib/utils';
 import initialFileSignal from '~/lib/stores/initial-file';
+import { imageNames } from '~/lib/constants';
 
 const getImages = async (id: string) => {
   'use server';
@@ -28,12 +29,13 @@ const getImages = async (id: string) => {
   const [image] = await db
     .select()
     .from(imageTable)
-    .where(and(eq(imageTable.id, id), isNull(imageTable.deleted)));
+    .where(and(eq(imageTable.id, id), isNull(imageTable.deleted))) as [SelectImage];
   if (userId !== image?.userId) return null;
   const imagesResults = await Promise.allSettled([
-    createPresignedUrl(image.result),
-    createPresignedUrl(image.source),
-    createPresignedUrl(image.mask),
+    createReadPresignedUrl(`${id}-${imageNames.result}`),
+    createReadPresignedUrl(`${id}-${image.name}`),
+    createReadPresignedUrl(`${id}-${imageNames.mask}`),
+    createReadPresignedUrl(`${id}-${imageNames.samMask}`),
   ]);
   image.result =
     imagesResults[0].status === 'fulfilled' ? imagesResults[0].value : '';
@@ -41,6 +43,8 @@ const getImages = async (id: string) => {
     imagesResults[1].status === 'fulfilled' ? imagesResults[1].value : '';
   image.mask =
     imagesResults[2]?.status === 'fulfilled' ? imagesResults[2].value : '';
+  image.samMask =
+    imagesResults[3]?.status === 'fulfilled' ? imagesResults[3].value : '';
   return image;
 };
 
@@ -60,12 +64,13 @@ export default function Page() {
     setInitialFileState({
       source: url,
       result: url,
-      // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-      mask: null as any,
+      mask: null,
+      samMask: null,
       name: file.name,
     } as SelectImage);
     setInitialFile(null)
   }
+
   return (
     <main class="flex">
       <Switch>

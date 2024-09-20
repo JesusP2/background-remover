@@ -4,6 +4,8 @@ export type GrabcutActionType =
   | "draw-green"
   | "draw-red"
   | "draw-yellow"
+  | "SAM-add-area"
+  | "SAM-remove-area"
   | "erase";
 export type GrabcutAction = {
   id: string;
@@ -12,6 +14,7 @@ export type GrabcutAction = {
   oldY: number;
   x: number;
   y: number;
+  label?: 0 | 1;
   pos: { x: number; y: number };
   scale: number;
 };
@@ -43,9 +46,19 @@ export async function urlToImage(
     },
   );
   if (typeof base64 !== "string") {
-    return null
+    return null;
   }
   return base64ToImage(base64).catch(() => null);
+}
+
+export function blobToBase64(blob: Blob) {
+  return new Promise<string | ArrayBuffer | null>((resolve) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(blob);
+    reader.onload = () => {
+      resolve(reader.result);
+    };
+  });
 }
 
 export function base64ToImage(base64: string): Promise<HTMLImageElement> {
@@ -56,8 +69,8 @@ export function base64ToImage(base64: string): Promise<HTMLImageElement> {
       resolve(img);
     };
     img.onerror = () => {
-      reject(null)
-    }
+      reject(null);
+    };
   });
 }
 
@@ -76,30 +89,21 @@ export function fileToImage(file: File | Blob): Promise<HTMLImageElement> {
   });
 }
 
-export function imageToCanvas(img: HTMLImageElement): HTMLCanvasElement {
-  const canvas = document.createElement("canvas");
-  canvas.width = img.width;
-  canvas.height = img.height;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) throw new Error("Failed to get 2d context.");
+export function imageToCanvas(img: HTMLImageElement) {
+  const canvas = new OffscreenCanvas(img.width, img.height);
+  const ctx = canvas.getContext("2d") as OffscreenCanvasRenderingContext2D;
   ctx.drawImage(img, 0, 0);
   return canvas;
 }
 
-export function canvasToFile(
-  canvas: HTMLCanvasElement,
+export async function canvasToFile(
+  canvas: OffscreenCanvas,
   fileName: string,
   mimeType: string,
 ): Promise<File> {
-  return new Promise((resolve) => {
-    canvas.toBlob((blob) => {
-      if (!blob) {
-        throw new Error("Failed to convert canvas to blob.");
-      }
-      const file = new File([blob], fileName, { type: mimeType });
-      resolve(file);
-    }, mimeType);
-  });
+  const blob = await canvas.convertToBlob();
+  const file = new File([blob], fileName, { type: mimeType });
+  return file;
 }
 
 export function getCanvas() {
@@ -117,7 +121,7 @@ export function getCanvas() {
 export function eraseStroke(
   sourceImg: HTMLImageElement,
   action: GrabcutAction,
-  ctx: CanvasRenderingContext2D,
+  ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
 ) {
   let size = 0;
   if (action.scale < 0.3) {
@@ -191,7 +195,7 @@ function bresenhamAlgorithm(
 
 export function drawStroke(
   action: GrabcutAction,
-  ctx: CanvasRenderingContext2D,
+  ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
   newMousePosition?: { x: number; y: number },
 ) {
   ctx.fillStyle = grabcutColors[action.type];
@@ -259,7 +263,7 @@ export function drawStroke(
     points.push({
       x: action.x,
       y: action.y,
-    })
+    });
   }
   for (const point of points) {
     const strokePos = {

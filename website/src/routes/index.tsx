@@ -8,15 +8,17 @@ import {
 import { useAction, useNavigate } from '@solidjs/router';
 import initialFileSignal from '~/lib/stores/initial-file';
 import { ulid } from 'ulidx';
-import { createPresignedUrlAction } from '~/lib/actions/create-presigned-url';
+import { createWritePresignedUrlAction } from '~/lib/actions/create-presigned-url';
 import { uploadImageAction } from '~/lib/actions/init-image-process';
 import { downscaleImage } from '~/lib/utils/image';
 
+
 export default function Page() {
   const [_, setInitialFile] = initialFileSignal;
-  const createPresignedUrl = useAction(createPresignedUrlAction);
+  const createWritePresignedUrl = useAction(createWritePresignedUrlAction);
   const uploadImage = useAction(uploadImageAction);
   const navigate = useNavigate();
+
   return (
     <div>
       <Navbar route="/" />
@@ -29,7 +31,10 @@ export default function Page() {
             <DialogTrigger
               // biome-ignore lint/suspicious/noExplicitAny: <explanation>
               as={(props: any) => (
-                <button class="relative h-12" {...props}>
+                <button
+                  class="relative h-12"
+                  {...props}
+                >
                   <div class="border-2 border-black bg-white rounded-lg w-36 h-12 relative">
                     <div class="bg-black w-36 h-12 relative top-[-0.7rem] rounded-lg text-white grid place-items-center font-gabarito text-lg group-hover:top-[-0.4rem] group-hover:left-[0.2rem] left-[0.5rem] duration-100">
                       Get Started
@@ -42,16 +47,16 @@ export default function Page() {
               <DropZone
                 onFileChange={async (file) => {
                   const id = ulid();
-                  const downscaledImage = await downscaleImage(file, 3840)
+                  const downscaledImage = await downscaleImage(file, 3840);
                   setInitialFile(downscaledImage);
                   navigate(`/canvas/grabcut/${id}`);
                   const [fileUrl, resultUrl] = await Promise.all([
-                    createPresignedUrl(
+                    createWritePresignedUrl(
                       `${id}-${downscaledImage.name}`,
                       downscaledImage.type,
                       downscaledImage.size,
                     ),
-                    createPresignedUrl(
+                    createWritePresignedUrl(
                       `${id}-result.png`,
                       downscaledImage.type,
                       downscaledImage.size,

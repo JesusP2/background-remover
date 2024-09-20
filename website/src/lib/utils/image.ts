@@ -1,6 +1,6 @@
 import pica from "pica";
 
-export type ImageResize = 720| 1080 | 3840;
+export type ImageResize = 720 | 1080 | 3840;
 export const sizes: Record<
   ImageResize,
   { maxWidth: number; maxHeight: number }
@@ -44,7 +44,10 @@ function getMaximumSize(
   };
 }
 
-export async function downscaleImage(file: File, size: ImageResize = 720): Promise<File> {
+export async function downscaleImage(
+  file: File,
+  size: ImageResize = 720,
+): Promise<File> {
   const img = await createImageBitmap(file);
   const canvas = document.createElement("canvas");
   const { width, height } = getMaximumSize(img, size);
@@ -99,60 +102,34 @@ export async function upscaleImage(
   });
 }
 
-export function removeBackground(
+export async function removeBackground(
   originalImage: HTMLImageElement,
   maskImage: HTMLImageElement,
-): Promise<Blob> {
-  return new Promise((resolve, reject) => {
-    const canvas = document.createElement("canvas");
-    canvas.width = originalImage.width;
-    canvas.height = originalImage.height;
-    const ctx = canvas.getContext("2d");
+) {
+  const canvas = new OffscreenCanvas(originalImage.width, originalImage.height);
+  const ctx = canvas.getContext("2d") as OffscreenCanvasRenderingContext2D;
+  ctx.drawImage(originalImage, 0, 0);
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
-    if (!ctx) {
-      reject(new Error("Unable to get 2D context"));
-      return;
-    }
+  const maskCanvas = new OffscreenCanvas(maskImage.width, maskImage.height);
+  const maskCtx = maskCanvas.getContext("2d") as OffscreenCanvasRenderingContext2D;
+  maskCtx.drawImage(maskImage, 0, 0);
+  const maskData = maskCtx.getImageData(
+    0,
+    0,
+    maskCanvas.width,
+    maskCanvas.height,
+  ).data;
 
-    ctx.drawImage(originalImage, 0, 0);
+  for (let i = 0; i < imageData.data.length; i += 4) {
+    // The mask is grayscale, so we can use any of R, G, or B channel. We'll use R.
+     imageData.data[i + 3] = maskData[i]; // Set alpha to the mask value
+  }
 
-    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    const data = imageData.data;
+  // Put the modified image data back to the canvas
+  ctx.putImageData(imageData, 0, 0);
 
-    const maskCanvas = document.createElement("canvas");
-    maskCanvas.width = maskImage.width;
-    maskCanvas.height = maskImage.height;
-    const maskCtx = maskCanvas.getContext("2d");
-
-    if (!maskCtx) {
-      reject(new Error("Unable to get 2D context for mask"));
-      return;
-    }
-
-    // Draw the mask
-    maskCtx.drawImage(maskImage, 0, 0);
-    const maskData = maskCtx.getImageData(
-      0,
-      0,
-      maskCanvas.width,
-      maskCanvas.height,
-    ).data;
-
-    for (let i = 0; i < data.length; i += 4) {
-      // The mask is grayscale, so we can use any of R, G, or B channel. We'll use R.
-      data[i + 3] = maskData[i]; // Set alpha to the mask value
-    }
-
-    // Put the modified image data back to the canvas
-    ctx.putImageData(imageData, 0, 0);
-
-    canvas.toBlob((blob) => {
-      if (blob) {
-        const newFile = new File([blob], "result.png", { type: "image/png" });
-        resolve(newFile);
-      } else {
-        reject(new Error("Canvas to Blob conversion failed"));
-      }
-    }, "image.png");
-  });
+  const blob = await canvas.convertToBlob();
+  const newFile = new File([blob], "result.png", { type: "image/png" });
+  return newFile;
 }
