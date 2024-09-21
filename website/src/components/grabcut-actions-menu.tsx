@@ -19,6 +19,7 @@ import type {
 import { cn } from '~/lib/utils';
 import { CgAddR, CgRemoveR } from 'solid-icons/cg';
 import { Dialog, DialogContentWithoutClose, DialogTrigger } from './ui/dialog';
+import { Button } from './ui/button';
 
 export function GrabcutActionsMenu(props: {
   setCurrentMode: Setter<GrabcutActionType>;
@@ -270,7 +271,7 @@ export function GrabcutActionsMenu(props: {
                   type="button"
                   disabled={props.isRemovingBackground()}
                   onClick={() => setIsConfirmResetDialogOpen(true)}
-                  class="disabled:ring-zinc-300 disabled:text-zinc-300 text-sm text-zinc-500 hover:text-zinc-600 font-semibold px-3 py-1 ring-1 w-full rounded-full ring-zinc-400 hover:ring-zinc-600 h-[26px]"
+                  class="disabled:ring-zinc-300 w-16 disabled:text-zinc-300 text-sm text-zinc-500 hover:text-zinc-600 font-semibold px-3 py-1 ring-1 w-full rounded-full ring-zinc-400 hover:ring-zinc-600 h-[26px]"
                 >
                   Reset
                 </button>
@@ -278,12 +279,15 @@ export function GrabcutActionsMenu(props: {
             />
             <DialogContentWithoutClose class="sm:max-w-[425px]">
               <p>Are you sure?</p>
-              <button onClick={() => props.changeToCanvasMethod('SAM')}>
+              <Button onClick={() => props.changeToCanvasMethod('SAM')} variant="outline">
                 Yes
-              </button>
-              <button onClick={() => setIsConfirmResetDialogOpen(false)}>
+              </Button>
+              <Button
+                onClick={() => setIsConfirmResetDialogOpen(false)}
+                variant="destructive"
+              >
                 Cancel
-              </button>
+              </Button>
             </DialogContentWithoutClose>
           </Dialog>
           <button

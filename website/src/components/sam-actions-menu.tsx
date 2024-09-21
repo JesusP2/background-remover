@@ -208,7 +208,7 @@ export function SAMActionsMenu(props: {
               type="button"
               disabled={props.isRemovingBackground()}
               onClick={() => props.changeToCanvasMethod('GRABCUT')}
-              class="text-sm text-zinc-500 hover:text-zinc-600 font-semibold px-3 py-1 ring-1 w-full rounded-full ring-zinc-400 hover:ring-zinc-600 h-[26px]"
+              class="text-sm text-zinc-500 w-16 hover:text-zinc-600 font-semibold px-3 py-1 ring-1 w-full rounded-full ring-zinc-400 hover:ring-zinc-600 h-[26px]"
             >
               Next
             </button>
