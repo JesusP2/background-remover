@@ -30,7 +30,7 @@ const getImages = async (id: string) => {
     .select()
     .from(imageTable)
     .where(and(eq(imageTable.id, id), isNull(imageTable.deleted))) as [SelectImage];
-  if (userId !== image?.userId) return null;
+  if (!image?.userId || userId !== image?.userId) return null;
   const imagesResults = await Promise.allSettled([
     createReadPresignedUrl(`${id}-${imageNames.result}`),
     createReadPresignedUrl(`${id}-${image.name}`),

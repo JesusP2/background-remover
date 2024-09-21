@@ -15,8 +15,8 @@ export function Draggable(props: ComponentProps<'div'>) {
     <div
       {...rest}
       onMouseDown={(e) => {
-        setMouse(prev => ({
-        ...prev,
+        setMouse((prev) => ({
+          ...prev,
           dragging: true,
           mouseX: e.clientX,
           mouseY: e.clientY,
@@ -36,10 +36,16 @@ export function Draggable(props: ComponentProps<'div'>) {
       }}
       onMouseMove={(e) => {
         if (mouse().dragging) {
-          setMouse(prev => ({
+          setMouse((prev) => ({
             dragging: true,
-            y: prev.y + e.clientY - prev.mouseY,
-            x: prev.x + e.clientX - prev.mouseX,
+            y: Math.min(
+              Math.max(prev.y + e.clientY - prev.mouseY, 0),
+              window.innerHeight,
+            ),
+            x: Math.min(
+              Math.max(prev.x + e.clientX - prev.mouseX, 0),
+              window.innerWidth,
+            ),
             mouseX: e.clientX,
             mouseY: e.clientY,
           }));

@@ -1,10 +1,13 @@
 import clsx from 'clsx';
-import { TbZoomInArea, TbZoomOutArea,  TbFocusCentered, TbArrowsMove  } from 'solid-icons/tb'
-import { CgAddR, CgRemoveR, CgUndo, CgRedo } from 'solid-icons/cg'
-import { TbPlayerTrackNext } from 'solid-icons/tb';
+import {
+  TbZoomInArea,
+  TbZoomOutArea,
+  TbFocusCentered,
+  TbArrowsMove,
+} from 'solid-icons/tb';
+import { CgAddR, CgRemoveR } from 'solid-icons/cg';
 import { BsWindowSplit } from 'solid-icons/bs';
 import { BsWindow } from 'solid-icons/bs';
-import { BsArrowsMove } from 'solid-icons/bs';
 import type { Accessor, Setter } from 'solid-js';
 import type { CanvasLayout } from '~/lib/types';
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
@@ -35,7 +38,7 @@ export function SAMActionsMenu(props: {
 }) {
   return (
     <div class="bg-white rounded-lg p-2 flex flex-col gap-y-2">
-      <div class="border-[2px] border-stone-300 p-3 flex gap-x-3 rounded-md">
+      <div class="border-[2px] border-stone-300 py-2 px-3 flex rounded-md gap-x-2 justify-between">
         <Tooltip>
           <TooltipTrigger>
             <button
@@ -69,33 +72,35 @@ export function SAMActionsMenu(props: {
           <TooltipContent>Remove area</TooltipContent>
         </Tooltip>
       </div>
-      <div class="h-10 flex items-center justify-between px-4 rounded-full bg-gray-100">
-        <Tooltip>
+      <div class="flex items-center justify-between border-2 border-stone-300 rounded-md px-3 py-2 gap-x-2">
+        <Tooltip disabled={!props.actions().length}>
           <TooltipTrigger>
             <button
               type="button"
               disabled={!props.actions().length}
               onClick={props.undo}
-              class="disabled:text-zinc-300 h-7 w-7 grid place-items-center text-zinc-500 hover:text-zinc-700"
+              class="disabled:text-zinc-100 disabled:bg-stone-300 text-zinc-100 hover:text-white hover:bg-stone-600 font-semibold px-3 py-1 bg-stone-500 rounded-full"
             >
               Undo
             </button>
           </TooltipTrigger>
           <TooltipContent>Undo last action</TooltipContent>
         </Tooltip>
-        <Tooltip>
+        <Tooltip disabled={!props.redoActions().length}>
           <TooltipTrigger>
             <button
               type="button"
               disabled={!props.redoActions().length}
               onClick={props.redo}
-              class="disabled:text-zinc-300 h-7 w-7 grid place-items-center text-zinc-500 hover:text-zinc-700"
+              class="disabled:text-zinc-100 disabled:bg-stone-300 text-zinc-100 hover:text-white hover:bg-stone-600 font-semibold px-3 py-1 bg-stone-500 rounded-full"
             >
               Redo
             </button>
           </TooltipTrigger>
           <TooltipContent>Redo previous action</TooltipContent>
         </Tooltip>
+      </div>
+      <div class="bg-gray-100 rounded-full flex items-center justify-between py-1 px-3">
         <Tooltip>
           <TooltipTrigger>
             <button
@@ -134,78 +139,82 @@ export function SAMActionsMenu(props: {
           </TooltipTrigger>
           <TooltipContent>Zoom out</TooltipContent>
         </Tooltip>
+        <Tooltip>
+          <TooltipTrigger>
+            <button
+              type="button"
+              onClick={props.resetToOriginal}
+              class="h-7 w-7 grid place-items-center text-zinc-500 hover:text-zinc-700"
+            >
+              <TbFocusCentered size={24} />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent>Fit and Center</TooltipContent>
+        </Tooltip>
       </div>
-      <Tooltip>
-        <TooltipTrigger>
-          <button
-            type="button"
-            onClick={props.resetToOriginal}
-            class="hover:bg-gray-100 rounded-full h-7 w-7 grid place-items-center"
-          >
-            <TbFocusCentered size={20} />
-          </button>
-        </TooltipTrigger>
-        <TooltipContent>Fit and Center</TooltipContent>
-      </Tooltip>
-      <Tooltip>
-        <TooltipTrigger>
-          <button
-            type="button"
-            onClick={() => props.setCurrentMode('move')}
-            class={clsx(
-              'hover:bg-gray-100 rounded-full h-7 w-7 grid place-items-center',
-              props.currentMode() === 'move' && 'bg-gray-100',
-            )}
-          >
-            <TbArrowsMove size={24} />
-          </button>
-        </TooltipTrigger>
-        <TooltipContent>Move</TooltipContent>
-      </Tooltip>
-      <Tooltip>
-        <TooltipTrigger>
-          <button
-            type="button"
-            onClick={() => props.setCanvasLayout('mask')}
-            class="hover:bg-gray-100 rounded-full h-7 w-7 grid place-items-center"
-          >
-            <BsWindow size={20} />
-          </button>
-        </TooltipTrigger>
-        <TooltipContent>1 window</TooltipContent>
-      </Tooltip>
-      <Tooltip>
-        <TooltipTrigger>
-          <button
-            type="button"
-            onClick={() => props.setCanvasLayout('both')}
-            class="hover:bg-gray-100 rounded-full h-7 w-7 grid place-items-center"
-          >
-            <BsWindowSplit size={20} />
-          </button>
-        </TooltipTrigger>
-        <TooltipContent>Split window</TooltipContent>
-      </Tooltip>
-      <Tooltip>
-        <TooltipTrigger>
-          <button
-            type="button"
-            onClick={() => props.changeToCanvasMethod('GRABCUT')}
-            class="hover:bg-gray-100 rounded-full h-7 w-7 grid place-items-center"
-          >
-            <TbPlayerTrackNext />
-          </button>
-        </TooltipTrigger>
-        <TooltipContent>Next</TooltipContent>
-      </Tooltip>
-      <button
-        onClick={() => props.saveResult(props.name)}
-        class={clsx(
-          'hover:bg-gray-100 rounded-lg h-7 bg-sky-500 font-medium text-white px-3 grid place-items-center text-sm hover:bg-sky-600',
-        )}
-      >
-        Download
-      </button>
+      <div class="bg-gray-100 rounded-full flex items-center justify-between py-1 px-3">
+        <Tooltip>
+          <TooltipTrigger>
+            <button
+              type="button"
+              onClick={() => props.setCurrentMode('move')}
+              class={cn(
+                'h-7 w-7 grid place-items-center text-zinc-500 hover:text-zinc-700',
+                props.currentMode() === 'move' && 'text-zinc-900',
+              )}
+            >
+              <TbArrowsMove size={24} />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent>Move</TooltipContent>
+        </Tooltip>
+        <Tooltip>
+          <TooltipTrigger>
+            <button
+              type="button"
+              onClick={() => props.setCanvasLayout('mask')}
+              class="text-zinc-600 hover:text-zinc-800 rounded-full h-7 w-7 grid place-items-center"
+            >
+              <BsWindow size={20} />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent>1 window</TooltipContent>
+        </Tooltip>
+        <Tooltip>
+          <TooltipTrigger>
+            <button
+              type="button"
+              onClick={() => props.setCanvasLayout('both')}
+              class="text-zinc-600 hover:text-zinc-800 rounded-full h-7 w-7 grid place-items-center"
+            >
+              <BsWindowSplit size={20} />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent>Split window</TooltipContent>
+        </Tooltip>
+      </div>
+      <div class="flex justify-between items-centerr">
+        <Tooltip>
+          <TooltipTrigger>
+            <button
+              type="button"
+              onClick={() => props.changeToCanvasMethod('GRABCUT')}
+              class="text-sm text-zinc-500 hover:text-zinc-600 font-semibold px-3 py-1 ring-1 w-full rounded-full ring-zinc-400 hover:ring-zinc-600 h-[26px]"
+            >
+              Next
+            </button>
+          </TooltipTrigger>
+          <TooltipContent>Next</TooltipContent>
+        </Tooltip>
+        <button
+          onClick={() => props.saveResult(props.name)}
+          class={clsx(
+            'hover:bg-gray-100 rounded-full bg-blue-500 font-medium text-white px-3 grid place-items-center text-sm hover:bg-blue-600 font-semibold w-24 h-[28px]',
+          )}
+        >
+          Download
+        </button>
+      </div>
     </div>
   );
 }
