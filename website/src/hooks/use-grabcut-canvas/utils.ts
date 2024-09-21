@@ -199,40 +199,40 @@ export function drawStroke(
   newMousePosition?: { x: number; y: number },
 ) {
   ctx.fillStyle = grabcutColors[action.type];
-  let size: number[] = [];
+  let size = 0;
   if (action.type === "draw-yellow") {
     if (action.scale < 0.3) {
-      size = [50];
+      size = 50;
     } else if (action.scale < 1) {
-      size = [40];
+      size = 40;
     } else if (action.scale < 2) {
-      size = [20];
+      size = 20;
     } else if (action.scale < 4) {
-      size = [5];
+      size = 8;
     } else if (action.scale < 8) {
-      size = [3];
+      size = 5;
     } else if (action.scale < 12) {
-      size = [1];
+      size = 2;
     } else if (action.scale <= 80) {
-      size = [0.5];
+      size = 1;
     }
   } else {
     if (action.scale < 0.3) {
-      size = [30];
+      size = 30;
     } else if (action.scale < 0.5) {
-      size = [20];
+      size = 20;
     } else if (action.scale < 1) {
-      size = [15];
+      size = 15;
     } else if (action.scale < 2) {
-      size = [8];
+      size = 10;
     } else if (action.scale < 4) {
-      size = [3];
+      size = 6;
     } else if (action.scale < 8) {
-      size = [2];
+      size = 4;
     } else if (action.scale < 12) {
-      size = [1];
+      size = 2;
     } else if (action.scale <= 80) {
-      size = [0.5];
+      size = 1;
     }
   }
 
@@ -270,21 +270,53 @@ export function drawStroke(
       x: point.x / action.scale - action.pos.x / action.scale,
       y: point.y / action.scale - action.pos.y / action.scale,
     };
-    for (let i = 0; i < size.length; i++) {
-      const xSize = size[i];
-      const ySize = size[size.length - i - 1];
-      let xPos = 0;
-      if (strokePos.x - xSize / 2 > 0) {
-        xPos = Math.floor(strokePos.x) - Math.floor(xSize / 2);
-      }
-      let yPos = 0;
-      if (strokePos.y - ySize / 2 > 0) {
-        yPos = Math.floor(strokePos.y) - Math.floor(ySize / 2);
-      }
-      ctx.fillRect(xPos, yPos, xSize * 2, ySize * 2);
-    }
+    // const ySize = size[size.length - i - 1];
+    const xPos = Math.max(Math.floor(strokePos.x), 0);
+    const yPos = Math.max(Math.floor(strokePos.y), 0);
+    strokeCircle({
+      ctx,
+      cx: xPos,
+      cy: yPos,
+      radius: size,
+    });
   }
 }
+const strokeCircle = ({
+  cx,
+  cy,
+  radius,
+  ctx,
+}: {
+  cx: number;
+  cy: number;
+  radius: number;
+  ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
+}) => {
+  let x = radius - 1;
+  let y = 0;
+  let dx = 1;
+  let dy = 1;
+  let err = dx - (radius << 1);
+
+  while (x >= y) {
+    ctx.fillRect(cx - x, cy + y, cx + x - (cx - x) + 1, 1);
+    ctx.fillRect(cx - x, cy - y, cx + x - (cx - x) + 1, 1);
+    ctx.fillRect(cx + y, cy - x, 1, cy + x - (cy - x) + 1);
+    ctx.fillRect(cx - y, cy - x, 1, cy + x - (cy - x) + 1);
+
+    if (err <= 0) {
+      y++;
+      err += dy;
+      dy += 2;
+    }
+
+    if (err > 0) {
+      x--;
+      dx += 2;
+      err += dx - (radius << 1);
+    }
+  }
+};
 
 export function getDataPoints(actions: GrabcutAction[]) {
   const positive_points = actions
