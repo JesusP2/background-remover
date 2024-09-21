@@ -9,7 +9,7 @@ import {
   TbZoomOutArea,
 } from 'solid-icons/tb';
 import { VsEdit } from 'solid-icons/vs';
-import type { Accessor, Setter } from 'solid-js';
+import { createSignal, type Accessor, type Setter } from 'solid-js';
 import type { CanvasLayout } from '~/lib/types';
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 import type {
@@ -18,6 +18,7 @@ import type {
 } from '~/hooks/use-grabcut-canvas/utils';
 import { cn } from '~/lib/utils';
 import { CgAddR, CgRemoveR } from 'solid-icons/cg';
+import { Dialog, DialogContentWithoutClose, DialogTrigger } from './ui/dialog';
 
 export function GrabcutActionsMenu(props: {
   setCurrentMode: Setter<GrabcutActionType>;
@@ -39,6 +40,8 @@ export function GrabcutActionsMenu(props: {
   isRemovingBackground: Accessor<boolean>;
   name: string;
 }) {
+  const [isConfirmResetDialogOpen, setIsConfirmResetDialogOpen] =
+    createSignal(false);
   return (
     <>
       <div class="bg-white rounded-lg p-2 flex flex-col gap-y-2">
@@ -121,11 +124,15 @@ export function GrabcutActionsMenu(props: {
           </Tooltip>
         </div>
         <div class="flex items-center justify-between border-2 border-stone-300 rounded-md px-3 py-2 gap-x-2">
-          <Tooltip disabled={!props.actions().length || props.isRemovingBackground()}>
+          <Tooltip
+            disabled={!props.actions().length || props.isRemovingBackground()}
+          >
             <TooltipTrigger>
               <button
                 type="button"
-                disabled={!props.actions().length || props.isRemovingBackground()}
+                disabled={
+                  !props.actions().length || props.isRemovingBackground()
+                }
                 onClick={props.undo}
                 class="disabled:text-zinc-100 disabled:bg-stone-300 text-zinc-100 hover:text-white hover:bg-stone-600 font-semibold px-3 py-1 bg-stone-500 rounded-full"
               >
@@ -134,11 +141,17 @@ export function GrabcutActionsMenu(props: {
             </TooltipTrigger>
             <TooltipContent>Undo last action</TooltipContent>
           </Tooltip>
-          <Tooltip disabled={!props.redoActions().length || props.isRemovingBackground()}>
+          <Tooltip
+            disabled={
+              !props.redoActions().length || props.isRemovingBackground()
+            }
+          >
             <TooltipTrigger>
               <button
                 type="button"
-                disabled={!props.redoActions().length || props.isRemovingBackground()}
+                disabled={
+                  !props.redoActions().length || props.isRemovingBackground()
+                }
                 onClick={props.redo}
                 class="disabled:text-zinc-100 disabled:bg-stone-300 text-zinc-100 hover:text-white hover:bg-stone-600 font-semibold px-3 py-1 bg-stone-500 rounded-full"
               >
@@ -248,19 +261,31 @@ export function GrabcutActionsMenu(props: {
           </Tooltip>
         </div>
         <div class="flex justify-between items-centerr">
-          <Tooltip disabled={props.isRemovingBackground()}>
-            <TooltipTrigger>
-              <button
-                type="button"
-                disabled={props.isRemovingBackground()}
-                onClick={() => props.changeToCanvasMethod('SAM')}
-                class="disabled:ring-zinc-300 disabled:text-zinc-300 text-sm text-zinc-500 hover:text-zinc-600 font-semibold px-3 py-1 ring-1 w-full rounded-full ring-zinc-400 hover:ring-zinc-600 h-[26px]"
-              >
-                Reset
+          <Dialog open={isConfirmResetDialogOpen()}>
+            <DialogTrigger
+              // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+              as={(dialogProps: any) => (
+                <button
+                  {...dialogProps}
+                  type="button"
+                  disabled={props.isRemovingBackground()}
+                  onClick={() => setIsConfirmResetDialogOpen(true)}
+                  class="disabled:ring-zinc-300 disabled:text-zinc-300 text-sm text-zinc-500 hover:text-zinc-600 font-semibold px-3 py-1 ring-1 w-full rounded-full ring-zinc-400 hover:ring-zinc-600 h-[26px]"
+                >
+                  Reset
+                </button>
+              )}
+            />
+            <DialogContentWithoutClose class="sm:max-w-[425px]">
+              <p>Are you sure?</p>
+              <button onClick={() => props.changeToCanvasMethod('SAM')}>
+                Yes
               </button>
-            </TooltipTrigger>
-            <TooltipContent>Next</TooltipContent>
-          </Tooltip>
+              <button onClick={() => setIsConfirmResetDialogOpen(false)}>
+                Cancel
+              </button>
+            </DialogContentWithoutClose>
+          </Dialog>
           <button
             type="button"
             onClick={() => props.saveResult(props.name)}
