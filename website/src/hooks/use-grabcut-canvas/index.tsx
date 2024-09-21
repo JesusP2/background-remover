@@ -53,6 +53,7 @@ export function useGrabcutCanvas({
   const [currentMode, setCurrentMode] =
     createSignal<GrabcutActionType>('SAM-add-area');
   let currentId = ulid();
+  const [isRemovingBackground, setIsRemovingBackground] = createSignal(false);
   const images = {
     sourceImg: null,
     destinationImg: null,
@@ -393,57 +394,68 @@ export function useGrabcutCanvas({
   }
 
   async function applyMaskToImage() {
-    const imgCanvasCopied = getDataFromSourceCanvas('image');
-    const strokesCanvasCopied = getDataFromSourceCanvas('strokes');
-    if (!imgCanvasCopied || !strokesCanvasCopied) return;
-    const [image, mask] = await Promise.all([
-      canvasToFile(imgCanvasCopied, 'file.png', 'image/png'),
-      canvasToFile(strokesCanvasCopied, 'mask.png', 'image/png'),
-    ]);
-    const formData = new FormData();
-    formData.append('image_file', image);
-    formData.append('mask_file', mask);
-    if (images.samMask) {
-      formData.append('sammask_file', images.samMask);
+    try {
+      setIsRemovingBackground(true);
+      const imgCanvasCopied = getDataFromSourceCanvas('image');
+      const strokesCanvasCopied = getDataFromSourceCanvas('strokes');
+      if (!imgCanvasCopied || !strokesCanvasCopied) return;
+      const [image, mask] = await Promise.all([
+        canvasToFile(imgCanvasCopied, 'file.png', 'image/png'),
+        canvasToFile(strokesCanvasCopied, 'mask.png', 'image/png'),
+      ]);
+      const formData = new FormData();
+      formData.append('image_file', image);
+      formData.append('mask_file', mask);
+      if (images.samMask) {
+        formData.append('sammask_file', images.samMask);
+      }
+      const res = await fetch('http://localhost:8000/mask', {
+        method: 'POST',
+        body: formData,
+      });
+      if (!res.ok) {
+        throw new Error('Failed to upload image');
+      }
+      const resultBlob = await res.blob();
+      const resultFile = new File([resultBlob], imageNames.result, {
+        type: 'image/png',
+      });
+      images.destinationImg = await fileToImage(resultFile);
+      redrawEverything();
+      const [strokesUrl, resultUrl] = await Promise.all([
+        createWritePresignedUrl(
+          `${id}-${imageNames.mask}`,
+          mask.type,
+          mask.size,
+        ),
+        createWritePresignedUrl(
+          `${id}-${imageNames.result}`,
+          resultFile.type,
+          resultFile.size,
+        ),
+      ]);
+      if (!strokesUrl || !resultUrl) return;
+      await Promise.all([
+        fetch(strokesUrl, {
+          method: 'PUT',
+          body: mask,
+          headers: {
+            'Content-Type': mask.type,
+          },
+        }),
+        fetch(resultUrl, {
+          method: 'PUT',
+          body: resultFile,
+          headers: {
+            'Content-Type': resultFile.type,
+          },
+        }),
+      ]);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsRemovingBackground(false);
     }
-    const res = await fetch('http://localhost:8000/mask', {
-      method: 'POST',
-      body: formData,
-    });
-    if (!res.ok) {
-      throw new Error('Failed to upload image');
-    }
-    const resultBlob = await res.blob();
-    const resultFile = new File([resultBlob], imageNames.result, {
-      type: 'image/png',
-    });
-    images.destinationImg = await fileToImage(resultFile);
-    redrawEverything();
-    const [strokesUrl, resultUrl] = await Promise.all([
-      createWritePresignedUrl(`${id}-${imageNames.mask}`, mask.type, mask.size),
-      createWritePresignedUrl(
-        `${id}-${imageNames.result}`,
-        resultFile.type,
-        resultFile.size,
-      ),
-    ]);
-    if (!strokesUrl || !resultUrl) return;
-    await Promise.all([
-      fetch(strokesUrl, {
-        method: 'PUT',
-        body: mask,
-        headers: {
-          'Content-Type': mask.type,
-        },
-      }),
-      fetch(resultUrl, {
-        method: 'PUT',
-        body: resultFile,
-        headers: {
-          'Content-Type': resultFile.type,
-        },
-      }),
-    ]);
   }
 
   function calculateBaseScale(sourceCtx: CanvasRenderingContext2D) {
@@ -768,5 +780,6 @@ export function useGrabcutCanvas({
     currentMode,
     saveResult,
     isDownloadingModelOrEmbeddingImage,
+    isRemovingBackground,
   };
 }

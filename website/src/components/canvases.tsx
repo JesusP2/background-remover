@@ -8,6 +8,8 @@ import { Dialog, DialogContentWithoutClose } from './ui/dialog';
 import { cn } from '~/lib/utils';
 import { SAMActionsMenu } from './sam-actions-menu';
 import { Draggable } from './draggable';
+import { AiOutlineLoading } from 'solid-icons/ai';
+import { isDriverValueEncoder } from 'drizzle-orm';
 
 export function Canvases(props: { img: SelectImage }) {
   const [canvasLayout, setCanvasLayout] = createSignal<CanvasLayout>('both');
@@ -27,6 +29,7 @@ export function Canvases(props: { img: SelectImage }) {
     isDownloadingModelOrEmbeddingImage,
     canvasMethod,
     changeToCanvasMethod,
+    isRemovingBackground,
   } = useGrabcutCanvas({
     sourceUrl: props.img.source,
     strokesUrl: props.img.mask,
@@ -65,6 +68,7 @@ export function Canvases(props: { img: SelectImage }) {
               setCanvasLayout={setCanvasLayout}
               changeToCanvasMethod={changeToCanvasMethod}
               name={props.img.name}
+              isRemovingBackground={isRemovingBackground}
             />
           </Match>
           <Match when={canvasMethod() === 'GRABCUT'}>
@@ -88,6 +92,7 @@ export function Canvases(props: { img: SelectImage }) {
               setCanvasLayout={setCanvasLayout}
               changeToCanvasMethod={changeToCanvasMethod}
               name={props.img.name}
+              isRemovingBackground={isRemovingBackground}
             />
           </Match>
         </Switch>
@@ -122,6 +127,11 @@ export function Canvases(props: { img: SelectImage }) {
         class={cn('h-screen svg-bg')}
         id="destination"
       />
+      <Show when={isRemovingBackground()}>
+        <div class="absolute h-screen w-[49.95%] left-[50%] bg-white bg-opacity-50 grid place-items-center">
+          <AiOutlineLoading class="text-stone-600 animate-spin" size={40} />
+        </div>
+      </Show>
     </>
   );
 }

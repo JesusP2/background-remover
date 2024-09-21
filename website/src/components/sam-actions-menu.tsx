@@ -1,4 +1,3 @@
-import clsx from 'clsx';
 import {
   TbZoomInArea,
   TbZoomOutArea,
@@ -34,16 +33,18 @@ export function SAMActionsMenu(props: {
   canvasLayout: Accessor<CanvasLayout>;
   setCanvasLayout: Setter<CanvasLayout>;
   changeToCanvasMethod: (step: 'SAM' | 'GRABCUT') => void;
+  isRemovingBackground: Accessor<boolean>;
   name: string;
 }) {
   return (
     <div class="bg-white rounded-lg p-2 flex flex-col gap-y-2">
       <div class="border-[2px] border-stone-300 py-2 px-3 flex rounded-md gap-x-2 justify-between">
-        <Tooltip>
+        <Tooltip disabled={props.isRemovingBackground()}>
           <TooltipTrigger>
             <button
               type="button"
               onClick={() => props.setCurrentMode('SAM-add-area')}
+              disabled={props.isRemovingBackground()}
               class={cn(
                 'hover:text-blue-600 text-stone-300 text-sm ease-in-out duration-200 rounded-full grid place-items-center font-semibold',
                 props.currentMode() === 'SAM-add-area' && 'text-blue-600',
@@ -55,10 +56,11 @@ export function SAMActionsMenu(props: {
           </TooltipTrigger>
           <TooltipContent>Add Mask</TooltipContent>
         </Tooltip>
-        <Tooltip>
+        <Tooltip disabled={props.isRemovingBackground()}>
           <TooltipTrigger>
             <button
               type="button"
+              disabled={props.isRemovingBackground()}
               onClick={() => props.setCurrentMode('SAM-remove-area')}
               class={cn(
                 'hover:text-red-500 text-stone-300 text-sm ease-in-out duration-200 rounded-full grid place-items-center font-semibold',
@@ -73,11 +75,11 @@ export function SAMActionsMenu(props: {
         </Tooltip>
       </div>
       <div class="flex items-center justify-between border-2 border-stone-300 rounded-md px-3 py-2 gap-x-2">
-        <Tooltip disabled={!props.actions().length}>
+        <Tooltip disabled={!props.actions().length || props.isRemovingBackground()}>
           <TooltipTrigger>
             <button
               type="button"
-              disabled={!props.actions().length}
+              disabled={!props.actions().length || props.isRemovingBackground()}
               onClick={props.undo}
               class="disabled:text-zinc-100 disabled:bg-stone-300 text-zinc-100 hover:text-white hover:bg-stone-600 font-semibold px-3 py-1 bg-stone-500 rounded-full"
             >
@@ -86,11 +88,11 @@ export function SAMActionsMenu(props: {
           </TooltipTrigger>
           <TooltipContent>Undo last action</TooltipContent>
         </Tooltip>
-        <Tooltip disabled={!props.redoActions().length}>
+        <Tooltip disabled={!props.redoActions().length || props.isRemovingBackground()}>
           <TooltipTrigger>
             <button
               type="button"
-              disabled={!props.redoActions().length}
+              disabled={!props.redoActions().length || props.isRemovingBackground()}
               onClick={props.redo}
               class="disabled:text-zinc-100 disabled:bg-stone-300 text-zinc-100 hover:text-white hover:bg-stone-600 font-semibold px-3 py-1 bg-stone-500 rounded-full"
             >
@@ -101,10 +103,11 @@ export function SAMActionsMenu(props: {
         </Tooltip>
       </div>
       <div class="bg-gray-100 rounded-full flex items-center justify-between py-1 px-3">
-        <Tooltip>
+        <Tooltip disabled={props.isRemovingBackground()}>
           <TooltipTrigger>
             <button
               type="button"
+              disabled={props.isRemovingBackground()}
               class="h-7 w-7 grid place-items-center text-zinc-500 hover:text-zinc-700"
               onMouseDown={() =>
                 props.zoomIn({
@@ -124,10 +127,11 @@ export function SAMActionsMenu(props: {
           </TooltipTrigger>
           <TooltipContent>Zoom in</TooltipContent>
         </Tooltip>
-        <Tooltip>
+        <Tooltip disabled={props.isRemovingBackground()}>
           <TooltipTrigger>
             <button
               type="button"
+              disabled={props.isRemovingBackground()}
               class="h-7 w-7 grid place-items-center text-zinc-500 hover:text-zinc-700"
               onMouseDown={() => props.zoomOut({ x: 417, y: 494 })}
               onMouseUp={() => {
@@ -139,10 +143,11 @@ export function SAMActionsMenu(props: {
           </TooltipTrigger>
           <TooltipContent>Zoom out</TooltipContent>
         </Tooltip>
-        <Tooltip>
+        <Tooltip disabled={props.isRemovingBackground()}>
           <TooltipTrigger>
             <button
               type="button"
+              disabled={props.isRemovingBackground()}
               onClick={props.resetToOriginal}
               class="h-7 w-7 grid place-items-center text-zinc-500 hover:text-zinc-700"
             >
@@ -153,10 +158,11 @@ export function SAMActionsMenu(props: {
         </Tooltip>
       </div>
       <div class="bg-gray-100 rounded-full flex items-center justify-between py-1 px-3">
-        <Tooltip>
+        <Tooltip disabled={props.isRemovingBackground()}>
           <TooltipTrigger>
             <button
               type="button"
+              disabled={props.isRemovingBackground()}
               onClick={() => props.setCurrentMode('move')}
               class={cn(
                 'h-7 w-7 grid place-items-center text-zinc-500 hover:text-zinc-700',
@@ -168,10 +174,11 @@ export function SAMActionsMenu(props: {
           </TooltipTrigger>
           <TooltipContent>Move</TooltipContent>
         </Tooltip>
-        <Tooltip>
+        <Tooltip disabled={props.isRemovingBackground()}>
           <TooltipTrigger>
             <button
               type="button"
+              disabled={props.isRemovingBackground()}
               onClick={() => props.setCanvasLayout('mask')}
               class="text-zinc-600 hover:text-zinc-800 rounded-full h-7 w-7 grid place-items-center"
             >
@@ -180,10 +187,11 @@ export function SAMActionsMenu(props: {
           </TooltipTrigger>
           <TooltipContent>1 window</TooltipContent>
         </Tooltip>
-        <Tooltip>
+        <Tooltip disabled={props.isRemovingBackground()}>
           <TooltipTrigger>
             <button
               type="button"
+              disabled={props.isRemovingBackground()}
               onClick={() => props.setCanvasLayout('both')}
               class="text-zinc-600 hover:text-zinc-800 rounded-full h-7 w-7 grid place-items-center"
             >
@@ -194,10 +202,11 @@ export function SAMActionsMenu(props: {
         </Tooltip>
       </div>
       <div class="flex justify-between items-centerr">
-        <Tooltip>
+        <Tooltip disabled={props.isRemovingBackground()}>
           <TooltipTrigger>
             <button
               type="button"
+              disabled={props.isRemovingBackground()}
               onClick={() => props.changeToCanvasMethod('GRABCUT')}
               class="text-sm text-zinc-500 hover:text-zinc-600 font-semibold px-3 py-1 ring-1 w-full rounded-full ring-zinc-400 hover:ring-zinc-600 h-[26px]"
             >
@@ -207,8 +216,10 @@ export function SAMActionsMenu(props: {
           <TooltipContent>Next</TooltipContent>
         </Tooltip>
         <button
+          type="button"
           onClick={() => props.saveResult(props.name)}
-          class={clsx(
+          disabled={props.isRemovingBackground()}
+          class={cn(
             'hover:bg-gray-100 rounded-full bg-blue-500 font-medium text-white px-3 grid place-items-center text-sm hover:bg-blue-600 font-semibold w-24 h-[28px]',
           )}
         >
