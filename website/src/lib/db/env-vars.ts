@@ -9,6 +9,12 @@ const envsSchema = object({
   R2_SECRET_ACCESS_KEY: string(),
   PYTHON_BACKEND: string(),
   R2_BUCKET: string(),
+  GOOGLE_CLIENT_ID: string(),
+  GOOGLE_CLIENT_SECRET: string(),
+  GOOGLE_REDIRECT_URI: string(),
+  GITHUB_CLIENT_ID: string(),
+  GITHUB_CLIENT_SECRET: string(),
+  GITHUB_REDIRECT_URI: string(),
 });
 
 export const envs = parse(envsSchema, process.env);

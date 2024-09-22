@@ -34,6 +34,7 @@ export default function Signin() {
           <section class="mb-4 flex flex-col gap-y-4">
             <a
               href="/auth/google"
+              target="_self"
               class={cn(
                 buttonVariants({ variant: 'secondary' }),
                 'w-full flex gap-x-2',
@@ -53,6 +54,7 @@ export default function Signin() {
             </a>
             <a
               href="/auth/github"
+              target="_self"
               class={cn(
                 buttonVariants({ variant: 'secondary' }),
                 'w-full flex gap-x-2',

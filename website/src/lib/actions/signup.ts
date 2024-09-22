@@ -2,12 +2,11 @@ import { action, redirect } from '@solidjs/router';
 import { eq } from 'drizzle-orm';
 import { generateId } from 'lucia';
 import { Argon2id } from 'oslo/password';
-import { setCookie } from 'vinxi/http';
-import { lucia } from '~/lib/auth';
 import { db } from '~/lib/db';
 import { userTable } from '~/lib/db/schema';
 import { rateLimit } from '../rate-limiter';
 import { signupSchema } from '../schemas';
+import { createUserSession } from '../sessions';
 
 export const signupAction = action(async (formData: FormData) => {
   'use server';
@@ -57,12 +56,10 @@ export const signupAction = action(async (formData: FormData) => {
   await db.insert(userTable).values({
     id: userId,
     username: username,
+    name: username,
     password: hashedPassword,
   });
 
-  const session = await lucia.createSession(userId, {});
-  const sessionCookie = lucia.createSessionCookie(session.id);
-  setCookie(sessionCookie.name, sessionCookie.value, sessionCookie.attributes);
-
+  await createUserSession(userId)
   throw redirect('/');
 });

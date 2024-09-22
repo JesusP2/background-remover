@@ -7,6 +7,7 @@ import { db } from '../db';
 import { userTable } from '../db/schema';
 import { rateLimit } from '../rate-limiter';
 import { signinSchema } from '../schemas';
+import { createUserSession } from '../sessions';
 
 export const signinAction = action(async (formData: FormData) => {
   'use server';
@@ -34,11 +35,11 @@ export const signinAction = action(async (formData: FormData) => {
     };
   }
 
-  const existingUser = await db
+  const [existingUser] = await db
     .select()
     .from(userTable)
     .where(eq(userTable.username, username.toLowerCase()));
-  if (!existingUser) {
+  if (!existingUser || !existingUser.password) {
     return {
       fieldErrors: {
         form: [],
@@ -49,7 +50,7 @@ export const signinAction = action(async (formData: FormData) => {
   }
 
   const validPassword = await new Argon2id().verify(
-    existingUser[0].password,
+    existingUser.password,
     password,
   );
   if (!validPassword) {
@@ -62,11 +63,6 @@ export const signinAction = action(async (formData: FormData) => {
     };
   }
 
-  const session = await lucia.createSession(existingUser[0].id, {});
-  appendResponseHeader(
-    'Set-Cookie',
-    lucia.createSessionCookie(session.id).serialize(),
-  );
-
+  await createUserSession(existingUser.id)
   throw redirect('/');
 }, 'signin-action');

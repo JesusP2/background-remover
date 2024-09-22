@@ -3,22 +3,18 @@ import { getRequestEvent } from 'solid-js/web';
 import { appendResponseHeader } from 'vinxi/http';
 import { lucia } from '../auth';
 import { rateLimit } from '../rate-limiter';
+import { deleteUserSessions } from '../sessions';
 
 export const signOutAction = action(async () => {
   'use server';
   const error = await rateLimit();
-  console.error(error);
   if (error) {
     return error;
   }
   const req = getRequestEvent();
   const sessionId = req?.locals.session?.id;
   if (sessionId) {
-    await lucia.invalidateSession(sessionId);
-    appendResponseHeader(
-      'Set-Cookie',
-      lucia.createBlankSessionCookie().serialize(),
-    );
+    await deleteUserSessions(sessionId)
   }
   return redirect('/');
 });
