@@ -14,7 +14,7 @@ export const signOutAction = action(async () => {
   const req = getRequestEvent();
   const sessionId = req?.locals.session?.id;
   if (sessionId) {
-    await deleteUserSessions(sessionId)
+    await deleteUserSessions(sessionId);
   }
   return redirect('/');
 });

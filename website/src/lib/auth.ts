@@ -1,21 +1,21 @@
-import { DrizzleSQLiteAdapter } from "@lucia-auth/adapter-drizzle";
-import { Lucia } from "lucia";
-import { db } from "./db";
-import { sessionTable, userTable } from "./db/schema/user";
-import { envs } from "./db/env-vars";
-import { GitHub, Google } from "arctic";
+import { DrizzleSQLiteAdapter } from '@lucia-auth/adapter-drizzle';
+import { GitHub, Google } from 'arctic';
+import { Lucia } from 'lucia';
+import { db } from './db';
+import { envs } from './db/env-vars';
+import { sessionTable, userTable } from './db/schema/user';
 
 export const adapter = new DrizzleSQLiteAdapter(db, sessionTable, userTable);
 export const lucia = new Lucia(adapter, {
   sessionCookie: {
     attributes: {
       secure: import.meta.env.PROD,
-        sameSite: "lax",
+      sameSite: 'lax',
     },
   },
 });
 
-declare module "lucia" {
+declare module 'lucia' {
   interface Register {
     Lucia: typeof lucia;
   }
@@ -35,7 +35,7 @@ export async function hashPassword(password: string) {
   const textEncoder = new TextEncoder();
   const digest = await crypto.subtle.digest(
     {
-      name: "SHA-256",
+      name: 'SHA-256',
     },
     textEncoder.encode(password),
   );

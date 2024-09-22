@@ -1,5 +1,5 @@
-import { setCookie } from "vinxi/http";
-import { lucia } from "./auth";
+import { setCookie } from 'vinxi/http';
+import { lucia } from './auth';
 
 export async function deleteUserSessions(sessionId: string) {
   await lucia.invalidateSession(sessionId);
@@ -16,9 +16,5 @@ export async function deleteAllUserSessions(userId: string) {
 export async function createUserSession(userId: string) {
   const session = await lucia.createSession(userId, {});
   const sessionCookie = lucia.createSessionCookie(session.id);
-  setCookie(
-    sessionCookie.name,
-    sessionCookie.value,
-    sessionCookie.attributes,
-  );
+  setCookie(sessionCookie.name, sessionCookie.value, sessionCookie.attributes);
 }

@@ -1,22 +1,22 @@
-import type { APIHandler } from "@solidjs/start/server";
-import { and, eq } from "drizzle-orm";
-import { ulid } from "ulidx";
-import { getCookie } from "vinxi/http";
-import { google } from "~/lib/auth";
-import { db } from "~/lib/db";
-import { oauthAccountTable, userTable } from "~/lib/db/schema";
-import { createUserSession } from "../../../lib/sessions";
+import type { APIHandler } from '@solidjs/start/server';
+import { and, eq } from 'drizzle-orm';
+import { ulid } from 'ulidx';
+import { getCookie } from 'vinxi/http';
+import { google } from '~/lib/auth';
+import { db } from '~/lib/db';
+import { oauthAccountTable, userTable } from '~/lib/db/schema';
+import { createUserSession } from '../../../lib/sessions';
 
 export const GET: APIHandler = async ({ request }) => {
   const url = new URL(request.url);
-  const code = url.searchParams.get("code")?.toString() ?? null;
-  const state = url.searchParams.get("state")?.toString() ?? null;
-  const storedState = getCookie("google_oauth_state") ?? null;
+  const code = url.searchParams.get('code')?.toString() ?? null;
+  const state = url.searchParams.get('state')?.toString() ?? null;
+  const storedState = getCookie('google_oauth_state') ?? null;
   if (!code || !state || !storedState || state !== storedState) {
     return new Response(null, {
       status: 302,
       headers: {
-        Location: "/auth/signin",
+        Location: '/auth/signin',
       },
     });
   }
@@ -24,7 +24,7 @@ export const GET: APIHandler = async ({ request }) => {
   try {
     const tokens = await google.validateAuthorizationCode(code, state);
     const googleUserResponse = await fetch(
-      "https://openidconnect.googleapis.com/v1/userinfo",
+      'https://openidconnect.googleapis.com/v1/userinfo',
       {
         headers: {
           Authorization: `Bearer ${tokens.accessToken}`,
@@ -37,7 +37,7 @@ export const GET: APIHandler = async ({ request }) => {
       .from(oauthAccountTable)
       .where(
         and(
-          eq(oauthAccountTable.providerId, "google"),
+          eq(oauthAccountTable.providerId, 'google'),
           eq(oauthAccountTable.providerUserId, googleUser.sub),
         ),
       );
@@ -46,7 +46,7 @@ export const GET: APIHandler = async ({ request }) => {
       return new Response(null, {
         status: 302,
         headers: {
-          Location: "/",
+          Location: '/',
         },
       });
     }
@@ -56,7 +56,7 @@ export const GET: APIHandler = async ({ request }) => {
       await tx.insert(oauthAccountTable).values({
         id: oauthId,
         userId: userId,
-        providerId: "google",
+        providerId: 'google',
         providerUserId: googleUser.sub,
       });
       await tx.insert(userTable).values({
@@ -71,7 +71,7 @@ export const GET: APIHandler = async ({ request }) => {
     return new Response(null, {
       status: 302,
       headers: {
-        Location: "/",
+        Location: '/',
       },
     });
   } catch (err) {
@@ -79,7 +79,7 @@ export const GET: APIHandler = async ({ request }) => {
     return new Response(null, {
       status: 302,
       headers: {
-        Location: "/auth/signin",
+        Location: '/auth/signin',
       },
     });
   }

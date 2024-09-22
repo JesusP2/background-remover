@@ -61,6 +61,6 @@ export const signinAction = action(async (formData: FormData) => {
     };
   }
 
-  await createUserSession(existingUser.id)
+  await createUserSession(existingUser.id);
   throw redirect('/');
 }, 'signin-action');

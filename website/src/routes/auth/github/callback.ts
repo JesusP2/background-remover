@@ -1,29 +1,29 @@
-import type { APIHandler } from "@solidjs/start/server";
-import { and, eq } from "drizzle-orm";
-import { ulid } from "ulidx";
-import { getCookie } from "vinxi/http";
-import { github } from "~/lib/auth";
-import { db } from "~/lib/db";
-import { oauthAccountTable, userTable } from "~/lib/db/schema";
-import { createUserSession } from "../../../lib/sessions";
+import type { APIHandler } from '@solidjs/start/server';
+import { and, eq } from 'drizzle-orm';
+import { ulid } from 'ulidx';
+import { getCookie } from 'vinxi/http';
+import { github } from '~/lib/auth';
+import { db } from '~/lib/db';
+import { oauthAccountTable, userTable } from '~/lib/db/schema';
+import { createUserSession } from '../../../lib/sessions';
 
 export const GET: APIHandler = async ({ request }) => {
   const url = new URL(request.url);
-  const code = url.searchParams.get("code")?.toString() ?? null;
-  const state = url.searchParams.get("state")?.toString() ?? null;
-  const storedState = getCookie("github_oauth_state") ?? null;
+  const code = url.searchParams.get('code')?.toString() ?? null;
+  const state = url.searchParams.get('state')?.toString() ?? null;
+  const storedState = getCookie('github_oauth_state') ?? null;
   if (!code || !state || !storedState || state !== storedState) {
     return new Response(null, {
       status: 302,
       headers: {
-        Location: "/auth/signin",
+        Location: '/auth/signin',
       },
     });
   }
 
   try {
     const tokens = await github.validateAuthorizationCode(code);
-    const githubUserResponse = await fetch("https://api.github.com/user", {
+    const githubUserResponse = await fetch('https://api.github.com/user', {
       headers: {
         Authorization: `Bearer ${tokens.accessToken}`,
       },
@@ -34,7 +34,7 @@ export const GET: APIHandler = async ({ request }) => {
       .from(oauthAccountTable)
       .where(
         and(
-          eq(oauthAccountTable.providerId, "github"),
+          eq(oauthAccountTable.providerId, 'github'),
           eq(oauthAccountTable.providerUserId, githubUser.id),
         ),
       );
@@ -43,7 +43,7 @@ export const GET: APIHandler = async ({ request }) => {
       return new Response(null, {
         status: 302,
         headers: {
-          Location: "/",
+          Location: '/',
         },
       });
     }
@@ -53,7 +53,7 @@ export const GET: APIHandler = async ({ request }) => {
       await tx.insert(oauthAccountTable).values({
         id: oauthId,
         userId: userId,
-        providerId: "github",
+        providerId: 'github',
         providerUserId: githubUser.id,
       });
       await tx.insert(userTable).values({
@@ -68,7 +68,7 @@ export const GET: APIHandler = async ({ request }) => {
     return new Response(null, {
       status: 302,
       headers: {
-        Location: "/",
+        Location: '/',
       },
     });
   } catch (err) {
@@ -76,7 +76,7 @@ export const GET: APIHandler = async ({ request }) => {
     return new Response(null, {
       status: 302,
       headers: {
-        Location: "/auth/signin",
+        Location: '/auth/signin',
       },
     });
   }

@@ -60,6 +60,6 @@ export const signupAction = action(async (formData: FormData) => {
     password: hashedPassword,
   });
 
-  await createUserSession(userId)
+  await createUserSession(userId);
   throw redirect('/');
 });
