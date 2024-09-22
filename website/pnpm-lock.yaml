@@ -26,6 +26,9 @@ importers:
       '@libsql/client':
         specifier: ^0.6.0
         version: 0.6.0
+      '@lottielab/lottie-player':
+        specifier: ^1.1.2
+        version: 1.1.2
       '@lucia-auth/adapter-drizzle':
         specifier: ^1.0.7
         version: 1.0.7(lucia@3.2.0)
@@ -1045,6 +1048,14 @@ packages:
     resolution: {integrity: sha512-/+n2ibxYs6C1GHQbmkdeCPlw7QhAJJb4XOAEzvfk069lelk8f26MHrodJJiRBBJczmwUl4HNwDjR4HT2+k9ljw==}
     cpu: [x64]
     os: [win32]
+
+  '@lottielab/lottie-player@1.1.2':
+    resolution: {integrity: sha512-i+Q8b4AZtekicMT+RWiHLPyM31EldeumUsVjZV7A5CsXYGUhVJfB90yTmpY2/QqyqvkGkjvfZKQNCDhTkxs38A==}
+    peerDependencies:
+      react: '>=16.8.0'
+    peerDependenciesMeta:
+      react:
+        optional: true
 
   '@lucia-auth/adapter-drizzle@1.0.7':
     resolution: {integrity: sha512-X/V7fLBca8EC/gPXCntwbQpb0+F9oEuRoHElvsi9rCrdnGhCMNxHgwAvgiQ6pes+rIYpyvx4n3hvjqo/fPo03A==}
@@ -3038,6 +3049,10 @@ packages:
 
   long@4.0.0:
     resolution: {integrity: sha512-XsP+KhQif4bjX1kbuSiySJFNAehNxgLb6hPRGJ9QsUr8ajHkuXGdrHmFUTUUXhDwVX2R5bY4JNZEwbUiMhV+MA==}
+
+  lottie-web@https://codeload.github.com/lottielab/lottie-web/tar.gz/c671e8eaefb95099fdb126d2fc68a566327e4354:
+    resolution: {tarball: https://codeload.github.com/lottielab/lottie-web/tar.gz/c671e8eaefb95099fdb126d2fc68a566327e4354}
+    version: 5.12.2
 
   lru-cache@10.2.0:
     resolution: {integrity: sha512-2bIM8x+VAf6JT4bKAljS1qUWgMsqZRPGJS6FSahIMPVvctcNhyVp7AJu7quxOW9jwkryBReKZY5tY5JYv2n/7Q==}
@@ -5301,6 +5316,10 @@ snapshots:
   '@libsql/win32-x64-msvc@0.3.16':
     optional: true
 
+  '@lottielab/lottie-player@1.1.2':
+    dependencies:
+      lottie-web: https://codeload.github.com/lottielab/lottie-web/tar.gz/c671e8eaefb95099fdb126d2fc68a566327e4354
+
   '@lucia-auth/adapter-drizzle@1.0.7(lucia@3.2.0)':
     dependencies:
       lucia: 3.2.0
@@ -7391,6 +7410,8 @@ snapshots:
   lodash@4.17.21: {}
 
   long@4.0.0: {}
+
+  lottie-web@https://codeload.github.com/lottielab/lottie-web/tar.gz/c671e8eaefb95099fdb126d2fc68a566327e4354: {}
 
   lru-cache@10.2.0: {}
 

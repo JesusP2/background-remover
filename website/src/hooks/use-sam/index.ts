@@ -21,7 +21,7 @@ function setupWorker({
   setLastPoints: Setter<null | Point[]>;
   images: GrabcutImages;
   modelStatus: ModelStatus;
-  setIsDownloadingModelOrEmbeddingImage: Setter<boolean>;
+  setIsDownloadingModelOrEmbeddingImage: Setter<string | null>;
   redrawEverything: () => void;
 }) {
   const worker = new Worker("/transformer.js", {
@@ -33,7 +33,7 @@ function setupWorker({
     if (type === "ready") {
       modelStatus.modelReady = true;
       // not needed, ugly flash that removes loading screen for a split second
-      // setIsDownloadingModelOrEmbeddingImage(false);
+      setIsDownloadingModelOrEmbeddingImage('Extracting embeddings...');
     } else if (type === "decode_result") {
       modelStatus.isDecoding = false;
 
@@ -124,9 +124,9 @@ function setupWorker({
         });
     } else if (type === "segment_result") {
       if (data === "start") {
-        setIsDownloadingModelOrEmbeddingImage(true);
+        setIsDownloadingModelOrEmbeddingImage('Extracting embeddings...');
       } else {
-        setIsDownloadingModelOrEmbeddingImage(false);
+        setIsDownloadingModelOrEmbeddingImage(null);
         modelStatus.isEncoded = true;
       }
     }
@@ -149,7 +149,7 @@ export function useSam({
   const [
     isDownloadingModelOrEmbeddingImage,
     setIsDownloadingModelOrEmbeddingImage,
-  ] = createSignal(false);
+  ] = createSignal<string | null>(null);
   const modelStatus = {
     isEncoded: false,
     isDecoding: false,
@@ -166,7 +166,7 @@ export function useSam({
     // Update state
     modelStatus.isEncoded = false;
     if (!modelStatus.modelReady) {
-      setIsDownloadingModelOrEmbeddingImage(true);
+      setIsDownloadingModelOrEmbeddingImage('Loading model...');
     }
     worker()?.postMessage({ type: "segment", data });
   }

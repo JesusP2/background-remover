@@ -9,7 +9,6 @@ import { cn } from '~/lib/utils';
 import { SAMActionsMenu } from './sam-actions-menu';
 import { Draggable } from './draggable';
 import { AiOutlineLoading } from 'solid-icons/ai';
-import { isDriverValueEncoder } from 'drizzle-orm';
 
 export function Canvases(props: { img: SelectImage }) {
   const [canvasLayout, setCanvasLayout] = createSignal<CanvasLayout>('both');
@@ -40,9 +39,11 @@ export function Canvases(props: { img: SelectImage }) {
   });
   return (
     <>
-      <Dialog open={isDownloadingModelOrEmbeddingImage()}>
+      <Dialog open={isDownloadingModelOrEmbeddingImage() !== null}>
         <DialogContentWithoutClose class="sm:max-w-[425px]">
-          <div class="grid gap-4 py-4">Loading...</div>
+        <div class="font-semibold">
+          {isDownloadingModelOrEmbeddingImage()}
+        </div>
         </DialogContentWithoutClose>
       </Dialog>
       <Draggable>
@@ -61,9 +62,6 @@ export function Canvases(props: { img: SelectImage }) {
               resetToOriginal={resetToOriginal}
               currentMode={currentMode}
               saveResult={saveResult}
-              isDownloadingModelOrEmbeddingImage={
-                isDownloadingModelOrEmbeddingImage
-              }
               canvasLayout={canvasLayout}
               setCanvasLayout={setCanvasLayout}
               changeToCanvasMethod={changeToCanvasMethod}
@@ -85,9 +83,6 @@ export function Canvases(props: { img: SelectImage }) {
               resetToOriginal={resetToOriginal}
               currentMode={currentMode}
               saveResult={saveResult}
-              isDownloadingModelOrEmbeddingImage={
-                isDownloadingModelOrEmbeddingImage
-              }
               canvasLayout={canvasLayout}
               setCanvasLayout={setCanvasLayout}
               changeToCanvasMethod={changeToCanvasMethod}

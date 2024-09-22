@@ -34,7 +34,6 @@ export function GrabcutActionsMenu(props: {
   resetToOriginal: () => void;
   currentMode: Accessor<GrabcutActionType>;
   saveResult: (name: string) => Promise<void>;
-  isDownloadingModelOrEmbeddingImage: Accessor<boolean>;
   canvasLayout: Accessor<CanvasLayout>;
   setCanvasLayout: Setter<CanvasLayout>;
   changeToCanvasMethod: (step: 'SAM' | 'GRABCUT') => void;

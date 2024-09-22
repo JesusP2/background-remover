@@ -5,13 +5,13 @@
 [] better initial loading screen
 [x] shortcuts - DONT CARE ENOUGH
 
-[] changing canvasStep
+[x] changing canvasStep
  [x] should remove actions
  [x] remove redo list
  [x] remove undo list
  [x] remove grabcut (going from grabcut to sam(if any)) mask image
  [x] add sam mask image
- [] add dialog that asks them to confirm if they want to change canvas step
+ [x] add dialog that asks them to confirm if they want to change canvas step
 
 [] implement the rest of the auth workflow
 [] add one-shot on the browser with birefnet-lite
