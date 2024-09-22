@@ -1,8 +1,6 @@
 import { action, redirect } from '@solidjs/router';
 import { eq } from 'drizzle-orm';
 import { Argon2id } from 'oslo/password';
-import { appendResponseHeader } from 'vinxi/http';
-import { lucia } from '../auth';
 import { db } from '../db';
 import { userTable } from '../db/schema';
 import { rateLimit } from '../rate-limiter';

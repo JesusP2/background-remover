@@ -2,7 +2,7 @@ import type { APIHandler } from "@solidjs/start/server";
 import { and, eq } from "drizzle-orm";
 import { ulid } from "ulidx";
 import { getCookie } from "vinxi/http";
-import { google } from "~/lib/auth";
+import { github } from "~/lib/auth";
 import { db } from "~/lib/db";
 import { oauthAccountTable, userTable } from "~/lib/db/schema";
 import { createUserSession } from "../../../lib/sessions";
@@ -11,7 +11,7 @@ export const GET: APIHandler = async ({ request }) => {
   const url = new URL(request.url);
   const code = url.searchParams.get("code")?.toString() ?? null;
   const state = url.searchParams.get("state")?.toString() ?? null;
-  const storedState = getCookie("google_oauth_state") ?? null;
+  const storedState = getCookie("github_oauth_state") ?? null;
   if (!code || !state || !storedState || state !== storedState) {
     return new Response(null, {
       status: 302,
@@ -22,23 +22,20 @@ export const GET: APIHandler = async ({ request }) => {
   }
 
   try {
-    const tokens = await google.validateAuthorizationCode(code, state);
-    const googleUserResponse = await fetch(
-      "https://openidconnect.googleapis.com/v1/userinfo",
-      {
-        headers: {
-          Authorization: `Bearer ${tokens.accessToken}`,
-        },
+    const tokens = await github.validateAuthorizationCode(code);
+    const githubUserResponse = await fetch("https://api.github.com/user", {
+      headers: {
+        Authorization: `Bearer ${tokens.accessToken}`,
       },
-    );
-    const googleUser: GoogleUser = await googleUserResponse.json();
+    });
+    const githubUser: GitHubUser = await githubUserResponse.json();
     const [existingUser] = await db
       .select()
       .from(oauthAccountTable)
       .where(
         and(
-          eq(oauthAccountTable.providerId, "google"),
-          eq(oauthAccountTable.providerUserId, googleUser.sub),
+          eq(oauthAccountTable.providerId, "github"),
+          eq(oauthAccountTable.providerUserId, githubUser.id),
         ),
       );
     if (existingUser) {
@@ -56,13 +53,13 @@ export const GET: APIHandler = async ({ request }) => {
       await tx.insert(oauthAccountTable).values({
         id: oauthId,
         userId: userId,
-        providerId: "google",
-        providerUserId: googleUser.sub,
+        providerId: "github",
+        providerUserId: githubUser.id,
       });
       await tx.insert(userTable).values({
         id: userId,
         username: null,
-        name: googleUser.name,
+        name: githubUser.login,
         email: null,
         password: null,
       });
@@ -85,12 +82,9 @@ export const GET: APIHandler = async ({ request }) => {
   }
 };
 
-interface GoogleUser {
-  sub: string;
-  name: string;
-  given_name: string;
-  family_name: string;
-  picture: string;
-  email: string;
-  email_verified: boolean;
+interface GitHubUser {
+  id: string;
+  login: string;
+  avatar_url: string;
+  email: string | null;
 }
