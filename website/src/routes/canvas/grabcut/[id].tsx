@@ -1,8 +1,4 @@
-import {
-  A,
-  createAsync,
-  useParams,
-} from '@solidjs/router';
+import { A, createAsync, useParams } from '@solidjs/router';
 import { and, eq, isNull } from 'drizzle-orm';
 import { AiOutlineLoading } from 'solid-icons/ai';
 import { VsClose } from 'solid-icons/vs';
@@ -10,13 +6,13 @@ import { createSignal } from 'solid-js';
 import { Match, Switch, getRequestEvent } from 'solid-js/web';
 import { Canvases } from '~/components/canvases';
 import { buttonVariants } from '~/components/ui/button';
+import { imageNames } from '~/lib/constants';
 import { db } from '~/lib/db';
 import { type SelectImage, imageTable } from '~/lib/db/schema';
 import { createReadPresignedUrl } from '~/lib/r2';
 import { rateLimit } from '~/lib/rate-limiter';
-import { cn } from '~/lib/utils';
 import initialFileSignal from '~/lib/stores/initial-file';
-import { imageNames } from '~/lib/constants';
+import { cn } from '~/lib/utils';
 
 const getImages = async (id: string) => {
   'use server';
@@ -26,10 +22,12 @@ const getImages = async (id: string) => {
   }
   const event = getRequestEvent();
   const userId = event?.locals.userId;
-  const [image] = await db
+  const [image] = (await db
     .select()
     .from(imageTable)
-    .where(and(eq(imageTable.id, id), isNull(imageTable.deleted))) as [SelectImage];
+    .where(and(eq(imageTable.id, id), isNull(imageTable.deleted)))) as [
+    SelectImage,
+  ];
   if (!image?.userId || userId !== image?.userId) return null;
   const imagesResults = await Promise.allSettled([
     createReadPresignedUrl(`${id}-${imageNames.result}`),
@@ -68,7 +66,7 @@ export default function Page() {
       samMask: null,
       name: file.name,
     } as SelectImage);
-    setInitialFile(null)
+    setInitialFile(null);
   }
 
   return (

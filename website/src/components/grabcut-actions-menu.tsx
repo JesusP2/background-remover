@@ -1,7 +1,8 @@
 import clsx from 'clsx';
+import { BiRegularEraser } from 'solid-icons/bi';
 import { BsWindowSplit } from 'solid-icons/bs';
 import { BsWindow } from 'solid-icons/bs';
-import { BiRegularEraser } from 'solid-icons/bi';
+import { CgAddR, CgRemoveR } from 'solid-icons/cg';
 import {
   TbArrowsMove,
   TbCrosshair,
@@ -9,17 +10,16 @@ import {
   TbZoomOutArea,
 } from 'solid-icons/tb';
 import { VsEdit } from 'solid-icons/vs';
-import { createSignal, type Accessor, type Setter } from 'solid-js';
-import type { CanvasLayout } from '~/lib/types';
-import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
+import { type Accessor, type Setter, createSignal } from 'solid-js';
 import type {
   GrabcutAction,
   GrabcutActionType,
 } from '~/hooks/use-grabcut-canvas/utils';
+import type { CanvasLayout } from '~/lib/types';
 import { cn } from '~/lib/utils';
-import { CgAddR, CgRemoveR } from 'solid-icons/cg';
-import { Dialog, DialogContentWithoutClose, DialogTrigger } from './ui/dialog';
 import { Button } from './ui/button';
+import { Dialog, DialogContentWithoutClose, DialogTrigger } from './ui/dialog';
+import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 
 export function GrabcutActionsMenu(props: {
   setCurrentMode: Setter<GrabcutActionType>;
@@ -278,7 +278,10 @@ export function GrabcutActionsMenu(props: {
             />
             <DialogContentWithoutClose class="sm:max-w-[425px]">
               <p>Are you sure?</p>
-              <Button onClick={() => props.changeToCanvasMethod('SAM')} variant="outline">
+              <Button
+                onClick={() => props.changeToCanvasMethod('SAM')}
+                variant="outline"
+              >
                 Yes
               </Button>
               <Button

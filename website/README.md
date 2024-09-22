@@ -2,7 +2,7 @@
 [x] canvas ui
 [x] strokes should be circles
 [x] loading screen for canvas
-[] better initial loading screen
+[x] better initial loading screen
 [x] shortcuts - DONT CARE ENOUGH
 
 [x] changing canvasStep

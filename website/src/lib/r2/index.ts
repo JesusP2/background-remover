@@ -1,14 +1,14 @@
 import {
+  DeleteObjectCommand,
   GetObjectCommand,
   PutObjectCommand,
-  DeleteObjectCommand,
   S3Client,
-} from "@aws-sdk/client-s3";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { envs } from "../db/env-vars";
+} from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { envs } from '../db/env-vars';
 
 export const client = new S3Client({
-  region: "auto",
+  region: 'auto',
   endpoint: envs.R2_ENDPOINT,
   credentials: {
     accessKeyId: envs.R2_ACCESS_KEY_ID,
@@ -58,9 +58,7 @@ export async function createWritePresignedUrl(
   return url;
 }
 
-export async function createDeletePresignedUrl(
-  key: string,
-) {
+export async function createDeletePresignedUrl(key: string) {
   const url = await getSignedUrl(
     client,
     new DeleteObjectCommand({

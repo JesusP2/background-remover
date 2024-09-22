@@ -1,13 +1,13 @@
 import {
+  type Accessor,
+  type Setter,
   createEffect,
   createSignal,
   onMount,
-  type Accessor,
-  type Setter,
-} from "solid-js";
-import type { GrabcutImages, ModelStatus, Point } from "~/lib/types";
-import { fileToImage } from "../use-grabcut-canvas/utils";
-import { imageNames } from "~/lib/constants";
+} from 'solid-js';
+import { imageNames } from '~/lib/constants';
+import type { GrabcutImages, ModelStatus, Point } from '~/lib/types';
+import { fileToImage } from '../use-grabcut-canvas/utils';
 
 function setupWorker({
   lastPoints,
@@ -24,17 +24,17 @@ function setupWorker({
   setIsDownloadingModelOrEmbeddingImage: Setter<string | null>;
   redrawEverything: () => void;
 }) {
-  const worker = new Worker("/transformer.js", {
-    type: "module",
+  const worker = new Worker('/transformer.js', {
+    type: 'module',
   });
 
-  worker.addEventListener("message", (e) => {
+  worker.addEventListener('message', (e) => {
     const { type, data } = e.data;
-    if (type === "ready") {
+    if (type === 'ready') {
       modelStatus.modelReady = true;
       // not needed, ugly flash that removes loading screen for a split second
       setIsDownloadingModelOrEmbeddingImage('Extracting embeddings...');
-    } else if (type === "decode_result") {
+    } else if (type === 'decode_result') {
       modelStatus.isDecoding = false;
 
       if (!modelStatus.isEncoded || !images?.sourceImg) {
@@ -45,7 +45,7 @@ function setupWorker({
         // Perform decoding with the last point
         // decode();
         modelStatus.isDecoding = true;
-        worker.postMessage({ type: "decode", data: lastPoints() });
+        worker.postMessage({ type: 'decode', data: lastPoints() });
         setLastPoints([]);
       }
 
@@ -53,11 +53,11 @@ function setupWorker({
 
       const maskCanvas = new OffscreenCanvas(mask.width, mask.height);
       const maskContext = maskCanvas.getContext(
-        "2d",
+        '2d',
       ) as OffscreenCanvasRenderingContext2D;
       const tempCanvas = new OffscreenCanvas(mask.width, mask.height);
       const tempContext = tempCanvas.getContext(
-        "2d",
+        '2d',
       ) as OffscreenCanvasRenderingContext2D;
       tempContext.drawImage(images.sourceImg, 0, 0);
       const maskImageData = maskContext.getImageData(
@@ -73,7 +73,7 @@ function setupWorker({
         tempCanvas.height,
       );
       if (!tempImageData || !maskImageData) {
-        console.error("could not get image data from mask canvas");
+        console.error('could not get image data from mask canvas');
         return;
       }
 
@@ -105,7 +105,7 @@ function setupWorker({
       maskContext.putImageData(maskImageData, 0, 0);
       maskCanvas.convertToBlob().then((blob) => {
         const file = new File([blob], imageNames.samMask, {
-          type: "image/jpeg",
+          type: 'image/jpeg',
         });
         images.samMask = file;
       });
@@ -114,7 +114,7 @@ function setupWorker({
         .convertToBlob()
         .then((blob) => {
           const file = new File([blob], imageNames.result, {
-            type: "image/png",
+            type: 'image/png',
           });
           return fileToImage(file);
         })
@@ -122,8 +122,8 @@ function setupWorker({
           images.destinationImg = img;
           redrawEverything();
         });
-    } else if (type === "segment_result") {
-      if (data === "start") {
+    } else if (type === 'segment_result') {
+      if (data === 'start') {
         setIsDownloadingModelOrEmbeddingImage('Extracting embeddings...');
       } else {
         setIsDownloadingModelOrEmbeddingImage(null);
@@ -159,7 +159,7 @@ export function useSam({
 
   function decode() {
     modelStatus.isDecoding = true;
-    worker()?.postMessage({ type: "decode", data: lastPoints() });
+    worker()?.postMessage({ type: 'decode', data: lastPoints() });
   }
 
   function segment(data: string) {
@@ -168,7 +168,7 @@ export function useSam({
     if (!modelStatus.modelReady) {
       setIsDownloadingModelOrEmbeddingImage('Loading model...');
     }
-    worker()?.postMessage({ type: "segment", data });
+    worker()?.postMessage({ type: 'segment', data });
   }
 
   onMount(() => {
@@ -187,7 +187,7 @@ export function useSam({
 
   createEffect(() => {
     const img = sourceImgBase64();
-    if (typeof img !== "string") return;
+    if (typeof img !== 'string') return;
     segment(img);
   });
   return {

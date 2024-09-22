@@ -1,14 +1,14 @@
-import { createSignal, Match, Show, Switch } from 'solid-js';
+import { AiOutlineLoading } from 'solid-icons/ai';
+import { Match, Show, Switch, createSignal } from 'solid-js';
 import { GrabcutActionsMenu } from '~/components/grabcut-actions-menu';
 import { useGrabcutCanvas } from '~/hooks/use-grabcut-canvas';
+import { drawStroke } from '~/hooks/use-grabcut-canvas/utils';
 import type { SelectImage } from '~/lib/db/schema';
 import type { CanvasLayout } from '~/lib/types';
-import { drawStroke } from '~/hooks/use-grabcut-canvas/utils';
-import { Dialog, DialogContentWithoutClose } from './ui/dialog';
 import { cn } from '~/lib/utils';
-import { SAMActionsMenu } from './sam-actions-menu';
 import { Draggable } from './draggable';
-import { AiOutlineLoading } from 'solid-icons/ai';
+import { SAMActionsMenu } from './sam-actions-menu';
+import { Dialog, DialogContentWithoutClose } from './ui/dialog';
 
 export function Canvases(props: { img: SelectImage }) {
   const [canvasLayout, setCanvasLayout] = createSignal<CanvasLayout>('both');
@@ -41,9 +41,9 @@ export function Canvases(props: { img: SelectImage }) {
     <>
       <Dialog open={isDownloadingModelOrEmbeddingImage() !== null}>
         <DialogContentWithoutClose class="sm:max-w-[425px]">
-        <div class="font-semibold">
-          {isDownloadingModelOrEmbeddingImage()}
-        </div>
+          <div class="font-semibold">
+            {isDownloadingModelOrEmbeddingImage()}
+          </div>
         </DialogContentWithoutClose>
       </Dialog>
       <Draggable>

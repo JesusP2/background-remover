@@ -1,9 +1,7 @@
-import { ulid } from 'ulidx';
-import { action, redirect } from '@solidjs/router';
+import { action } from '@solidjs/router';
 import { getRequestEvent } from 'solid-js/web';
 import { db } from '../db';
 import { imageTable } from '../db/schema';
-import { uploadFile } from '../r2';
 import { rateLimit } from '../rate-limiter';
 
 export const uploadImageAction = action(async (id: string, name: string) => {

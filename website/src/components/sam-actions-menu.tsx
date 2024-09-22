@@ -1,20 +1,20 @@
-import {
-  TbZoomInArea,
-  TbZoomOutArea,
-  TbFocusCentered,
-  TbArrowsMove,
-} from 'solid-icons/tb';
-import { CgAddR, CgRemoveR } from 'solid-icons/cg';
 import { BsWindowSplit } from 'solid-icons/bs';
 import { BsWindow } from 'solid-icons/bs';
+import { CgAddR, CgRemoveR } from 'solid-icons/cg';
+import {
+  TbArrowsMove,
+  TbFocusCentered,
+  TbZoomInArea,
+  TbZoomOutArea,
+} from 'solid-icons/tb';
 import type { Accessor, Setter } from 'solid-js';
-import type { CanvasLayout } from '~/lib/types';
-import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 import type {
   GrabcutAction,
   GrabcutActionType,
 } from '~/hooks/use-grabcut-canvas/utils';
+import type { CanvasLayout } from '~/lib/types';
 import { cn } from '~/lib/utils';
+import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 
 export function SAMActionsMenu(props: {
   setCurrentMode: Setter<GrabcutActionType>;
@@ -74,7 +74,9 @@ export function SAMActionsMenu(props: {
         </Tooltip>
       </div>
       <div class="flex items-center justify-between border-2 border-stone-300 rounded-md px-3 py-2 gap-x-2">
-        <Tooltip disabled={!props.actions().length || props.isRemovingBackground()}>
+        <Tooltip
+          disabled={!props.actions().length || props.isRemovingBackground()}
+        >
           <TooltipTrigger>
             <button
               type="button"
@@ -87,11 +89,15 @@ export function SAMActionsMenu(props: {
           </TooltipTrigger>
           <TooltipContent>Undo last action</TooltipContent>
         </Tooltip>
-        <Tooltip disabled={!props.redoActions().length || props.isRemovingBackground()}>
+        <Tooltip
+          disabled={!props.redoActions().length || props.isRemovingBackground()}
+        >
           <TooltipTrigger>
             <button
               type="button"
-              disabled={!props.redoActions().length || props.isRemovingBackground()}
+              disabled={
+                !props.redoActions().length || props.isRemovingBackground()
+              }
               onClick={props.redo}
               class="disabled:text-zinc-100 disabled:bg-stone-300 text-zinc-100 hover:text-white hover:bg-stone-600 font-semibold px-3 py-1 bg-stone-500 rounded-full"
             >

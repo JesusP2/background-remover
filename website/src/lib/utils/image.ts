@@ -1,4 +1,4 @@
-import pica from "pica";
+import pica from 'pica';
 
 export type ImageResize = 720 | 1080 | 3840;
 export const sizes: Record<
@@ -49,7 +49,7 @@ export async function downscaleImage(
   size: ImageResize = 720,
 ): Promise<File> {
   const img = await createImageBitmap(file);
-  const canvas = document.createElement("canvas");
+  const canvas = document.createElement('canvas');
   const { width, height } = getMaximumSize(img, size);
   if (img.width === width && img.height === height) {
     return file;
@@ -67,7 +67,7 @@ export async function downscaleImage(
         const newFile = new File([blob], file.name, { type: file.type });
         resolve(newFile);
       } else {
-        reject(new Error("Canvas to Blob conversion failed"));
+        reject(new Error('Canvas to Blob conversion failed'));
       }
     }, file.type);
   });
@@ -78,7 +78,7 @@ export async function upscaleImage(
   targetHeight: number,
 ): Promise<File> {
   const img = await createImageBitmap(file);
-  const canvas = document.createElement("canvas");
+  const canvas = document.createElement('canvas');
 
   canvas.width = targetWidth;
   canvas.height = targetHeight;
@@ -96,7 +96,7 @@ export async function upscaleImage(
         const newFile = new File([blob], file.name, { type: file.type });
         resolve(newFile);
       } else {
-        reject(new Error("Canvas to Blob conversion failed"));
+        reject(new Error('Canvas to Blob conversion failed'));
       }
     }, file.type);
   });
@@ -107,12 +107,14 @@ export async function removeBackground(
   maskImage: HTMLImageElement,
 ) {
   const canvas = new OffscreenCanvas(originalImage.width, originalImage.height);
-  const ctx = canvas.getContext("2d") as OffscreenCanvasRenderingContext2D;
+  const ctx = canvas.getContext('2d') as OffscreenCanvasRenderingContext2D;
   ctx.drawImage(originalImage, 0, 0);
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
   const maskCanvas = new OffscreenCanvas(maskImage.width, maskImage.height);
-  const maskCtx = maskCanvas.getContext("2d") as OffscreenCanvasRenderingContext2D;
+  const maskCtx = maskCanvas.getContext(
+    '2d',
+  ) as OffscreenCanvasRenderingContext2D;
   maskCtx.drawImage(maskImage, 0, 0);
   const maskData = maskCtx.getImageData(
     0,
@@ -123,13 +125,13 @@ export async function removeBackground(
 
   for (let i = 0; i < imageData.data.length; i += 4) {
     // The mask is grayscale, so we can use any of R, G, or B channel. We'll use R.
-     imageData.data[i + 3] = maskData[i]; // Set alpha to the mask value
+    imageData.data[i + 3] = maskData[i]; // Set alpha to the mask value
   }
 
   // Put the modified image data back to the canvas
   ctx.putImageData(imageData, 0, 0);
 
   const blob = await canvas.convertToBlob();
-  const newFile = new File([blob], "result.png", { type: "image/png" });
+  const newFile = new File([blob], 'result.png', { type: 'image/png' });
   return newFile;
 }
