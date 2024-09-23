@@ -9,12 +9,12 @@ import {
   CardHeader,
   CardTitle,
 } from '~/components/ui/card';
-import { resetPasswordAction } from '~/lib/actions/reset-password';
+import { resetPasswordEmailAction } from '~/lib/actions/reset-password';
 import { FaSolidCircleCheck } from 'solid-icons/fa';
 
 export default function ForgotPassword() {
   const [isEmailSent, toggleEmailState] = createSignal(false);
-  const resetPasswordState = useSubmission(resetPasswordAction);
+  const resetPasswordState = useSubmission(resetPasswordEmailAction);
   createEffect(() => {
     if (resetPasswordState.result?.email) {
       toggleEmailState(true);
@@ -45,7 +45,7 @@ export default function ForgotPassword() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form method="post" action={resetPasswordAction}>
+            <form method="post" action={resetPasswordEmailAction}>
               <div class="grid gap-2 max-w-3xl mt-4">
                 <FormLabel htmlFor="email" class="font-medium">
                   Email

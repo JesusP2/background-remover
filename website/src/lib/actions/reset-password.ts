@@ -1,6 +1,6 @@
-import { action } from "@solidjs/router";
+import { action, redirect } from "@solidjs/router";
 import { rateLimit } from "../rate-limiter";
-import { resetTokenSchema } from "../schemas";
+import { resetTokenSchema, validateResetTokenSchema } from "../schemas";
 import { db } from "../db";
 import { resetTokenTable, userTable } from "../db/schema";
 import { eq } from "drizzle-orm";
@@ -11,10 +11,69 @@ import { generateIdFromEntropySize } from "lucia";
 import { encodeHex } from "oslo/encoding";
 import { sha256 } from "oslo/crypto";
 import { ulid } from "ulidx";
-import { createDate, TimeSpan } from "oslo";
+import { createDate, isWithinExpirationDate, TimeSpan } from "oslo";
 import { getRequestEvent } from "solid-js/web";
+import { createUserSession, deleteAllUserSessions } from "../sessions";
+import { Argon2id } from "oslo/password";
 
-export const resetPasswordAction = action(async (formData: FormData) => {
+export const resetPasswordConfirmationAction = action(
+  async (formData: FormData) => {
+    "use server";
+    const error = await rateLimit();
+    if (error) {
+      return {
+        fieldErrors: {
+          form: ["Too many requests"],
+          password: [],
+          token: [],
+        },
+      };
+    }
+
+    const event = getRequestEvent();
+    if (event?.locals.user) {
+      throw redirect("/");
+    }
+    const submission = validateResetTokenSchema.safeParse({
+      password: formData.get("password"),
+      token: formData.get("token"),
+    });
+    if (!submission.success) {
+      return {
+        fieldErrors: {
+          form: [],
+          password: ["Invalid type"],
+          token: ["Invalid type"],
+        },
+      };
+    }
+    const hashedToken = encodeHex(
+      await sha256(new TextEncoder().encode(submission.data.token)),
+    );
+    const [record] = await db
+      .select()
+      .from(resetTokenTable)
+      .where(eq(resetTokenTable.token, hashedToken));
+    if (!record || !isWithinExpirationDate(new Date(record.expiresAt))) {
+      return {
+        fieldErrors: {
+          form: [],
+          password: [],
+          token: ["Token expired"],
+        },
+      };
+    }
+    await deleteAllUserSessions(record.userId);
+    const hashedPassword = await new Argon2id().hash(submission.data.password);
+    db.update(userTable).set({
+      password: hashedPassword,
+    });
+    await createUserSession(record.userId);
+    throw redirect("/");
+  },
+);
+
+export const resetPasswordEmailAction = action(async (formData: FormData) => {
   "use server";
   const error = await rateLimit();
   if (error) {
@@ -26,7 +85,6 @@ export const resetPasswordAction = action(async (formData: FormData) => {
       },
     };
   }
-  console.log("hit x1");
 
   const submission = resetTokenSchema.safeParse({
     email: formData.get("email"),
@@ -39,21 +97,18 @@ export const resetPasswordAction = action(async (formData: FormData) => {
       },
     };
   }
-  console.log("hit x2");
   try {
     const [user] = await db
       .select()
       .from(userTable)
       .where(eq(userTable.email, submission.data.email))
       .limit(1);
-    console.log("hit x3", user);
     if (!user) {
       return {
         email: submission.data.email,
       };
     }
     await db.delete(resetTokenTable).where(eq(resetTokenTable.userId, user.id));
-    console.log("hit x4", user);
     const tokenId = generateIdFromEntropySize(25); // 40 character
     const tokenHash = encodeHex(
       await sha256(new TextEncoder().encode(tokenId)),
@@ -64,7 +119,6 @@ export const resetPasswordAction = action(async (formData: FormData) => {
       userId: user.id,
       expiresAt: createDate(new TimeSpan(2, "h")).toISOString(),
     });
-    console.log("hit x5", user);
     const event = getRequestEvent();
     if (!event) {
       return {
