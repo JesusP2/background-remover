@@ -39,6 +39,7 @@
     "oslo": "^1.2.0",
     "pica": "^9.0.1",
     "postcss": "^8.4.26",
+    "react-dom": "^18.3.1",
     "solid-icons": "^1.1.0",
     "solid-js": "^1.8.22",
     "tailwind-merge": "^2.3.0",
@@ -55,6 +56,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "1.6.3",
+    "@types/react-dom": "^18.3.0",
     "drizzle-kit": "^0.20.14"
   }
 }

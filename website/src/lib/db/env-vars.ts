@@ -1,4 +1,4 @@
-import { object, parse, string } from 'valibot';
+import { object, parse, string } from "valibot";
 
 const envsSchema = object({
   DATABASE_URL: string(),
@@ -15,6 +15,8 @@ const envsSchema = object({
   GITHUB_CLIENT_ID: string(),
   GITHUB_CLIENT_SECRET: string(),
   GITHUB_REDIRECT_URI: string(),
+  RESEND_API_KEY: string(),
+  EMAIL_FROM: string(),
 });
 
 export const envs = parse(envsSchema, process.env);

@@ -24,7 +24,6 @@ export const GET: APIHandler = async ({ locals }) => {
     maxAge: 60 * 10,
     sameSite: 'lax',
   });
-  console.log(url.toString());
   return new Response(null, {
     status: 302,
     headers: {
