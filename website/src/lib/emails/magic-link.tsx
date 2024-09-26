@@ -18,7 +18,7 @@ export function MagicLinkEmail({
       max-width: 0;
     "
   >
-    You&#x27;ve been invited to a group!
+    Magic Link 
     <div>
        ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌
     </div>
@@ -84,9 +84,9 @@ export function MagicLinkEmail({
                 <tr>
                   <td>
                     <img
-                      alt="StarterKit"
+                      alt="magic-link-icon"
                       height="48"
-                      src="http://localhost:5173/group.jpeg"
+                      src="${origin}/group.jpeg"
                       style="
                         display: block;
                         outline: none;
@@ -138,7 +138,7 @@ export function MagicLinkEmail({
                       "
                     >
                       <a
-                        href="${origin}/api/auth/magic-link/${tokenId}"
+                        href="${origin}/auth/magic-link/${tokenId}"
                         style="
                           color: rgb(39, 84, 197);
                           text-decoration: none;

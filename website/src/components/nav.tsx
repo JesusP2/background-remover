@@ -1,10 +1,11 @@
 import { A, cache, createAsync } from '@solidjs/router';
-import { Show, createSignal } from 'solid-js';
+import { Match, Show, Switch, createSignal } from 'solid-js';
 import { getRequestEvent } from 'solid-js/web';
 import { signOutAction } from '~/lib/actions/signout';
 import { rateLimit } from '~/lib/rate-limiter';
 import { cn } from '~/lib/utils';
 import { Button, buttonVariants } from './ui/button';
+import { UserDropdown } from './user-dropdown';
 
 const getUserId = cache(async () => {
   'use server';
@@ -41,16 +42,14 @@ export function Navbar(props: { route: string }) {
         </div>
         <div>
           <A
-            href="/pricing"
+            href="/"
             class={cn(
               buttonVariants({ variant: 'ghost' }),
               'font-gabarito text-md text-zinc-600',
-              props.route === '/pricing'
-                ? 'bg-accent text-accent-foreground'
-                : '',
+              props.route === '/' ? 'bg-accent text-accent-foreground' : '',
             )}
           >
-            Pricing
+            Home
           </A>
           <A
             href="/my-gallery"
@@ -90,28 +89,22 @@ export function Navbar(props: { route: string }) {
           </A>
         </div>
         <div class="space-x-4 flex w-[153px] justify-end">
-          <Show when={!userId()}>
-            <A
-              href="/auth/signin"
-              class={cn(
-                buttonVariants({ variant: 'ghost' }),
-                'font-gabarito text-md text-zinc-600',
-              )}
-            >
-              Sign in
-            </A>
-          </Show>
-          <Show when={userId()}>
-            <form method="post" action={signOutAction}>
-              <Button
-                type="submit"
-                variant="ghost"
-                class="font-gabarito text-md text-zinc-600"
+          <Switch>
+            <Match when={!userId()}>
+              <A
+                href="/auth/signin"
+                class={cn(
+                  buttonVariants({ variant: 'ghost' }),
+                  'font-gabarito text-md text-zinc-600',
+                )}
               >
-                Sign out
-              </Button>
-            </form>
-          </Show>
+                Sign in
+              </A>
+            </Match>
+            <Match when={userId()}>
+              <UserDropdown />
+            </Match>
+          </Switch>
         </div>
       </div>
       <div class="mid:hidden flex justify-between items-center max-w-7xl mx-auto h-16">
@@ -126,16 +119,14 @@ export function Navbar(props: { route: string }) {
       </div>
       <div class={cn('flex flex-col gap-y-4', isOpen() ? '' : 'hidden')}>
         <A
-          href="/pricing"
+          href="/"
           class={cn(
             buttonVariants({ variant: 'ghost' }),
             'font-gabarito text-md text-zinc-600',
-            props.route === '/pricing'
-              ? 'bg-accent text-accent-foreground'
-              : '',
+            props.route === '/' ? 'bg-accent text-accent-foreground' : '',
           )}
         >
-          Pricing
+          Home
         </A>
         <A
           href="/my-gallery"

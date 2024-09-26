@@ -1,5 +1,10 @@
-import { type ComponentProps, splitProps } from 'solid-js';
-import { TextField, TextFieldRoot } from '~/components/ui/textfield';
+import { PolymorphicProps } from '@kobalte/core/polymorphic';
+import { type ComponentProps, splitProps, ValidComponent } from 'solid-js';
+import {
+  TextField,
+  textFieldInputProps,
+  TextFieldRoot,
+} from '~/components/ui/textfield';
 import { cn } from '~/lib/utils';
 
 interface FormLabelProps extends ComponentProps<'label'> {
@@ -19,13 +24,13 @@ export function FormLabel(props: FormLabelProps) {
   );
 }
 
-interface FormInputProps extends ComponentProps<'input'> {
-  error?: boolean;
-}
-export function FormInput(props: FormInputProps) {
+export function FormInput<T extends ValidComponent = 'input'>(
+  props: PolymorphicProps<T, textFieldInputProps<T>>,
+) {
   const [, rest] = splitProps(props, ['class']);
   return (
     <TextFieldRoot>
+      {/*@ts-ignore idk*/}
       <TextField
         class={cn(
           props.error

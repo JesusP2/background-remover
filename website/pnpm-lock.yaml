@@ -14,6 +14,9 @@ importers:
       '@aws-sdk/s3-request-presigner':
         specifier: ^3.550.0
         version: 3.556.0
+      '@corvu/otp-field':
+        specifier: ^0.1.2
+        version: 0.1.2(solid-js@1.8.22)
       '@fontsource-variable/gabarito':
         specifier: ^5.0.4
         version: 5.0.4
@@ -491,6 +494,11 @@ packages:
   '@cloudflare/kv-asset-handler@0.3.2':
     resolution: {integrity: sha512-EeEjMobfuJrwoctj7FA1y1KEbM0+Q1xSjobIEyie9k4haVEBB7vkDvsasw1pM3rO39mL2akxIAzLMUAtrMHZhA==}
     engines: {node: '>=16.13'}
+
+  '@corvu/otp-field@0.1.2':
+    resolution: {integrity: sha512-R7Ks4EoIY6/ptY0W4ewO6wtSSqYGvz30eIsQBffc+6zOWAL4tc/qEKxUCLpOdAUyxp28ODCLHg1/ZpzNjgZBZw==}
+    peerDependencies:
+      solid-js: ^1.8
 
   '@corvu/utils@0.1.1':
     resolution: {integrity: sha512-NY6s6ZvOJKQw3gI6Ra9CixHslKeGTQJsaGCPBVX/K5DtDXgEPeinD5k2EnCvWmey92L2btPtasDrlGUx0sY9JA==}
@@ -5140,6 +5148,11 @@ snapshots:
   '@cloudflare/kv-asset-handler@0.3.2':
     dependencies:
       mime: 3.0.0
+
+  '@corvu/otp-field@0.1.2(solid-js@1.8.22)':
+    dependencies:
+      '@corvu/utils': 0.4.1(solid-js@1.8.22)
+      solid-js: 1.8.22
 
   '@corvu/utils@0.1.1(solid-js@1.8.22)':
     dependencies:

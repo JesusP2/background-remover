@@ -13,6 +13,7 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.550.0",
     "@aws-sdk/s3-request-presigner": "^3.550.0",
+    "@corvu/otp-field": "^0.1.2",
     "@fontsource-variable/gabarito": "^5.0.4",
     "@fontsource/geist-sans": "^5.0.2",
     "@huggingface/transformers": "3.0.0-alpha.15",

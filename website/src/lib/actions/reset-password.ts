@@ -19,85 +19,101 @@ import { Argon2id } from "oslo/password";
 export const resetPasswordConfirmationAction = action(
   async (formData: FormData) => {
     "use server";
-    const error = await rateLimit();
-    if (error) {
-      return {
-        fieldErrors: {
-          form: ["Too many requests"],
-          password: [],
-          token: [],
-        },
-      };
-    }
+    try {
+      const error = await rateLimit();
+      if (error) {
+        return {
+          fieldErrors: {
+            form: ["Too many requests"],
+            password: [],
+            token: [],
+          },
+        };
+      }
 
-    const event = getRequestEvent();
-    if (event?.locals.user) {
+      const event = getRequestEvent();
+      if (event?.locals.user) {
+        throw redirect("/");
+      }
+      const submission = validateResetTokenSchema.safeParse({
+        password: formData.get("password"),
+        token: formData.get("token"),
+      });
+      if (!submission.success) {
+        return {
+          fieldErrors: {
+            form: [],
+            password: ["Invalid type"],
+            token: ["Invalid type"],
+          },
+        };
+      }
+      const hashedToken = encodeHex(
+        await sha256(new TextEncoder().encode(submission.data.token)),
+      );
+      const [record] = await db
+        .select()
+        .from(resetTokenTable)
+        .where(eq(resetTokenTable.token, hashedToken));
+      if (!record || !isWithinExpirationDate(new Date(record.expiresAt))) {
+        return {
+          fieldErrors: {
+            form: [],
+            password: [],
+            token: ["Token expired"],
+          },
+        };
+      }
+      await deleteAllUserSessions(record.userId);
+      const hashedPassword = await new Argon2id().hash(
+        submission.data.password,
+      );
+      await db
+        .update(userTable)
+        .set({
+          password: hashedPassword,
+        })
+        .where(eq(userTable.id, record.userId));
+      await createUserSession(record.userId);
       throw redirect("/");
-    }
-    const submission = validateResetTokenSchema.safeParse({
-      password: formData.get("password"),
-      token: formData.get("token"),
-    });
-    if (!submission.success) {
+    } catch (err) {
+      console.error(err);
       return {
         fieldErrors: {
-          form: [],
-          password: ["Invalid type"],
-          token: ["Invalid type"],
-        },
-      };
-    }
-    const hashedToken = encodeHex(
-      await sha256(new TextEncoder().encode(submission.data.token)),
-    );
-    const [record] = await db
-      .select()
-      .from(resetTokenTable)
-      .where(eq(resetTokenTable.token, hashedToken));
-    if (!record || !isWithinExpirationDate(new Date(record.expiresAt))) {
-      return {
-        fieldErrors: {
-          form: [],
+          form: ["Something went wrong, please try again."],
           password: [],
-          token: ["Token expired"],
+          email: [],
         },
       };
     }
-    await deleteAllUserSessions(record.userId);
-    const hashedPassword = await new Argon2id().hash(submission.data.password);
-    db.update(userTable).set({
-      password: hashedPassword,
-    });
-    await createUserSession(record.userId);
-    throw redirect("/");
   },
 );
 
 export const resetPasswordEmailAction = action(async (formData: FormData) => {
   "use server";
-  const error = await rateLimit();
-  if (error) {
-    return {
-      fieldErrors: {
-        form: ["Too many requests"],
-        username: [],
-        password: [],
-      },
-    };
-  }
-
-  const submission = resetTokenSchema.safeParse({
-    email: formData.get("email"),
-  });
-  if (!submission.success) {
-    return {
-      fieldErrors: {
-        form: [],
-        email: ["Invalid email"],
-      },
-    };
-  }
   try {
+    const error = await rateLimit();
+    if (error) {
+      return {
+        fieldErrors: {
+          form: ["Too many requests"],
+          username: [],
+          password: [],
+        },
+      };
+    }
+
+    const submission = resetTokenSchema.safeParse({
+      email: formData.get("email"),
+    });
+    if (!submission.success) {
+      return {
+        fieldErrors: {
+          form: [],
+          email: ["Invalid email"],
+        },
+      };
+    }
     const [user] = await db
       .select()
       .from(userTable)
@@ -122,9 +138,9 @@ export const resetPasswordEmailAction = action(async (formData: FormData) => {
     const event = getRequestEvent();
     if (!event) {
       return {
-        form: [],
         fieldErrors: {
-          email: ["Something went wrong, please try again"],
+          form: ["Something went wrong, please try again"],
+          email: [],
         },
       };
     }
@@ -145,9 +161,9 @@ export const resetPasswordEmailAction = action(async (formData: FormData) => {
   } catch (err) {
     console.error(err);
     return {
-      form: [],
       fieldErrors: {
-        email: ["Something went wrong, please try again"],
+        form: ["Something went wrong, please try again"],
+        email: [],
       },
     };
   }

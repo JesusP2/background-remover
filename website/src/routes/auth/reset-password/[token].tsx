@@ -48,7 +48,7 @@ export default function ResetPasswordToken() {
                 {resetPasswordState.result?.fieldErrors?.password}
               </span>
             </div>
-            <Button class="w-full mt-4">Change password</Button>
+            <Button type="submit" class="w-full mt-4">Change password</Button>
           </form>
         </CardContent>
       </Card>
