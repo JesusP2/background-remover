@@ -1,11 +1,7 @@
-import {
-  cache,
-  createAsync,
-  redirect,
-  useSubmission,
-} from '@solidjs/router';
+import { createAsync, redirect, useSubmission } from '@solidjs/router';
 import { eq } from 'drizzle-orm';
-import { createSignal, Match, Switch } from 'solid-js';
+import { AiOutlineLoading } from 'solid-icons/ai';
+import { createEffect, createSignal, Match, Switch } from 'solid-js';
 import { getRequestEvent } from 'solid-js/web';
 import { FormInput, FormLabel } from '~/components/form';
 import { OTPForm } from '~/components/otp-form';
@@ -22,7 +18,7 @@ import { db } from '~/lib/db';
 import { userTable } from '~/lib/db/schema';
 import { rateLimit } from '~/lib/rate-limiter';
 
-const getUserProfile = cache(async () => {
+const getUserProfile = async () => {
   'use server';
   const error = await rateLimit();
   if (error) {
@@ -35,15 +31,15 @@ const getUserProfile = cache(async () => {
     .from(userTable)
     .where(eq(userTable.id, event.locals.userId));
   if (!user) {
-    throw redirect("/")
-  };
+    throw redirect('/');
+  }
   return {
     isOauth: user.password === null,
     name: user.name,
     username: user.username,
     email: user.email,
   };
-}, 'user-profile');
+};
 
 export const route = {
   load: () => getUserProfile(),
@@ -56,6 +52,15 @@ export default function Profile() {
   const [isEmailVerificationDialogOpen, openEmailVerificationDialog] =
     createSignal(false);
   const updateProfileState = useSubmission(updateProfileAction);
+  createEffect(() => {
+    setProfileName(profile()?.name ?? '');
+    setProfileEmail(profile()?.email ?? '');
+  });
+  createEffect(() => {
+    if (updateProfileState.result?.message) {
+      openEmailVerificationDialog(true);
+    }
+  });
   return (
     <>
       <h4>Profile</h4>
@@ -75,17 +80,20 @@ export default function Profile() {
             id="name"
             name="name"
             value={profileName()}
-            onInput={(e) => setProfileName(e.target.nodeValue)}
+            onInput={(e) => {
+              // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+              setProfileName((e.target as any).value);
+            }}
             placeholder="John Doe"
             required
-            minLength={3}
+            minlength={3}
           />
           <span class="text-muted-foreground text-xs">
             This is your public display name. It can be your real name or a
             pseudonym.{' '}
           </span>
           <span class="text-sm text-red-500">
-            {updateProfileState.result?.fieldErrors?.name}
+            {updateProfileState.result?.fieldErrors?.name?.at(0)}
           </span>
         </div>
         <div class="grid gap-2 max-w-3xl">
@@ -101,7 +109,10 @@ export default function Profile() {
                 disabled={profile()?.isOauth}
                 value={profileEmail()}
                 title="Email only available for email/password auth."
-                onInput={(e) => setProfileEmail(e.target.nodeValue)}
+                onInput={(e) => {
+                  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+                  setProfileEmail((e.target as any).value);
+                }}
               />
             </Match>
             <Match when={!profile()?.isOauth}>
@@ -109,7 +120,10 @@ export default function Profile() {
                 id="email"
                 name="email"
                 value={profileEmail()}
-                onInput={(e) => setProfileEmail(e.target.nodeValue)}
+                onInput={(e) => {
+                  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+                  setProfileEmail((e.target as any).value);
+                }}
               />
             </Match>
           </Switch>
@@ -117,11 +131,28 @@ export default function Profile() {
             This field is private, only you can see your email.
           </span>
           <span class="text-sm text-red-500">
-            {updateProfileState.result?.fieldErrors?.email}
+            {updateProfileState.result?.fieldErrors?.email?.at(0)}
           </span>
         </div>
-        <Button type="submit" variant="default" class="w-36">
-          Save changes
+        <span class="text-sm text-red-500">
+          {updateProfileState.result?.fieldErrors?.form?.at(0)}
+        </span>
+        <Button
+          type="submit"
+          disabled={updateProfileState.pending}
+          class="w-36"
+        >
+          {updateProfileState.pending ? (
+            <AiOutlineLoading
+              class={
+                updateProfileState.pending
+                  ? 'animate-spin w-5 h-5 ml-4'
+                  : 'hidden'
+              }
+            />
+          ) : (
+            'Save changes'
+          )}
         </Button>
       </form>
       <Dialog
@@ -139,7 +170,7 @@ export default function Profile() {
             </DialogDescription>
           </DialogHeader>
           <div class="pt-6 grid place-items-center">
-            <OTPForm />
+            <OTPForm onSuccess={() => openEmailVerificationDialog(false)} />
           </div>
         </DialogContent>
       </Dialog>

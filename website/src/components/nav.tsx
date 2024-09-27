@@ -1,10 +1,9 @@
 import { A, cache, createAsync } from '@solidjs/router';
-import { Match, Show, Switch, createSignal } from 'solid-js';
+import { Match, Switch, createSignal } from 'solid-js';
 import { getRequestEvent } from 'solid-js/web';
-import { signOutAction } from '~/lib/actions/signout';
 import { rateLimit } from '~/lib/rate-limiter';
 import { cn } from '~/lib/utils';
-import { Button, buttonVariants } from './ui/button';
+import { buttonVariants } from './ui/button';
 import { UserDropdown } from './user-dropdown';
 
 const getUserId = cache(async () => {

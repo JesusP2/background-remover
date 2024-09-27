@@ -1,4 +1,3 @@
-import { verifyEmailAction } from '~/lib/actions/update-profile';
 import {
   OTPField,
   OTPFieldGroup,
@@ -8,9 +7,17 @@ import {
 } from './ui/otp-field';
 import { useSubmission } from '@solidjs/router';
 import { Button } from './ui/button';
+import { verifyEmailAction } from '~/lib/actions/verify-email';
+import { createEffect } from 'solid-js';
+import { AiOutlineLoading } from 'solid-icons/ai';
 
-export const OTPForm = () => {
+export const OTPForm = (props: { onSuccess: () => void }) => {
   const verifyEmailState = useSubmission(verifyEmailAction);
+  createEffect(() => {
+    if (verifyEmailState.result?.message === null) {
+      props.onSuccess();
+    }
+  });
   return (
     <form method="post" action={verifyEmailAction}>
       <OTPField maxLength={6}>
@@ -28,10 +35,24 @@ export const OTPForm = () => {
         </OTPFieldGroup>
       </OTPField>
       <span class="text-sm text-red-500">
-        {verifyEmailState.result?.fieldErrors?.code[0] ||
-          verifyEmailState.result?.fieldErrors?.form[0]}
+        {verifyEmailState.result?.fieldErrors?.code.at(0) ||
+          verifyEmailState.result?.fieldErrors?.form.at(0)}
       </span>
-      <Button class="w-full mt-6">Verify</Button>
+      <Button
+        type="submit"
+        disabled={verifyEmailState.pending}
+        class="w-full mt-6"
+      >
+        {verifyEmailState.pending ? (
+          <AiOutlineLoading
+            class={
+              verifyEmailState.pending ? 'animate-spin w-5 h-5 ml-4' : 'hidden'
+            }
+          />
+        ) : (
+          'Verify'
+        )}
+      </Button>
     </form>
   );
 };
