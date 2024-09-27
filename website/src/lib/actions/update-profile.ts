@@ -111,11 +111,15 @@ export const updateProfileAction = action(async (formData: FormData) => {
         envs.RESEND_API_KEY,
         envs.EMAIL_FROM,
       );
+      const fields = ['email']
+      if (isNameBeingUpdated) fields.push('name')
       return {
-        message: "email verification sent",
-      };
+        fields,
+      }
     }
-    return null;
+    return {
+      fields: ['name']
+    };
   } catch (err) {
     console.error(err);
     return {

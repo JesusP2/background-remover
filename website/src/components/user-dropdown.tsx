@@ -35,17 +35,12 @@ export const UserDropdown = () => {
           <DropdownMenuItem
             // biome-ignore lint/suspicious/noExplicitAny: <explanation>
             as={(props: any) => (
-              <A {...props} class={cn(props.class, 'pl-4')} href="/settings/profile">
+              <A
+                {...props}
+                class={cn(props.class, 'pl-4')}
+                href="/settings/profile"
+              >
                 <span>Profile</span>
-                <DropdownMenuShortcut>⇧⌘P</DropdownMenuShortcut>
-              </A>
-            )}
-          />
-          <DropdownMenuItem
-            // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-            as={(props: any) => (
-              <A {...props} class={cn(props.class, 'pl-4')} href="/settings/account">
-                <span>Account</span>
                 <DropdownMenuShortcut>⇧⌘P</DropdownMenuShortcut>
               </A>
             )}
@@ -71,3 +66,12 @@ export const UserDropdown = () => {
     </DropdownMenu>
   );
 };
+// <DropdownMenuItem
+//   // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+//   as={(props: any) => (
+//     <A {...props} class={cn(props.class, 'pl-4')} href="/settings/account">
+//       <span>Account</span>
+//       <DropdownMenuShortcut>⇧⌘P</DropdownMenuShortcut>
+//     </A>
+//   )}
+// />

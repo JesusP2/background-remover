@@ -1,3 +1,4 @@
+import { toaster } from '@kobalte/core/toast';
 import { createAsync, redirect, useSubmission } from '@solidjs/router';
 import { eq } from 'drizzle-orm';
 import { AiOutlineLoading } from 'solid-icons/ai';
@@ -17,6 +18,13 @@ import { updateProfileAction } from '~/lib/actions/update-profile';
 import { db } from '~/lib/db';
 import { userTable } from '~/lib/db/schema';
 import { rateLimit } from '~/lib/rate-limiter';
+import {
+  Toast,
+  ToastContent,
+  ToastDescription,
+  ToastProgress,
+  ToastTitle,
+} from '~/components/ui/toast';
 
 const getUserProfile = async () => {
   'use server';
@@ -57,13 +65,25 @@ export default function Profile() {
     setProfileEmail(profile()?.email ?? '');
   });
   createEffect(() => {
-    if (updateProfileState.result?.message) {
+    if (updateProfileState.result?.fields?.includes('name')) {
+      toaster.show((props) => (
+        <Toast toastId={props.toastId}>
+          <ToastContent>
+            <ToastTitle>Success</ToastTitle>
+            <ToastDescription>Name updated successfully!</ToastDescription>
+          </ToastContent>
+          <ToastProgress />
+        </Toast>
+      ));
+    }
+    if (updateProfileState.result?.fields?.includes('email')) {
+      updateProfileState.clear();
       openEmailVerificationDialog(true);
     }
   });
   return (
     <>
-      <h4>Profile</h4>
+      <h4 class="font-semibold text-2xl">Profile</h4>
       <p class="text-muted-foreground mt-2 text-sm">
         This is how others will see you on this site.
       </p>
@@ -73,7 +93,7 @@ export default function Profile() {
       />
       <form class="grid gap-6" method="post" action={updateProfileAction}>
         <div class="grid gap-2 max-w-3xl">
-          <FormLabel htmlFor="name" class="font-medium">
+          <FormLabel htmlFor="name" class="font-semibold">
             Name
           </FormLabel>
           <FormInput
@@ -97,7 +117,7 @@ export default function Profile() {
           </span>
         </div>
         <div class="grid gap-2 max-w-3xl">
-          <FormLabel htmlFor="email" class="font-medium">
+          <FormLabel htmlFor="email" class="font-semibold">
             Email
           </FormLabel>
           <Switch>
@@ -170,7 +190,22 @@ export default function Profile() {
             </DialogDescription>
           </DialogHeader>
           <div class="pt-6 grid place-items-center">
-            <OTPForm onSuccess={() => openEmailVerificationDialog(false)} />
+            <OTPForm
+              onSuccess={() => {
+                openEmailVerificationDialog(false);
+                toaster.show((props) => (
+                  <Toast toastId={props.toastId}>
+                    <ToastContent>
+                      <ToastTitle>Success</ToastTitle>
+                      <ToastDescription>
+                        Email updated successfully!
+                      </ToastDescription>
+                    </ToastContent>
+                    <ToastProgress />
+                  </Toast>
+                ));
+              }}
+            />
           </div>
         </DialogContent>
       </Dialog>
