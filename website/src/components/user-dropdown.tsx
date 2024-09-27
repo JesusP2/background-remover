@@ -42,6 +42,19 @@ export const UserDropdown = (props: { name: string }) => {
               </A>
             )}
           />
+          <DropdownMenuItem
+            // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+            as={(props: any) => (
+              <A
+                {...props}
+                class={cn(props.class, 'pl-4')}
+                href="/settings/account"
+              >
+                <span>Account</span>
+                <DropdownMenuShortcut>⇧⌘P</DropdownMenuShortcut>
+              </A>
+            )}
+          />
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem
@@ -63,12 +76,3 @@ export const UserDropdown = (props: { name: string }) => {
     </DropdownMenu>
   );
 };
-// <DropdownMenuItem
-//   // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-//   as={(props: any) => (
-//     <A {...props} class={cn(props.class, 'pl-4')} href="/settings/account">
-//       <span>Account</span>
-//       <DropdownMenuShortcut>⇧⌘P</DropdownMenuShortcut>
-//     </A>
-//   )}
-// />

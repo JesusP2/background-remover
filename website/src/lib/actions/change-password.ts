@@ -1,4 +1,4 @@
-import { action } from "@solidjs/router";
+import { action, redirect } from "@solidjs/router";
 import { rateLimit } from "../rate-limiter";
 import { getRequestEvent } from "solid-js/web";
 import { changePasswordSchema } from "../schemas";
@@ -15,8 +15,8 @@ export const changePasswordAction = action(async (formData: FormData) => {
     return {
       fieldErrors: {
         form: ["Too many requests"],
-        name: [],
-        email: [],
+        currentPassword: [],
+        newPassword: [],
       },
     };
   }
@@ -42,10 +42,10 @@ export const changePasswordAction = action(async (formData: FormData) => {
       .select()
       .from(userTable)
       .where(eq(userTable.id, user.id));
-    const hashedPassword = await new Argon2id().hash(
-      submission.data.currentPassword,
-    );
-    if (!user || userRecord.password !== hashedPassword) {
+    const validPassword = await new Argon2id().verify(
+      userRecord.password || '', submission.data.currentPassword
+    )
+    if (!user || !validPassword) {
       return {
         fieldErrors: {
           form: [],
@@ -61,7 +61,6 @@ export const changePasswordAction = action(async (formData: FormData) => {
       })
       .where(eq(userTable.id, user.id));
     await deleteUserSessions(user.id);
-    return null;
   } catch (err) {
     console.error(err);
     return {
@@ -72,4 +71,5 @@ export const changePasswordAction = action(async (formData: FormData) => {
       },
     };
   }
+  throw redirect('/')
 });

@@ -1,5 +1,5 @@
 import { toaster } from '@kobalte/core/toast';
-import { createAsync, redirect, useSubmission } from '@solidjs/router';
+import { cache, createAsync, redirect, useSubmission } from '@solidjs/router';
 import { eq } from 'drizzle-orm';
 import { AiOutlineLoading } from 'solid-icons/ai';
 import { createEffect, createSignal, Match, Switch } from 'solid-js';
@@ -26,7 +26,7 @@ import {
   ToastTitle,
 } from '~/components/ui/toast';
 
-const getUserProfile = async () => {
+const getUserProfile = cache(async () => {
   'use server';
   const error = await rateLimit();
   if (error) {
@@ -47,7 +47,7 @@ const getUserProfile = async () => {
     username: user.username,
     email: user.email,
   };
-};
+}, 'user-profile');
 
 export const route = {
   load: () => getUserProfile(),

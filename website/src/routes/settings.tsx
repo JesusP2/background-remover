@@ -27,6 +27,16 @@ export default function SettingsLayout(props: { children: JSX.Element }) {
             >
               Profile
             </A>
+            <A
+              class={
+                location.pathname === '/settings/account'
+                  ? selectedCss
+                  : unselectedCss
+              }
+              href="/settings/account"
+            >
+              Account
+            </A>
             <A class={unselectedCss} href="/">
               Go back
             </A>
@@ -37,13 +47,3 @@ export default function SettingsLayout(props: { children: JSX.Element }) {
     </>
   );
 }
-// <A
-//   class={
-//     location.pathname === '/settings/account'
-//       ? selectedCss
-//       : unselectedCss
-//   }
-//   href="/settings/account"
-// >
-//   Account
-// </A>
