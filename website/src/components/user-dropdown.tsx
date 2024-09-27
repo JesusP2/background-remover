@@ -13,19 +13,16 @@ import {
 import { signOutAction } from '~/lib/actions/signout';
 import { A } from '@solidjs/router';
 import { cn } from '~/lib/utils';
+import { Avatar, AvatarFallback } from './ui/avatar';
 
-export const UserDropdown = () => {
+export const UserDropdown = (props: { name: string }) => {
   return (
     <DropdownMenu placement="bottom">
       <DropdownMenuTrigger
-        as={(props: DropdownMenuSubTriggerProps) => (
-          <Button
-            variant="ghost"
-            class="font-gabarito font-light text-md"
-            {...props}
-          >
-            User
-          </Button>
+        as={(dropdownProps: DropdownMenuSubTriggerProps) => (
+          <Avatar {...dropdownProps}>
+            <AvatarFallback>{props.name.slice(0, 1)}</AvatarFallback>
+          </Avatar>
         )}
       />
       <DropdownMenuContent class="w-56">

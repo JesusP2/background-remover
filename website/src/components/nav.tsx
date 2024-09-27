@@ -6,7 +6,7 @@ import { cn } from '~/lib/utils';
 import { buttonVariants } from './ui/button';
 import { UserDropdown } from './user-dropdown';
 
-const getUserId = cache(async () => {
+const getUserInfo = cache(async () => {
   'use server';
   const error = await rateLimit();
   if (error) {
@@ -14,15 +14,17 @@ const getUserId = cache(async () => {
   }
   const req = getRequestEvent();
   if (!req?.locals.userId) return null;
-  return req.locals.userId;
+  return {
+    id: req.locals.user?.id,
+    name: req.locals.user?.name,
+  };
 }, 'session');
 
 export const route = {
-  load: () => getUserId(),
+  load: () => getUserInfo(),
 };
 export function Navbar(props: { route: string }) {
-  const userId = createAsync(() => getUserId());
-
+  const userInfo = createAsync(() => getUserInfo());
   const [isOpen, open] = createSignal(false);
   return (
     <header
@@ -89,7 +91,7 @@ export function Navbar(props: { route: string }) {
         </div>
         <div class="space-x-4 flex w-[153px] justify-end">
           <Switch>
-            <Match when={!userId()}>
+            <Match when={userInfo() === null}>
               <A
                 href="/auth/signin"
                 class={cn(
@@ -100,8 +102,10 @@ export function Navbar(props: { route: string }) {
                 Sign in
               </A>
             </Match>
-            <Match when={userId()}>
-              <UserDropdown />
+            {/*@ts-expect-error idk*/}
+            <Match when={userInfo() && ('id' in userInfo())}>
+              {/*@ts-expect-error idk*/}
+              <UserDropdown name={userInfo().name} />
             </Match>
           </Switch>
         </div>
