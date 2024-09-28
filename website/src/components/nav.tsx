@@ -76,20 +76,9 @@ export function Navbar(props: { route: string }) {
           >
             One shot
           </A>
-          <A
-            href="/releases"
-            class={cn(
-              buttonVariants({ variant: 'ghost' }),
-              'font-gabarito text-md text-zinc-600',
-              props.route === '/releases'
-                ? 'bg-accent text-accent-foreground'
-                : '',
-            )}
-          >
-            Releases
-          </A>
-          <A
-            href="/github"
+          <a
+            href="https://github.com/JesusP2/background-remover"
+            target="_self"
             class={cn(
               buttonVariants({ variant: 'ghost' }),
               'font-gabarito text-md text-zinc-600',
@@ -99,7 +88,7 @@ export function Navbar(props: { route: string }) {
             )}
           >
             Github
-          </A>
+          </a>
         </div>
         <div class="space-x-4 flex w-[153px] justify-end">
           <Switch>
@@ -115,7 +104,7 @@ export function Navbar(props: { route: string }) {
               </A>
             </Match>
             {/*@ts-expect-error idk*/}
-            <Match when={userInfo() && ('id' in userInfo())}>
+            <Match when={userInfo() && 'id' in userInfo()}>
               {/*@ts-expect-error idk*/}
               <UserDropdown name={userInfo().name} />
             </Match>
@@ -156,27 +145,27 @@ export function Navbar(props: { route: string }) {
           My Gallery
         </A>
         <A
-          href="/releases"
+          href="/one-shot"
           class={cn(
             buttonVariants({ variant: 'ghost' }),
             'font-gabarito text-md text-zinc-600',
-            props.route === '/releases'
+            props.route === '/one-shot'
               ? 'bg-accent text-accent-foreground'
               : '',
           )}
         >
-          Releases
+          One shot
         </A>
-        <A
-          href="/github"
+        <a
+          href="https://github.com/JesusP2/background-remover"
+          target="_self"
           class={cn(
             buttonVariants({ variant: 'ghost' }),
             'font-gabarito text-md text-zinc-600',
-            props.route === '/github' ? 'bg-accent text-accent-foreground' : '',
           )}
         >
           Github
-        </A>
+        </a>
       </div>
       <div
         class={cn(
@@ -184,15 +173,26 @@ export function Navbar(props: { route: string }) {
           isOpen() ? '' : 'hidden',
         )}
       >
-        <A
-          href="/auth/signin"
-          class={cn(
-            buttonVariants({ variant: 'ghost' }),
-            'font-gabarito text-md text-zinc-600',
-          )}
-        >
-          Sign in
-        </A>
+        <div class="space-x-4 flex justify-end">
+          <Switch>
+            <Match when={userInfo() === null}>
+              <A
+                href="/auth/signin"
+                class={cn(
+                  buttonVariants({ variant: 'ghost' }),
+                  'font-gabarito text-md text-zinc-600',
+                )}
+              >
+                Sign in
+              </A>
+            </Match>
+            {/*@ts-expect-error idk*/}
+            <Match when={userInfo() && 'id' in userInfo()}>
+              {/*@ts-expect-error idk*/}
+              <UserDropdown name={userInfo().name} />
+            </Match>
+          </Switch>
+        </div>
         <A
           href="/auth/signup"
           class={cn(
