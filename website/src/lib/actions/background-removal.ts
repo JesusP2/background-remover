@@ -32,6 +32,5 @@ export const removeBackgroundAction = action(async (file: File) => {
   const mask = await RawImage.fromTensor(
     output_image[0].sigmoid().mul(255).to('uint8'),
   ).resize(image.width, image.height);
-  const idk = await mask.toBlob('image/jpeg');
-  return idk;
+  return Buffer.from(mask.data)
 });

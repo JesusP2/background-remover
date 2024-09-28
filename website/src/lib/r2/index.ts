@@ -21,6 +21,7 @@ export async function uploadFile(buffer: Buffer, name: string) {
     Bucket: envs.R2_BUCKET,
     Key: name,
     Body: buffer,
+    ContentType: 'image/jpeg',
   });
 
   await client.send(command);

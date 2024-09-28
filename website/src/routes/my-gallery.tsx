@@ -99,7 +99,7 @@ export default function MyGallery() {
                   <img
                     src={image.source}
                     alt={image.name}
-                    class="max-w-[100%]  max-h-[100%] h-96 md:h-44 object-contain"
+                    class="max-w-[100%] max-h-[100%] h-96 md:h-44 object-contain"
                   />
                   <A
                     href={`/canvas/grabcut/${image.id}`}

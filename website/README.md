@@ -15,7 +15,6 @@
 
 [] implement the rest of the auth workflow
     [x] account page
-    [] passkeys
     [] rate limiting for emails
 [] add one-shot on the browser with birefnet-lite
 p add video about the editor, showing brushes
