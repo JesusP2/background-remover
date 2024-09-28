@@ -6,8 +6,6 @@ import {
   type Processor,
   RawImage,
 } from "@xenova/transformers";
-import { appendResponseHeader } from "vinxi/http";
-import { uploadFile } from "~/lib/r2";
 
 const model_id = "onnx-community/BiRefNet_lite";
 let model: PreTrainedModel;
@@ -19,10 +17,9 @@ export const GET: APIHandler = async () => {
   };
 };
 
-export const POST: APIHandler = async ({ request, response, nativeEvent }) => {
+export const POST: APIHandler = async ({ request, nativeEvent }) => {
   const formData = await request.formData();
 
-  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
   const file = formData.get("file") as File;
   if (!model) {
     model = await AutoModel.from_pretrained(model_id, {

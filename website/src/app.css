@@ -183,24 +183,23 @@ body {
 }
 
 .image-slider {
-    margin-left: 3rem;
     position: relative;
+    overflow: hidden;
     display: inline-block;
     line-height: 0;
 }
 
 .image-slider img {
     user-select: none;
-    max-width: 700px;
+    max-width: 500px;
 }
 
 .image-slider > div {
     position: absolute;
-    width: 25px;
+    width: 50px;
     max-width: 100%;
     overflow: hidden;
 }
-
 
 .handle {
   position: absolute;
@@ -236,5 +235,17 @@ body {
 @media (max-width: 768px) {
   :root {
     --image-comparison-slider-width: 90vw;
+  }
+
+  .image-slider img {
+      user-select: none;
+      max-width: 400px;
+  }
+}
+
+@media (max-width: 550px) {
+  .image-slider img {
+      user-select: none;
+      max-width: 300px;
   }
 }

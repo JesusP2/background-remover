@@ -65,6 +65,18 @@ export function Navbar(props: { route: string }) {
             My Gallery
           </A>
           <A
+            href="/one-shot"
+            class={cn(
+              buttonVariants({ variant: 'ghost' }),
+              'font-gabarito text-md text-zinc-600',
+              props.route === '/one-shot'
+                ? 'bg-accent text-accent-foreground'
+                : '',
+            )}
+          >
+            One shot
+          </A>
+          <A
             href="/releases"
             class={cn(
               buttonVariants({ variant: 'ghost' }),
