@@ -191,7 +191,6 @@ body {
 
 .image-slider img {
     user-select: none;
-    max-width: 500px;
 }
 
 .image-slider > div {
@@ -235,17 +234,5 @@ body {
 @media (max-width: 768px) {
   :root {
     --image-comparison-slider-width: 90vw;
-  }
-
-  .image-slider img {
-      user-select: none;
-      max-width: 400px;
-  }
-}
-
-@media (max-width: 550px) {
-  .image-slider img {
-      user-select: none;
-      max-width: 300px;
   }
 }

@@ -1,8 +1,10 @@
-import { Match, Switch, createEffect, createSignal } from 'solid-js';
+import { AiOutlineLoading } from 'solid-icons/ai';
+import { Match, Switch, createEffect, createSignal, onMount } from 'solid-js';
 import { DropZone } from '~/components/dropzone';
 import { Navbar } from '~/components/nav';
-import { Button } from '~/components/ui/button';
+import { Button, buttonVariants } from '~/components/ui/button';
 import { fileToImage } from '~/hooks/use-grabcut-canvas/utils';
+import { cn } from '~/lib/utils';
 import { downscaleImage, removeBackground } from '~/lib/utils/image';
 
 export default function Page() {
@@ -10,6 +12,24 @@ export default function Page() {
     null,
   );
   const [newFileUrl, setNewFileUrl] = createSignal<null | string>(null);
+  const [fileName, setFileName] = createSignal<null | string>(null);
+  const [windowSize, setWindowSize] = createSignal({
+    height: 0,
+    width: 0,
+  });
+
+  onMount(() => {
+    setWindowSize({
+      height: window.innerHeight,
+      width: window.innerWidth,
+    });
+    window.addEventListener('resize', () => {
+      setWindowSize({
+        height: window.innerHeight,
+        width: window.innerWidth,
+      });
+    });
+  });
   createEffect(() => {
     if (newFileUrl() === null) return;
     const slider = document.querySelector<HTMLElement>('.image-slider');
@@ -28,6 +48,7 @@ export default function Page() {
       const sliderWidth = slider?.clientWidth;
       const sliderHandleWidth = sliderHandle?.clientWidth;
 
+      // @ts-expect-error idk
       let mouseX = (event.clientX || event.touches[0].clientX) - sliderLeftX;
       if (mouseX < 0) mouseX = 0;
       else if (mouseX > sliderWidth) mouseX = sliderWidth;
@@ -64,14 +85,15 @@ export default function Page() {
       <div class="grid place-items-center my-10">
         <Switch>
           <Match when={originalFileUrl() === null}>
-            <div class="max-w-3xl w-full">
-              <h1 class="font-gabarito lg:text-6xl md:text-5xl sm:text-4xl text-3xl font-semibold">
+            <div class="max-w-3xl w-full px-10">
+              <h1 class="font-gabarito md:text-5xl sm:text-4xl text-3xl font-semibold">
                 Background remover
               </h1>
               <DropZone
                 class="mt-4"
                 onFileChange={async (file) => {
                   const downscaledImage = await downscaleImage(file, 3840);
+                  setFileName(file.name);
                   setOriginalFileUrl(URL.createObjectURL(downscaledImage));
                   const formData = new FormData();
                   formData.set('file', downscaledImage);
@@ -85,7 +107,7 @@ export default function Page() {
                     return;
                   }
                   const data = await res.blob();
-                  const mask = new File([data], downscaledImage.name, {
+                  const mask = new File([data], file.name, {
                     type: 'image/jpeg',
                   });
                   const newImg = await removeBackground(
@@ -98,13 +120,53 @@ export default function Page() {
               />
             </div>
           </Match>
+          <Match
+            when={
+              typeof originalFileUrl() === 'string' && newFileUrl() === null
+            }
+          >
+            <div class="relative">
+              <img
+                alt="loading"
+                style={{
+                  'max-height': `${(windowSize().height / 5) * 3}px`,
+                  'max-width': `${windowSize().width - 80}px`,
+                }}
+                src={originalFileUrl() ?? ''}
+              />
+              <div
+                class="absolute top-0 grid place-items-center bg-white/30 w-full h-full backdrop-blur-sm"
+                style={{
+                  'max-height': `${(windowSize().height / 5) * 3}px`,
+                  'max-width': `${windowSize().width - 80}px`,
+                }}
+              >
+                <AiOutlineLoading size={50} class="animate-spin text-white" />
+              </div>
+            </div>
+          </Match>
           <Match when={typeof newFileUrl() === 'string'}>
             <div>
-              <div class="image-slider svg-bg max-h-[70%]">
+              <div class="image-slider svg-bg">
                 <div class="image-wrapper">
-                  <img src={originalFileUrl() ?? ''} alt="GFG_Image" />
+                  <img
+                    src={originalFileUrl() ?? ''}
+                    alt="original"
+                    style={{
+                      'max-height': `${(windowSize().height / 5) * 3}px`,
+                      'max-width': `${windowSize().width - 80}px`,
+                    }}
+                  />
                 </div>
-                <img src={newFileUrl() ?? ''} alt="GFG_Image" class="z-0" />
+                <img
+                  src={newFileUrl() ?? ''}
+                  alt="backgroundless"
+                  class="z-0"
+                  style={{
+                    'max-height': `${(windowSize().height / 5) * 3}px`,
+                    'max-width': `${windowSize().width - 80}px`,
+                  }}
+                />
                 <div class="handle">
                   <div class="handle-line" />
                   <div class="handle-circle">
@@ -115,8 +177,23 @@ export default function Page() {
                 </div>
               </div>
               <div class="flex flex-col gap-y-4 items-center">
-                <Button class="w-40">Go back</Button>
-                <Button class="w-40">Download</Button>
+                <Button
+                  class="w-40"
+                  onClick={() => {
+                    setNewFileUrl(null);
+                    setOriginalFileUrl(null);
+                  }}
+                >
+                  Go back
+                </Button>
+                <a
+                  target="_self"
+                  class={cn(buttonVariants({ variant: 'default' }), 'w-40')}
+                  download={fileName() ?? ''}
+                  href={newFileUrl() ?? ''}
+                >
+                  Download
+                </a>
               </div>
             </div>
           </Match>
