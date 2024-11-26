@@ -1,5 +1,5 @@
 import { A, cache, createAsync } from '@solidjs/router';
-import { Match, Switch, createSignal } from 'solid-js';
+import { Match, Show, Switch, createSignal } from 'solid-js';
 import { getRequestEvent } from 'solid-js/web';
 import { rateLimit } from '~/lib/rate-limiter';
 import { cn } from '~/lib/utils';
@@ -52,18 +52,20 @@ export function Navbar(props: { route: string }) {
           >
             Home
           </A>
-          <A
-            href="/my-gallery"
-            class={cn(
-              buttonVariants({ variant: 'ghost' }),
-              'font-gabarito text-md text-zinc-600',
-              props.route === '/my-gallery'
-                ? 'bg-accent text-accent-foreground'
-                : '',
-            )}
-          >
-            My Gallery
-          </A>
+          <Show when={userInfo() !== null}>
+            <A
+              href="/my-gallery"
+              class={cn(
+                buttonVariants({ variant: 'ghost' }),
+                'font-gabarito text-md text-zinc-600',
+                props.route === '/my-gallery'
+                  ? 'bg-accent text-accent-foreground'
+                  : '',
+              )}
+            >
+              My Gallery
+            </A>
+          </Show>
           <A
             href="/one-shot"
             class={cn(
@@ -132,18 +134,20 @@ export function Navbar(props: { route: string }) {
         >
           Home
         </A>
-        <A
-          href="/my-gallery"
-          class={cn(
-            buttonVariants({ variant: 'ghost' }),
-            'font-gabarito text-md text-zinc-600',
-            props.route === '/my-gallery'
-              ? 'bg-accent text-accent-foreground'
-              : '',
-          )}
-        >
-          My Gallery
-        </A>
+        <Show when={userInfo() !== null}>
+          <A
+            href="/my-gallery"
+            class={cn(
+              buttonVariants({ variant: 'ghost' }),
+              'font-gabarito text-md text-zinc-600',
+              props.route === '/my-gallery'
+                ? 'bg-accent text-accent-foreground'
+                : '',
+            )}
+          >
+            My Gallery
+          </A>
+        </Show>
         <A
           href="/one-shot"
           class={cn(

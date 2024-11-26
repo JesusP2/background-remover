@@ -16,12 +16,10 @@
 [] implement the rest of the auth workflow
     [x] account page
     [] rate limiting for emails
-[] add one-shot on the browser with birefnet-lite
-p add video about the editor, showing brushes
 [] one-shot:
-    [] free
-    [] no login required
-    [] truncate images at max 4k
+    [x] free
+    [x] no login required
+    [x] truncate images at max 4k
     [] not store anything if user is not logged in, store if user is logged in
     [] give the option to open it in the editor at the end
 

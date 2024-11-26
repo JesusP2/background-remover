@@ -42,7 +42,7 @@ export const updateProfileAction = action(async (formData: FormData) => {
     });
     const submission = schema.safeParse({
       name: formData.get("name"),
-      email: formData.get("email"),
+      email: formData.get("email") || null,
     });
     if (!submission.success) {
       return {
@@ -58,11 +58,11 @@ export const updateProfileAction = action(async (formData: FormData) => {
     if (user.isOauth) {
       submission.data.email = null;
     }
-    const isNameBeingUpdated = submission.data.name !== user.name;
-    const isEmailBeingUpdated =
+    const isUpdatingName = submission.data.name !== user.name;
+    const isUpdatingEmail =
       typeof submission.data.email === "string" &&
       submission.data.email !== user.email;
-    if (isEmailBeingUpdated) {
+    if (isUpdatingEmail) {
       const [user] = await db
         .select()
         .from(userTable)
@@ -80,7 +80,7 @@ export const updateProfileAction = action(async (formData: FormData) => {
     }
     const code = generateRandomString(6, alphabet("0-9"));
     await db.transaction(async (tx) => {
-      if (isNameBeingUpdated) {
+      if (isUpdatingName) {
         await tx
           .update(userTable)
           .set({
@@ -88,7 +88,7 @@ export const updateProfileAction = action(async (formData: FormData) => {
           })
           .where(eq(userTable.id, user.id));
       }
-      if (isEmailBeingUpdated) {
+      if (isUpdatingEmail) {
         await tx
           .delete(emailVerificationTable)
           .where(eq(emailVerificationTable.userId, user.id));
@@ -101,7 +101,7 @@ export const updateProfileAction = action(async (formData: FormData) => {
         });
       }
     });
-    if (isEmailBeingUpdated) {
+    if (isUpdatingEmail) {
       await sendEmail(
         submission.data.email as string,
         "Verify email",
@@ -112,11 +112,12 @@ export const updateProfileAction = action(async (formData: FormData) => {
         envs.EMAIL_FROM,
       );
       const fields = ['email']
-      if (isNameBeingUpdated) fields.push('name')
+      if (isUpdatingName) fields.push('name')
       return {
         fields,
       }
     }
+    console.log('completed')
     return {
       fields: ['name']
     };

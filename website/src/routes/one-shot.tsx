@@ -1,5 +1,7 @@
 import { AiOutlineLoading } from 'solid-icons/ai';
+import { IoClose } from 'solid-icons/io';
 import { Match, Switch, createEffect, createSignal, onMount } from 'solid-js';
+import { VsChevronLeft, VsChevronRight } from 'solid-icons/vs';
 import { DropZone } from '~/components/dropzone';
 import { Navbar } from '~/components/nav';
 import { Button, buttonVariants } from '~/components/ui/button';
@@ -37,6 +39,9 @@ export default function Page() {
       document.querySelector<HTMLElement>('.image-wrapper');
     const sliderHandle = document.querySelector<HTMLElement>('.handle');
 
+    if (sliderImgWrapper) {
+      sliderImgWrapper.style.width = '50%';
+    }
     slider?.addEventListener('mousemove', sliderMouseMove);
     slider?.addEventListener('touchmove', sliderMouseMove);
 
@@ -83,12 +88,15 @@ export default function Page() {
     <>
       <Navbar route="/one-shot" />
       <div class="grid place-items-center my-10">
+        <h1 class="font-gabarito md:text-5xl sm:text-4xl text-3xl font-semibold text-center">
+          Background remover
+        </h1>
+        <p class="text-lg text-gray-600 text-center my-4 mb-10">
+          Upload your image and we'll magically remove the background for you
+        </p>
         <Switch>
           <Match when={originalFileUrl() === null}>
             <div class="max-w-3xl w-full px-10">
-              <h1 class="font-gabarito md:text-5xl sm:text-4xl text-3xl font-semibold">
-                Background remover
-              </h1>
               <DropZone
                 class="mt-4"
                 onFileChange={async (file) => {
@@ -134,15 +142,19 @@ export default function Page() {
                 }}
                 src={originalFileUrl() ?? ''}
               />
-              <div
-                class="absolute top-0 grid place-items-center bg-white/30 w-full h-full backdrop-blur-sm"
-                style={{
-                  'max-height': `${(windowSize().height / 5) * 3}px`,
-                  'max-width': `${windowSize().width - 80}px`,
+              <button
+                onClick={() => {
+                  setNewFileUrl(null);
+                  setOriginalFileUrl(null);
                 }}
+                class="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
               >
-                <AiOutlineLoading size={50} class="animate-spin text-white" />
-              </div>
+                <IoClose class="w-4 h-4" />
+              </button>
+            </div>
+            <div class="flex items-center gap-2 text-blue-600">
+              <AiOutlineLoading size={50} class="animate-spin text-white" />
+              <span class="font-medium">Processing your image...</span>
             </div>
           </Match>
           <Match when={typeof newFileUrl() === 'string'}>
@@ -161,7 +173,6 @@ export default function Page() {
                 <img
                   src={newFileUrl() ?? ''}
                   alt="backgroundless"
-                  class="z-0"
                   style={{
                     'max-height': `${(windowSize().height / 5) * 3}px`,
                     'max-width': `${windowSize().width - 80}px`,
@@ -170,8 +181,8 @@ export default function Page() {
                 <div class="handle">
                   <div class="handle-line" />
                   <div class="handle-circle">
-                    <i class="fas fa-chevron-left" />
-                    <i class="fas fa-chevron-right" />
+                    <VsChevronLeft size={25} />
+                    <VsChevronRight size={25} />
                   </div>
                   <div class="handle-line" />
                 </div>
@@ -184,7 +195,7 @@ export default function Page() {
                     setOriginalFileUrl(null);
                   }}
                 >
-                  Go back
+                  Select new Image
                 </Button>
                 <a
                   target="_self"

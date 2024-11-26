@@ -24,11 +24,11 @@ export default function Page() {
   return (
     <div>
       <Navbar route="/" />
-      <main class="grid place-items-center gap-y-10 mt-10 px-4 max-w-7xl mx-auto">
+      <main class="grid place-items-center gap-y-10 mt-10 px-4 max-w-7xl mx-auto h-[20vh] overflow-hidden">
         <h1 class="font-gabarito lg:text-6xl md:text-5xl sm:text-4xl text-3xl font-semibold z-10">
           Background Removal App
         </h1>
-        <div class="group z-10 w-[153px]">
+        <div class="group z-10">
           <Dialog
             onOpenChange={() => {
               setEditorSelected(false);
@@ -99,10 +99,11 @@ export default function Page() {
             </DialogContentWithoutClose>
           </Dialog>
         </div>
+        <img src="/img-without-bg-2.jpeg" alt="img-without-bg-2" class="absolute" />
         <img
           src="/collage.png"
           alt="collage"
-          class="relative sm:top-[-130px]"
+          class="absolute sm:top-[-130px]"
         />
       </main>
     </div>
