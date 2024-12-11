@@ -518,7 +518,7 @@ export function useGrabcutCanvas({
     if (window.TouchEvent && event instanceof TouchEvent) {
       mouse.button = 0;
       const { sourceCtx } = getCanvas();
-      trackMousePosition(sourceCtx);
+      trackMousePosition(sourceCtx, event);
       if (currentMode().startsWith('SAM')) {
         const { sourceCtx } = getCanvas();
         executeDrawingAction(sourceCtx);
@@ -532,7 +532,10 @@ export function useGrabcutCanvas({
     }
   }
 
-  function trackMousePosition(sourceCtx: CanvasRenderingContext2D) {
+  function trackMousePosition(
+    sourceCtx: CanvasRenderingContext2D,
+    event: MouseEvent | TouchEvent,
+  ) {
     let pageX = 0;
     let pageY = 0;
     if (window.TouchEvent && event instanceof TouchEvent) {
@@ -551,14 +554,14 @@ export function useGrabcutCanvas({
     mouse.oldX = mouse.x;
     mouse.oldY = mouse.y;
     const canvasRect = sourceCtx.canvas.getBoundingClientRect();
-    mouse.x = pageX - canvasRect.left;
-    mouse.y = pageY - canvasRect.top;
+    mouse.x = Math.round(pageX - canvasRect.left);
+    mouse.y = Math.round(pageY - canvasRect.top);
   }
 
   function mousemove(event: MouseEvent | TouchEvent) {
     event.preventDefault();
     const { sourceCtx } = getCanvas();
-    trackMousePosition(sourceCtx);
+    trackMousePosition(sourceCtx, event);
     if (mouse.button === null) return;
     if (mouse.button === 1 || currentMode() === 'move') {
       const deltaX = mouse.x - mouse.oldX;

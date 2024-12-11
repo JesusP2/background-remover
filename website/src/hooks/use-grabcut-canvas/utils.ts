@@ -1,12 +1,12 @@
 const TRUNCATE_AT = 200;
 export type GrabcutActionType =
-  | 'move'
-  | 'draw-green'
-  | 'draw-red'
-  | 'draw-yellow'
-  | 'SAM-add-area'
-  | 'SAM-remove-area'
-  | 'erase';
+  | "move"
+  | "draw-green"
+  | "draw-red"
+  | "draw-yellow"
+  | "SAM-add-area"
+  | "SAM-remove-area"
+  | "erase";
 export type GrabcutAction = {
   id: string;
   type: GrabcutActionType;
@@ -20,9 +20,9 @@ export type GrabcutAction = {
 };
 
 export const grabcutColors = {
-  'draw-green': '#41fa5d',
-  'draw-red': '#fa4150',
-  'draw-yellow': '#fafa41',
+  "draw-green": "#41fa5d",
+  "draw-red": "#fa4150",
+  "draw-yellow": "#fafa41",
 } as Record<GrabcutActionType, string>;
 
 export async function urlToImage(
@@ -45,7 +45,7 @@ export async function urlToImage(
       };
     },
   );
-  if (typeof base64 !== 'string') {
+  if (typeof base64 !== "string") {
     return null;
   }
   return base64ToImage(base64).catch(() => null);
@@ -80,7 +80,7 @@ export function fileToImage(file: File | Blob): Promise<HTMLImageElement> {
     reader.readAsDataURL(file);
     reader.onload = () => {
       const img = new Image();
-      if (typeof reader.result !== 'string') return;
+      if (typeof reader.result !== "string") return;
       img.src = reader.result;
       img.onload = () => {
         resolve(img);
@@ -91,7 +91,7 @@ export function fileToImage(file: File | Blob): Promise<HTMLImageElement> {
 
 export function imageToCanvas(img: HTMLImageElement) {
   const canvas = new OffscreenCanvas(img.width, img.height);
-  const ctx = canvas.getContext('2d') as OffscreenCanvasRenderingContext2D;
+  const ctx = canvas.getContext("2d") as OffscreenCanvasRenderingContext2D;
   ctx.drawImage(img, 0, 0);
   return canvas;
 }
@@ -107,13 +107,13 @@ export async function canvasToFile(
 }
 
 export function getCanvas() {
-  const sourceCanvas = document.querySelector<HTMLCanvasElement>('#source');
-  const sourceCtx = sourceCanvas?.getContext('2d');
+  const sourceCanvas = document.querySelector<HTMLCanvasElement>("#source");
+  const sourceCtx = sourceCanvas?.getContext("2d");
   const destinationCanvas =
-    document.querySelector<HTMLCanvasElement>('#destination');
-  const destinationCtx = destinationCanvas?.getContext('2d');
+    document.querySelector<HTMLCanvasElement>("#destination");
+  const destinationCtx = destinationCanvas?.getContext("2d");
   if (!sourceCtx || !sourceCanvas || !destinationCanvas || !destinationCtx) {
-    throw new Error('Canvas not found');
+    throw new Error("Canvas not found");
   }
   return { sourceCtx, destinationCtx };
 }
@@ -160,22 +160,22 @@ function bresenhamAlgorithm(
   endX: number,
   endY: number,
 ) {
-  const deltaCol = Math.abs(endX - startX); // zero or positive number
-  const deltaRow = Math.abs(endY - startY); // zero or positive number
+  const deltaCol = Math.abs(endX - startX);
+  const deltaRow = Math.abs(endY - startY);
 
   let pointX = startX;
   let pointY = startY;
 
   const horizontalStep = startX < endX ? 1 : -1;
-
   const verticalStep = startY < endY ? 1 : -1;
 
   const points = [];
 
   let difference = deltaCol - deltaRow;
 
-  while (true) {
-    const doubleDifference = 2 * difference; // necessary to store this value
+  while (pointX !== endX || pointY !== endY) {
+    const doubleDifference = 2 * difference;
+
     if (doubleDifference > -deltaRow) {
       difference -= deltaRow;
       pointX += horizontalStep;
@@ -184,9 +184,7 @@ function bresenhamAlgorithm(
       difference += deltaCol;
       pointY += verticalStep;
     }
-    if (pointX === endX && pointY === endY) {
-      break;
-    } // doesnt include the end point
+    
     points.push({ x: pointX, y: pointY });
   }
 
@@ -200,7 +198,7 @@ export function drawStroke(
 ) {
   ctx.fillStyle = grabcutColors[action.type];
   let size = 0;
-  if (action.type === 'draw-yellow') {
+  if (action.type === "draw-yellow") {
     if (action.scale < 0.3) {
       size = 50;
     } else if (action.scale < 1) {
@@ -320,14 +318,14 @@ const strokeCircle = ({
 
 export function getDataPoints(actions: GrabcutAction[]) {
   const positive_points = actions
-    .filter((action) => action.type === 'draw-green')
+    .filter((action) => action.type === "draw-green")
     .map((action) => {
       const x = action.oldX / action.scale - action.pos.x / action.scale;
       const y = action.oldY / action.scale - action.pos.y / action.scale;
       return [x, y];
     });
   const negative_points = actions
-    .filter((action) => action.type === 'draw-red')
+    .filter((action) => action.type === "draw-red")
     .map((action) => {
       const x = action.oldX / action.scale - action.pos.x / action.scale;
       const y = action.oldY / action.scale - action.pos.y / action.scale;
