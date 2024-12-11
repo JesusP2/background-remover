@@ -1,5 +1,5 @@
 import { AiOutlineLoading } from 'solid-icons/ai';
-import { Match, Show, Switch, createSignal } from 'solid-js';
+import { Match, Show, Switch, createSignal, onMount } from 'solid-js';
 import { GrabcutActionsMenu } from '~/components/grabcut-actions-menu';
 import { useGrabcutCanvas } from '~/hooks/use-grabcut-canvas';
 import { drawStroke } from '~/hooks/use-grabcut-canvas/utils';
@@ -36,6 +36,11 @@ export function Canvases(props: { img: SelectImage }) {
     samMaskUrl: props.img.samMask,
     drawStroke: drawStroke,
     canvasLayout: canvasLayout,
+  });
+  onMount(() => {
+    if (window.innerWidth < 600) {
+      setCanvasLayout('mask');
+    }
   });
   return (
     <>
@@ -98,6 +103,12 @@ export function Canvases(props: { img: SelectImage }) {
             canvasLayout() !== 'both' && setCanvasLayout('result')
           }
           onmouseleave={() =>
+            canvasLayout() !== 'both' && setCanvasLayout('mask')
+          }
+          onTouchStart={() =>
+            canvasLayout() !== 'both' && setCanvasLayout('result')
+          }
+          onTouchEnd={() =>
             canvasLayout() !== 'both' && setCanvasLayout('mask')
           }
           class="absolute top-14 right-2 text-white bg-blue-500 py-1 px-4 rounded-sm w-20 hover:bg-blue-600 hover:w-28 duration-100 ease-in-out"

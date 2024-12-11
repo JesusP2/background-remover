@@ -1,60 +1,23 @@
 import { type ComponentProps, createSignal, splitProps } from 'solid-js';
+import { useDraggable } from '~/hooks/use-dragabble';
 import { cn } from '~/lib/utils';
 
 export function Draggable(props: ComponentProps<'div'>) {
   const [local, rest] = splitProps(props, ['class', 'children']);
-  const [mouse, setMouse] = createSignal({
-    dragging: false,
+  const [position, setPosition] = createSignal({
     x: 0,
     y: 0,
-    mouseX: 0,
-    mouseY: 0,
   });
+  const { handleMouseDown } = useDraggable({ position, setPosition });
 
   return (
     <div
       {...rest}
-      onMouseDown={(e) => {
-        setMouse((prev) => ({
-          ...prev,
-          dragging: true,
-          mouseX: e.clientX,
-          mouseY: e.clientY,
-        }));
-      }}
-      onMouseUp={() => {
-        setMouse((prev) => ({
-          ...prev,
-          dragging: false,
-        }));
-      }}
-      onMouseLeave={() => {
-        setMouse((prev) => ({
-          ...prev,
-          dragging: false,
-        }));
-      }}
-      onMouseMove={(e) => {
-        if (mouse().dragging) {
-          setMouse((prev) => ({
-            dragging: true,
-            y: Math.min(
-              Math.max(prev.y + e.clientY - prev.mouseY, 0),
-              window.innerHeight,
-            ),
-            x: Math.min(
-              Math.max(prev.x + e.clientX - prev.mouseX, 0),
-              window.innerWidth,
-            ),
-            mouseX: e.clientX,
-            mouseY: e.clientY,
-          }));
-        }
-      }}
+      onMouseDown={handleMouseDown}
       class={cn('absolute', local.class)}
       style={{
-        top: `${mouse().y}px`,
-        left: `${mouse().x}px`,
+        top: `${position().y}px`,
+        left: `${position().x}px`,
       }}
     >
       {local.children}

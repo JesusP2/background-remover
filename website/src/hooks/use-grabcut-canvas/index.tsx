@@ -506,39 +506,68 @@ export function useGrabcutCanvas({
     return canvas;
   }
 
-  function mouseup(event: MouseEvent) {
+  function mouseup(event: MouseEvent | TouchEvent) {
     event.preventDefault();
     mouse.button = null;
     saveSnapshot();
   }
 
-  function mousedown(event: MouseEvent) {
+  function mousedown(event: MouseEvent | TouchEvent) {
     event.preventDefault();
-    mouse.button = event.button;
     currentId = ulid();
-    // extra check just to not trigger SAM actions on mousemove
-    if (currentMode().startsWith('SAM') && event.button === 0) {
+    if (window.TouchEvent && event instanceof TouchEvent) {
+      mouse.button = 0;
       const { sourceCtx } = getCanvas();
-      executeDrawingAction(sourceCtx);
+      trackMousePosition(sourceCtx);
+      if (currentMode().startsWith('SAM')) {
+        const { sourceCtx } = getCanvas();
+        executeDrawingAction(sourceCtx);
+      }
+    } else if (window.MouseEvent && event instanceof MouseEvent) {
+      mouse.button = event.button;
+      if (currentMode().startsWith('SAM') && event.button === 0) {
+        const { sourceCtx } = getCanvas();
+        executeDrawingAction(sourceCtx);
+      }
     }
   }
 
-  function mousemove(event: MouseEvent) {
-    event.preventDefault();
-    const { sourceCtx } = getCanvas();
+  function trackMousePosition(sourceCtx: CanvasRenderingContext2D) {
+    let pageX = 0;
+    let pageY = 0;
+    if (window.TouchEvent && event instanceof TouchEvent) {
+      // Make sure there's at least one touch
+      if (event.touches.length > 0) {
+        const touch = event.touches[0]; // Use the first touch
+        pageX = touch.pageX;
+        pageY = touch.pageY;
+      } else {
+        return;
+      }
+    } else if (event instanceof MouseEvent) {
+      pageX = event.pageX;
+      pageY = event.pageY;
+    }
     mouse.oldX = mouse.x;
     mouse.oldY = mouse.y;
-    mouse.x = event.pageX - sourceCtx.canvas.offsetLeft;
-    mouse.y = event.pageY - sourceCtx.canvas.offsetTop;
+    const canvasRect = sourceCtx.canvas.getBoundingClientRect();
+    mouse.x = pageX - canvasRect.left;
+    mouse.y = pageY - canvasRect.top;
+  }
+
+  function mousemove(event: MouseEvent | TouchEvent) {
+    event.preventDefault();
+    const { sourceCtx } = getCanvas();
+    trackMousePosition(sourceCtx);
     if (mouse.button === null) return;
-    if (mouse.button === 1) {
-      pan({ x: mouse.x - mouse.oldX, y: mouse.y - mouse.oldY });
-      redrawEverything();
-      return;
-    }
-    if (currentMode() === 'move') {
-      pan({ x: mouse.x - mouse.oldX, y: mouse.y - mouse.oldY });
-      redrawEverything();
+    if (mouse.button === 1 || currentMode() === 'move') {
+      const deltaX = mouse.x - mouse.oldX;
+      const deltaY = mouse.y - mouse.oldY;
+
+      if (deltaX !== 0 || deltaY !== 0) {
+        pan({ x: deltaX, y: deltaY });
+        redrawEverything();
+      }
       return;
     }
     // extra check just to not trigger SAM actions on mousemove
@@ -659,21 +688,14 @@ export function useGrabcutCanvas({
     canvas: HTMLCanvasElement,
     type: 'source' | 'destination',
   ) {
-    canvas.addEventListener('mousemove', mousemove, {
-      passive: false,
-    });
-    canvas.addEventListener('mousedown', mousedown, {
-      passive: false,
-    });
-    canvas.addEventListener('mouseup', mouseup, {
-      passive: false,
-    });
-    canvas.addEventListener('mouseout', mouseup, {
-      passive: false,
-    });
-    canvas.addEventListener('wheel', (e) => mouseWheelEvent(e, type), {
-      passive: false,
-    });
+    canvas.addEventListener('mousemove', mousemove);
+    canvas.addEventListener('mousedown', mousedown);
+    canvas.addEventListener('mouseup', mouseup);
+    canvas.addEventListener('mouseout', mouseup);
+    canvas.addEventListener('touchmove', mousemove);
+    canvas.addEventListener('touchstart', mousedown);
+    canvas.addEventListener('touchend', mouseup);
+    canvas.addEventListener('wheel', (e) => mouseWheelEvent(e, type));
   }
 
   async function saveResult(name: string) {
