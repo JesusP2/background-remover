@@ -98,23 +98,21 @@ export function Canvases(props: { img: SelectImage }) {
         </Switch>
       </Draggable>
       <Show when={canvasLayout() !== 'both'}>
-        <button
-          onmouseenter={() =>
-            canvasLayout() !== 'both' && setCanvasLayout('result')
-          }
-          onmouseleave={() =>
-            canvasLayout() !== 'both' && setCanvasLayout('mask')
-          }
-          onTouchStart={() =>
-            canvasLayout() !== 'both' && setCanvasLayout('result')
-          }
-          onTouchEnd={() =>
-            canvasLayout() !== 'both' && setCanvasLayout('mask')
-          }
-          class="absolute top-14 right-2 text-white bg-blue-500 py-1 px-4 rounded-sm w-20 hover:bg-blue-600 hover:w-28 duration-100 ease-in-out"
+        <div
+          onmouseover={() => setCanvasLayout('result')}
+          onmouseup={() => setCanvasLayout('mask')}
+          onmouseout={() => setCanvasLayout('mask')}
+          onmouseleave={() => setCanvasLayout('mask')}
+          ontouchstart={() => setCanvasLayout('result')}
+          ontouchend={() => setCanvasLayout('mask')}
+          ontouchcancel={() => setCanvasLayout('mask')}
+          class={cn(
+            'absolute top-14 right-2 text-white bg-blue-500 py-1 px-4 rounded-sm w-20 duration-100 ease-in-out text-center',
+            canvasLayout() === 'mask' ? '' : 'bg-blue-600 w-28',
+          )}
         >
           {canvasLayout() === 'mask' ? 'Source' : 'Result'}
-        </button>
+        </div>
       </Show>
       <canvas
         hidden={canvasLayout() === 'result'}

@@ -1,4 +1,3 @@
-import { createSelectableItem } from '@kobalte/core/*';
 import { A, useAction, useNavigate } from '@solidjs/router';
 import { Match, Show, Switch, batch, createSignal, onMount } from 'solid-js';
 import { ulid } from 'ulidx';
