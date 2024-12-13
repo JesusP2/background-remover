@@ -5,6 +5,9 @@ module.exports = {
   content: ["src/routes/**/*.{ts,tsx}", "src/components/**/*.{ts,tsx}"],
   prefix: "",
   theme: {
+    screens: {
+      xs: "550px",
+    },
     container: {
       center: true,
       padding: "2rem",
@@ -14,7 +17,7 @@ module.exports = {
     },
     extend: {
       screens: {
-        mid: '850px',
+        mid: "850px",
       },
       colors: {
         border: "hsl(var(--border))",
@@ -81,15 +84,15 @@ module.exports = {
         },
         "caret-blink": {
           "0%,70%,100%": { opacity: "1" },
-          "20%,50%": { opacity: "0" }
-        }
+          "20%,50%": { opacity: "0" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         "collapsible-down": "collapsible-down 0.2s ease-out",
         "collapsible-up": "collapsible-up 0.2s ease-out",
-        "caret-blink": "caret-blink 1.25s ease-out infinite"
+        "caret-blink": "caret-blink 1.25s ease-out infinite",
       },
     },
   },
