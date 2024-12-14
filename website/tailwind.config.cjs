@@ -5,9 +5,6 @@ module.exports = {
   content: ["src/routes/**/*.{ts,tsx}", "src/components/**/*.{ts,tsx}"],
   prefix: "",
   theme: {
-    screens: {
-      xs: "550px",
-    },
     container: {
       center: true,
       padding: "2rem",
@@ -18,6 +15,7 @@ module.exports = {
     extend: {
       screens: {
         mid: "850px",
+        xs: "550px",
       },
       colors: {
         border: "hsl(var(--border))",
