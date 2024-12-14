@@ -1,6 +1,6 @@
 import { toaster } from '@kobalte/core';
 import { A, cache, createAsync, useSubmission } from '@solidjs/router';
-import { and, eq, isNull } from 'drizzle-orm';
+import { and, asc, eq, isNull } from 'drizzle-orm';
 import { BsArchive } from 'solid-icons/bs';
 import { Show, createEffect } from 'solid-js';
 import { For, getRequestEvent } from 'solid-js/web';
@@ -31,7 +31,8 @@ const getGallery = cache(async () => {
   const userImages = await db
     .select()
     .from(imageTable)
-    .where(and(eq(imageTable.userId, userId), isNull(imageTable.deleted)));
+    .where(and(eq(imageTable.userId, userId), isNull(imageTable.deleted)))
+    .orderBy(asc(imageTable.createdAt));
 
   const userImagesPromises = userImages.map(async (image) => {
     const imagesResults = await Promise.allSettled([
@@ -48,6 +49,7 @@ const getGallery = cache(async () => {
     };
   });
   const userImagesResults = await Promise.allSettled(userImagesPromises);
+  userImagesResults.reverse();
   return userImagesResults
     .filter((result) => result.status === 'fulfilled')
     .map((result) => result.value);
