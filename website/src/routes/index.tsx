@@ -15,6 +15,7 @@ import { uploadImageAction } from '~/lib/actions/init-image-process';
 import initialFileSignal from '~/lib/stores/initial-file';
 import { downscaleImage } from '~/lib/utils/image';
 import { Drawer, DrawerContent, DrawerTrigger } from '~/components/ui/drawer';
+import { useCanvasAlphaMaskAnimation } from '~/lib/utils/test';
 
 type Coordinates = {
   x: number;
@@ -41,6 +42,11 @@ export default function Page() {
   const uploadImage = useAction(uploadImageAction);
   const navigate = useNavigate();
   const [displayOn, setDisplayOn] = createSignal<'drawer' | 'dialog'>('dialog');
+  useCanvasAlphaMaskAnimation({
+    canvasId: 'myCanvas',
+    url1: '/img-with-bg-4.png',
+    url2: '/img-without-bg-4.png',
+  })
   const [position1, setPosition1] = createSignal({
     x: -335,
     y: -93,
@@ -241,50 +247,7 @@ export default function Page() {
             </Match>
           </Switch>
         </div>
-        <div class="relative">
-          <DraggableImg
-            img1={{
-              src: '/img-without-bg-2.png',
-              alt: 'img-with-bg-2',
-              class: 'w-28 xs:w-36 md:w-48 lg:w-56',
-            }}
-            img2={{
-              src: '/img-without-bg-2.jpeg',
-              alt: 'img-without-bg-2',
-              class: 'w-12 xs:w-16 md:w-20 lg:w-28',
-            }}
-            position={position1}
-            setPosition={setPosition1}
-          />
-          <DraggableImg
-            img1={{
-              src: '/img-without-bg-6.png',
-              alt: 'img-with-bg-6',
-              class: 'w-56 xs:w-64 lg:w-80',
-            }}
-            img2={{
-              src: '/img-without-bg-6.jpg',
-              alt: 'img-without-bg-6',
-              class: 'w-20 xs:w-28 lg:w-36',
-            }}
-            position={position2}
-            setPosition={setPosition2}
-          />
-          <DraggableImg
-            img1={{
-              src: '/img-without-bg-8.png',
-              alt: 'img-with-bg-8',
-              class: 'w-36 xs:w-48 md:w-64 lg:w-80',
-            }}
-            img2={{
-              src: '/img-without-bg-8.jpeg',
-              alt: 'img-without-bg-8',
-              class: 'w-16 xs:w-20 md:w-28 lg:w-36',
-            }}
-            position={position3}
-            setPosition={setPosition3}
-          />
-        </div>
+        <canvas id="myCanvas" />
       </main>
     </div>
   );
