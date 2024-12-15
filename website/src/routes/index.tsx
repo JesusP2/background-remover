@@ -138,9 +138,9 @@ export default function Page() {
 
   async function processFile(file: File) {
     const id = ulid();
+    navigate(`/canvas/grabcut/${id}`);
     const downscaledImage = await downscaleImage(file, 3840);
     setInitialFile(downscaledImage);
-    navigate(`/canvas/grabcut/${id}`);
     const [fileUrl, resultUrl] = await Promise.all([
       createWritePresignedUrl(
         `${id}-${downscaledImage.name}`,

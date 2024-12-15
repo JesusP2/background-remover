@@ -60,6 +60,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "1.6.3",
+    "@types/pica": "^9.0.4",
     "@types/react-dom": "^18.3.0",
     "drizzle-kit": "^0.20.14"
   }
