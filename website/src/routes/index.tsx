@@ -1,5 +1,5 @@
 import { A, useAction, useNavigate } from '@solidjs/router';
-import { Match, Show, Switch, batch, createSignal, onMount } from 'solid-js';
+import { Match, Show, Switch, createSignal, onMount } from 'solid-js';
 import { ulid } from 'ulidx';
 import { DropZone } from '~/components/dropzone';
 import { Navbar } from '~/components/nav';
@@ -15,6 +15,67 @@ import initialFileSignal from '~/lib/stores/initial-file';
 import { downscaleImage } from '~/lib/utils/image';
 import { Drawer, DrawerContent, DrawerTrigger } from '~/components/ui/drawer';
 import { CanvasAlphaMaskAnimation } from '~/components/image-animation';
+
+import { Card, CardContent } from '~/components/ui/card';
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from '~/components/ui/carousel';
+
+const CarouselDemo = () => {
+  return (
+    <Carousel class="w-full max-w-md">
+      <CarouselContent>
+        <CarouselItem>
+          <div class="p-1">
+            <Card>
+              <CardContent class="flex aspect-square items-center justify-center p-6">
+                <div class="h-full w-full rounded-sm shadow-sm grid place-items-center">
+                  <CanvasAlphaMaskAnimation
+                    canvasId="myCanvas"
+                    url1="/img-without-bg-4.png"
+                    url2="/img-with-bg-4.png"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </CarouselItem>
+        <CarouselItem>
+          <div class="p-1">
+            <Card>
+              <CardContent class="flex aspect-square items-center justify-center p-6">
+                <CanvasAlphaMaskAnimation
+                  canvasId="myCanvas2"
+                  url1="/img-with-bg-5.png"
+                  url2="/img-without-bg-5.png"
+                />
+              </CardContent>
+            </Card>
+          </div>
+        </CarouselItem>
+        <CarouselItem>
+          <div class="p-1">
+            <Card>
+              <CardContent class="flex aspect-square items-center justify-center p-6">
+                <CanvasAlphaMaskAnimation
+                  canvasId="myCanvas3"
+                  url1="/img-without-bg-3.jpg"
+                  url2="/img-without-bg-3.png"
+                />
+              </CardContent>
+            </Card>
+          </div>
+        </CarouselItem>
+      </CarouselContent>
+      <CarouselPrevious />
+      <CarouselNext />
+    </Carousel>
+  );
+};
 
 // biome-ignore lint/suspicious/noExplicitAny: <explanation>
 function GetStartedButton(props: any) {
@@ -154,11 +215,7 @@ export default function Page() {
             </Match>
           </Switch>
         </div>
-        <CanvasAlphaMaskAnimation
-          canvasId="myCanvas"
-          url1="/img-with-bg-4.png"
-          url2="/img-without-bg-4.png"
-        />
+        <CarouselDemo />
       </main>
     </div>
   );

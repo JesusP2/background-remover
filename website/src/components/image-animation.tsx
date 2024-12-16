@@ -88,5 +88,5 @@ export function CanvasAlphaMaskAnimation(props: {
       backgroundlessCanvas.height,
     ).data;
   });
-  return <canvas id={props.canvasId} />
+  return <canvas class="max-w-[100%] max-h-[100%] h-96 object-contain" id={props.canvasId} />
 }
