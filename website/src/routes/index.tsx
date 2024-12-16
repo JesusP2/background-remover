@@ -50,8 +50,8 @@ const CarouselDemo = () => {
               <CardContent class="flex aspect-square items-center justify-center p-6">
                 <CanvasAlphaMaskAnimation
                   canvasId="myCanvas2"
-                  url1="/img-with-bg-5.png"
-                  url2="/img-without-bg-5.png"
+                  url1="/img-without-bg-5.png"
+                  url2="/img-with-bg-5.png"
                 />
               </CardContent>
             </Card>
@@ -63,8 +63,8 @@ const CarouselDemo = () => {
               <CardContent class="flex aspect-square items-center justify-center p-6">
                 <CanvasAlphaMaskAnimation
                   canvasId="myCanvas3"
-                  url1="/img-without-bg-3.jpg"
-                  url2="/img-without-bg-3.png"
+                  url1="/img-without-bg-3.png"
+                  url2="/img-without-bg-3.jpg"
                 />
               </CardContent>
             </Card>
