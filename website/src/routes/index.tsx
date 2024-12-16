@@ -1,7 +1,6 @@
 import { A, useAction, useNavigate } from '@solidjs/router';
 import { Match, Show, Switch, batch, createSignal, onMount } from 'solid-js';
 import { ulid } from 'ulidx';
-import { DraggableImg } from '~/components/draggable-img';
 import { DropZone } from '~/components/dropzone';
 import { Navbar } from '~/components/nav';
 import { Button, buttonVariants } from '~/components/ui/button';
@@ -15,12 +14,7 @@ import { uploadImageAction } from '~/lib/actions/init-image-process';
 import initialFileSignal from '~/lib/stores/initial-file';
 import { downscaleImage } from '~/lib/utils/image';
 import { Drawer, DrawerContent, DrawerTrigger } from '~/components/ui/drawer';
-import { useCanvasAlphaMaskAnimation } from '~/lib/utils/test';
-
-type Coordinates = {
-  x: number;
-  y: number;
-};
+import { CanvasAlphaMaskAnimation } from '~/components/image-animation';
 
 // biome-ignore lint/suspicious/noExplicitAny: <explanation>
 function GetStartedButton(props: any) {
@@ -42,103 +36,16 @@ export default function Page() {
   const uploadImage = useAction(uploadImageAction);
   const navigate = useNavigate();
   const [displayOn, setDisplayOn] = createSignal<'drawer' | 'dialog'>('dialog');
-  useCanvasAlphaMaskAnimation({
-    canvasId: 'myCanvas',
-    url1: '/img-with-bg-4.png',
-    url2: '/img-without-bg-4.png',
-  })
-  const [position1, setPosition1] = createSignal({
-    x: -335,
-    y: -93,
-  });
-  const [position2, setPosition2] = createSignal({
-    x: -143,
-    y: 404,
-  });
-  const [position3, setPosition3] = createSignal({
-    x: 117,
-    y: -98,
-  });
 
   onMount(() => {
-    const images = document.querySelectorAll('img');
-    for (const image of images) {
-      image.addEventListener('dragstart', (e) => {
-        e.preventDefault();
-      });
-    }
-
-    function updateImagesPosition({
-      img1,
-      img2,
-      img3,
-    }: {
-      img1: Coordinates;
-      img2: Coordinates;
-      img3: Coordinates;
-    }) {
-      batch(() => {
-        setPosition1({
-          x: img1.x,
-          y: img1.y,
-        });
-        setPosition2({
-          x: img2.x,
-          y: img2.y,
-        });
-        setPosition3({
-          x: img3.x,
-          y: img3.y,
-        });
-      });
-    }
     function onResize() {
       if (window.innerWidth <= 640 && displayOn() === 'dialog') {
         setDisplayOn('drawer');
       } else if (window.innerWidth > 640 && displayOn() === 'drawer') {
         setDisplayOn('dialog');
       }
-
-      if (window.innerWidth < 500) {
-        updateImagesPosition({
-          img1: { x: -173, y: -29 },
-          img2: { x: -130, y: 310 },
-          img3: { x: 50, y: -23 },
-        });
-      } else if (window.innerWidth < 550) {
-        updateImagesPosition({
-          img1: { x: -208, y: -30 },
-          img2: { x: -142, y: 278 },
-          img3: { x: 34, y: -20 },
-        });
-      } else if (window.innerWidth < 640) {
-        updateImagesPosition({
-          img1: { x: -236, y: -51 },
-          img2: { x: -157, y: 308 },
-          img3: { x: 53, y: -29 },
-        });
-      } else if (window.innerWidth < 768) {
-        updateImagesPosition({
-          img1: { x: -255, y: -61 },
-          img2: { x: -151, y: 308 },
-          img3: { x: 89, y: -47 },
-        });
-      } else if (window.innerWidth < 1024) {
-        updateImagesPosition({
-          img1: { x: -295, y: -93 },
-          img2: { x: -133, y: 321 },
-          img3: { x: 102, y: -99 },
-        });
-      } else {
-        updateImagesPosition({
-          img1: { x: -335, y: -93 },
-          img2: { x: -143, y: 404 },
-          img3: { x: 117, y: -98 },
-        });
-      }
     }
     onResize();
-
     window.addEventListener('resize', onResize);
   });
 
@@ -247,7 +154,11 @@ export default function Page() {
             </Match>
           </Switch>
         </div>
-        <canvas id="myCanvas" />
+        <CanvasAlphaMaskAnimation
+          canvasId="myCanvas"
+          url1="/img-with-bg-4.png"
+          url2="/img-without-bg-4.png"
+        />
       </main>
     </div>
   );

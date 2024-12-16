@@ -1,11 +1,7 @@
 import { onMount } from "solid-js";
 import { base64ToImage } from "~/hooks/use-grabcut-canvas/utils";
 
-export function useCanvasAlphaMaskAnimation({
-  canvasId,
-  url1,
-  url2,
-}: {
+export function CanvasAlphaMaskAnimation(props: {
   canvasId: string;
   url1: string;
   url2: string;
@@ -67,11 +63,11 @@ export function useCanvasAlphaMaskAnimation({
   }
 
   onMount(async () => {
-    canvas = document.querySelector<HTMLCanvasElement>(`#${canvasId}`);
+    canvas = document.querySelector<HTMLCanvasElement>(`#${props.canvasId}`);
     if (!canvas) return;
     [originalImage, backgroundlessImage] = await Promise.all([
-      base64ToImage(url1),
-      base64ToImage(url2),
+      base64ToImage(props.url1),
+      base64ToImage(props.url2),
     ]);
     canvas.width = originalImage.width;
     canvas.height = originalImage.height;
@@ -92,4 +88,5 @@ export function useCanvasAlphaMaskAnimation({
       backgroundlessCanvas.height,
     ).data;
   });
+  return <canvas id={props.canvasId} />
 }

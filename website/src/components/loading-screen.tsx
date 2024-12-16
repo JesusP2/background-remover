@@ -1,5 +1,5 @@
 import anime from 'animejs';
-import { For, createSignal, onCleanup, onMount } from 'solid-js';
+import { For, createSignal, onMount } from 'solid-js';
 
 function randomHexColor() {
   const randomColor = Math.floor(Math.random() * 16777215);
@@ -38,7 +38,6 @@ export function LoadingScreen() {
 
   onMount(() => {
     getGridSize();
-    // window.addEventListener('resize', getGridSize);
   });
 
   // onCleanup(() => window.removeEventListener('resize', getGridSize));
