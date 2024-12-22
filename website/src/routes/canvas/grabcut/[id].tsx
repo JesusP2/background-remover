@@ -2,10 +2,11 @@ import { A, createAsync, useParams } from '@solidjs/router';
 import { and, eq, isNull } from 'drizzle-orm';
 import { AiOutlineLoading } from 'solid-icons/ai';
 import { VsClose } from 'solid-icons/vs';
-import { createSignal } from 'solid-js';
+import { createSignal, Show } from 'solid-js';
 import { Match, Switch, getRequestEvent } from 'solid-js/web';
 import { Canvases } from '~/components/canvases';
 import { buttonVariants } from '~/components/ui/button';
+import { Dialog, DialogContentWithoutClose } from '~/components/ui/dialog';
 import { imageNames } from '~/lib/constants';
 import { db } from '~/lib/db';
 import { type SelectImage, imageTable } from '~/lib/db/schema';
@@ -84,7 +85,13 @@ export default function Page() {
           <Canvases img={(initialFileState() || image()) as SelectImage} />
         </Match>
         <Match when={!image()}>
-          <AiOutlineLoading class="animate-spin" />
+          <Dialog open>
+            <DialogContentWithoutClose class="max-w-[375px] overflow-hidden rounded-md">
+              <div class="font-semibold relative justify-center flex flex-col items-center gap-y-4">
+                <AiOutlineLoading class="animate-spin" />
+              </div>
+            </DialogContentWithoutClose>
+          </Dialog>
         </Match>
       </Switch>
     </main>

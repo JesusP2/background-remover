@@ -1,22 +1,21 @@
-import { object, parse, safeParse, string } from "valibot";
+import * as z from 'zod';
 
-const envsSchema = object({
-  DATABASE_URL: string(),
-  DATABASE_TOKEN: string(),
-  CLOUDFLARE_TOKEN: string(),
-  R2_ENDPOINT: string(),
-  R2_ACCESS_KEY_ID: string(),
-  R2_SECRET_ACCESS_KEY: string(),
-  PYTHON_BACKEND: string(),
-  R2_BUCKET: string(),
-  GOOGLE_CLIENT_ID: string(),
-  GOOGLE_CLIENT_SECRET: string(),
-  GOOGLE_REDIRECT_URI: string(),
-  GITHUB_CLIENT_ID: string(),
-  GITHUB_CLIENT_SECRET: string(),
-  GITHUB_REDIRECT_URI: string(),
-  RESEND_API_KEY: string(),
-  EMAIL_FROM: string(),
+const envsSchema = z.object({
+  DATABASE_URL: z.string(),
+  DATABASE_TOKEN: z.string(),
+  CLOUDFLARE_TOKEN: z.string(),
+  R2_ENDPOINT: z.string(),
+  R2_ACCESS_KEY_ID: z.string(),
+  R2_SECRET_ACCESS_KEY: z.string(),
+  PYTHON_BACKEND: z.string(),
+  R2_BUCKET: z.string(),
+  GOOGLE_CLIENT_ID: z.string(),
+  GOOGLE_CLIENT_SECRET: z.string(),
+  GOOGLE_REDIRECT_URI: z.string(),
+  GITHUB_CLIENT_ID: z.string(),
+  GITHUB_CLIENT_SECRET: z.string(),
+  GITHUB_REDIRECT_URI: z.string(),
+  RESEND_API_KEY: z.string(),
+  EMAIL_FROM: z.string(),
 });
-
-export const envs = parse(envsSchema, process.env);
+export const envs = envsSchema.parse(process.env);

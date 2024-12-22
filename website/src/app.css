@@ -316,3 +316,59 @@ body {
     opacity: 0;
   }
 }
+
+.btn-cube-wrap {
+  margin-bottom: -20px;
+  padding-top: 16px;
+  padding-right: 16px;
+  padding-bottom: 16px;
+}
+
+.btn-cube {
+  position: relative;
+  -webkit-box-flex: 0;
+  -webkit-flex: 0 0 auto;
+  -ms-flex: 0 0 auto;
+  flex: 0 0 auto;
+  -webkit-perspective: 2000px;
+  perspective: 2000px;
+  -webkit-transition: .2s;
+  transition: .2s;
+}
+
+.btn-cube__front {
+  position: relative;
+  top: 0;
+  z-index: 2;
+  display: block;
+  padding: 22px 30px;
+  border: 2px solid #000;
+  border-radius: 0;
+  background-color: #fff;
+  color: #000;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.mod--1 {
+  left: 7.5px;
+  top: -14px;
+  right: -6px;
+  height: 16px;
+  -webkit-transform: skew(-45deg,0deg);
+  -ms-transform: skew(-45deg,0deg);
+  transform: skew(-45deg,0deg);
+}
+
+.btn-cube__side {
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: auto;
+  z-index: 0;
+  border: 2px solid #000;
+  background-color: #f5f5f5;
+  -webkit-transition: .2s;
+  transition: .2s;
+}

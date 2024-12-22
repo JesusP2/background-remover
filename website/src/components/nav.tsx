@@ -41,12 +41,12 @@ export function Navbar(props: { route: string }) {
             </A>
           </div>
         </div>
-        <div>
+        <div class="flex gap-x-2">
           <A
             href="/"
             class={cn(
               buttonVariants({ variant: 'ghost' }),
-              'font-gabarito text-md text-zinc-600',
+              'font-gabarito text-md text-zinc-600 rounded-sm',
               props.route === '/' ? 'bg-accent text-accent-foreground' : '',
             )}
           >
@@ -57,7 +57,7 @@ export function Navbar(props: { route: string }) {
               href="/my-gallery"
               class={cn(
                 buttonVariants({ variant: 'ghost' }),
-                'font-gabarito text-md text-zinc-600',
+                'font-gabarito text-md text-zinc-600 rounded-sm',
                 props.route === '/my-gallery'
                   ? 'bg-accent text-accent-foreground'
                   : '',
@@ -70,7 +70,7 @@ export function Navbar(props: { route: string }) {
             href="/one-shot"
             class={cn(
               buttonVariants({ variant: 'ghost' }),
-              'font-gabarito text-md text-zinc-600',
+              'font-gabarito text-md text-zinc-600 rounded-sm',
               props.route === '/one-shot'
                 ? 'bg-accent text-accent-foreground'
                 : '',
@@ -83,7 +83,7 @@ export function Navbar(props: { route: string }) {
             target="_self"
             class={cn(
               buttonVariants({ variant: 'ghost' }),
-              'font-gabarito text-md text-zinc-600',
+              'font-gabarito text-md text-zinc-600 rounded-sm',
               props.route === '/github'
                 ? 'bg-accent text-accent-foreground'
                 : '',

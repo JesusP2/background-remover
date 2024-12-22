@@ -135,7 +135,7 @@ function GetStartedButton2(props: any) {
     <button class="group w-56 relative" {...props}>
       <div class="-skew-y-[45deg] group-hover:skew-y-[45deg] duration-300 w-[9px] h-10 bg-white border-2 border-black absolute -left-[7px] top-[4px] group-hover:top-[12px] bg-white z-50" />
       <div class="h-10 w-full grid place-items-center border-2 border-black font-bold relative top-0 group-hover:top-4 ease-in-out duration-300 bg-white z-50">
-        Start your free trial
+        Get Started
       </div>
       <div class="-skew-x-[45deg] h-2 w-full border-2 border-t-0 border-black relative right-[4px]" />
       <div class="skew-x-[45deg] h-2 w-full border-2 border-b-0 border-black absolute right-[4px] top-2" />
@@ -165,9 +165,9 @@ export default function Page() {
 
   async function processFile(file: File) {
     const id = ulid();
-    navigate(`/canvas/grabcut/${id}`);
     const downscaledImage = await downscaleImage(file, 3840);
     setInitialFile(downscaledImage);
+    navigate(`/canvas/grabcut/${id}`);
     const [fileUrl, resultUrl] = await Promise.all([
       createWritePresignedUrl(
         `${id}-${downscaledImage.name}`,
@@ -268,6 +268,7 @@ export default function Page() {
             </Match>
           </Switch>
         </div>
+        <CarouselDemo />
       </main>
     </div>
   );
