@@ -3,22 +3,11 @@ import { eq } from 'drizzle-orm';
 import { Argon2id } from 'oslo/password';
 import { db } from '../db';
 import { userTable } from '../db/schema';
-import { rateLimit } from '../rate-limiter';
 import { signinSchema } from '../schemas';
 import { createUserSession } from '../sessions';
 
 export const signinAction = action(async (formData: FormData) => {
   'use server';
-  const error = await rateLimit();
-  if (error) {
-    return {
-      fieldErrors: {
-        form: ['Too many requests'],
-        username: [],
-        password: [],
-      },
-    };
-  }
   const username = formData.get('username') as string;
   const password = formData.get('password') as string;
   const result = signinSchema.safeParse({ username, password });

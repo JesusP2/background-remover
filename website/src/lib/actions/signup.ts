@@ -4,22 +4,11 @@ import { generateId } from 'lucia';
 import { Argon2id } from 'oslo/password';
 import { db } from '~/lib/db';
 import { userTable } from '~/lib/db/schema';
-import { rateLimit } from '../rate-limiter';
 import { signupSchema } from '../schemas';
 import { createUserSession } from '../sessions';
 
 export const signupAction = action(async (formData: FormData) => {
   'use server';
-  const error = await rateLimit();
-  if (error) {
-    return {
-      fieldErrors: {
-        form: ['Too many requests'],
-        username: [],
-        password: [],
-      },
-    };
-  }
   const username = formData.get('username') as string;
   const password = formData.get('password') as string;
   const result = signupSchema.safeParse({ username, password });

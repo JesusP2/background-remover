@@ -1,5 +1,5 @@
 import { action } from "@solidjs/router";
-import { rateLimit } from "../rate-limiter";
+import { authRateLimiter, rateLimit } from "../rate-limiter";
 import { resetTokenSchema } from "../schemas";
 import { db } from "../db";
 import { magicLinkTable, userTable } from "../db/schema";
@@ -17,7 +17,9 @@ import { envs } from "../db/env-vars";
 export const createMagicLinkAction = action(async (formData: FormData) => {
   "use server";
   try {
-    const error = await rateLimit();
+    const error = await rateLimit({
+      rateLimiter: authRateLimiter
+    });
     if (error) {
       return {
         fieldErrors: {

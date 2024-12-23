@@ -1,5 +1,4 @@
 import { action, redirect } from "@solidjs/router";
-import { rateLimit } from "../rate-limiter";
 import { getRequestEvent } from "solid-js/web";
 import { changePasswordSchema } from "../schemas";
 import { db } from "../db";
@@ -10,16 +9,6 @@ import { deleteUserSessions } from "../sessions";
 
 export const changePasswordAction = action(async (formData: FormData) => {
   'use server';
-  const error = await rateLimit();
-  if (error) {
-    return {
-      fieldErrors: {
-        form: ["Too many requests"],
-        currentPassword: [],
-        newPassword: [],
-      },
-    };
-  }
   const event = getRequestEvent();
   const user = event?.locals.user;
   if (!user) {

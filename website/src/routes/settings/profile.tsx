@@ -17,7 +17,6 @@ import {
 import { updateProfileAction } from '~/lib/actions/update-profile';
 import { db } from '~/lib/db';
 import { userTable } from '~/lib/db/schema';
-import { rateLimit } from '~/lib/rate-limiter';
 import {
   Toast,
   ToastContent,
@@ -28,10 +27,6 @@ import {
 
 const getUserProfile = cache(async () => {
   'use server';
-  const error = await rateLimit();
-  if (error) {
-    throw redirect('/');
-  }
   const event = getRequestEvent();
   if (!event?.locals.userId) throw redirect('/');
   const [user] = await db

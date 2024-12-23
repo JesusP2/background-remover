@@ -17,14 +17,9 @@ import { imageNames } from '~/lib/constants';
 import { db } from '~/lib/db';
 import { imageTable } from '~/lib/db/schema';
 import { createReadPresignedUrl } from '~/lib/r2';
-import { rateLimit } from '~/lib/rate-limiter';
 
 const getGallery = cache(async () => {
   'use server';
-  const error = await rateLimit();
-  if (error) {
-    return [];
-  }
   const event = getRequestEvent();
   const userId = event?.locals.userId;
   if (!userId) return [];

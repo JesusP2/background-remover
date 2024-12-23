@@ -15,15 +15,10 @@ import { changePasswordAction } from '~/lib/actions/change-password';
 import { unselectedCss } from '~/lib/constants';
 import { db } from '~/lib/db';
 import { userTable } from '~/lib/db/schema';
-import { rateLimit } from '~/lib/rate-limiter';
 import { cn } from '~/lib/utils';
 
 const getUserProfile = cache(async () => {
   'use server';
-  const error = await rateLimit();
-  if (error) {
-    throw redirect('/');
-  }
   const event = getRequestEvent();
   if (!event?.locals.userId) throw redirect('/');
   const [user] = await db

@@ -2,7 +2,7 @@ import { A, createAsync, useParams } from '@solidjs/router';
 import { and, eq, isNull } from 'drizzle-orm';
 import { AiOutlineLoading } from 'solid-icons/ai';
 import { VsClose } from 'solid-icons/vs';
-import { createSignal, Show } from 'solid-js';
+import { createSignal } from 'solid-js';
 import { Match, Switch, getRequestEvent } from 'solid-js/web';
 import { Canvases } from '~/components/canvases';
 import { buttonVariants } from '~/components/ui/button';
@@ -11,16 +11,12 @@ import { imageNames } from '~/lib/constants';
 import { db } from '~/lib/db';
 import { type SelectImage, imageTable } from '~/lib/db/schema';
 import { createReadPresignedUrl } from '~/lib/r2';
-import { rateLimit } from '~/lib/rate-limiter';
 import initialFileSignal from '~/lib/stores/initial-file';
 import { cn } from '~/lib/utils';
 
-const getImages = async (id: string) => {
+const getImages = async (id: string, fetch = true) => {
   'use server';
-  const error = await rateLimit();
-  if (error) {
-    return error;
-  }
+  if (!fetch) return;
   const event = getRequestEvent();
   const userId = event?.locals.userId;
   const [image] = (await db
@@ -29,7 +25,12 @@ const getImages = async (id: string) => {
     .where(and(eq(imageTable.id, id), isNull(imageTable.deleted)))) as [
     SelectImage,
   ];
-  if (!image?.userId || userId !== image?.userId) return null;
+  if (!image?.userId || userId !== image?.userId) {
+    return {
+      success: false,
+      error: 'Invalid data',
+    };
+  }
   const imagesResults = await Promise.allSettled([
     createReadPresignedUrl(`${id}-${imageNames.result}`),
     createReadPresignedUrl(`${id}-${image.name}`),
@@ -44,7 +45,10 @@ const getImages = async (id: string) => {
     imagesResults[2]?.status === 'fulfilled' ? imagesResults[2].value : '';
   image.samMask =
     imagesResults[3]?.status === 'fulfilled' ? imagesResults[3].value : '';
-  return image;
+  return {
+    success: true,
+    data: image,
+  };
 };
 
 export const route = {
@@ -53,11 +57,11 @@ export const route = {
 
 export default function Page() {
   const { id } = useParams();
-  const image = createAsync(() => getImages(id));
   const [initialFileState, setInitialFileState] =
     createSignal<null | SelectImage>(null);
   const [initialFile, setInitialFile] = initialFileSignal;
   const file = initialFile();
+  const image = createAsync(() => getImages(id));
   if (file !== null) {
     const url = URL.createObjectURL(file);
     setInitialFileState({
@@ -73,7 +77,7 @@ export default function Page() {
   return (
     <main class="flex">
       <Switch>
-        <Match when={initialFileState() || image()}>
+        <Match when={initialFileState() || image()?.data}>
           <div class="rounded-sm px-2 py-1 bg-white absolute top-0 right-0 flex gap-x-4 items-center">
             <A
               href="/my-gallery"
@@ -82,13 +86,15 @@ export default function Page() {
               <VsClose size={20} />
             </A>
           </div>
-          <Canvases img={(initialFileState() || image()) as SelectImage} />
+          <Canvases
+            img={(initialFileState() || image()?.data) as SelectImage}
+          />
         </Match>
-        <Match when={!image()}>
+        <Match when={!image()?.success}>
           <Dialog open>
             <DialogContentWithoutClose class="max-w-[375px] overflow-hidden rounded-md">
               <div class="font-semibold relative justify-center flex flex-col items-center gap-y-4">
-                <AiOutlineLoading class="animate-spin" />
+                Something went wrong
               </div>
             </DialogContentWithoutClose>
           </Dialog>

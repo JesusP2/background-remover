@@ -747,7 +747,7 @@ export function useGrabcutCanvas({
     const blob = await res.blob();
     const base64 = await blobToBase64(blob);
     setSourceImgBase64(base64 as string);
-    if (typeof base64 !== 'string') {
+    if (typeof base64 !== 'string' || !base64.startsWith('data:image')) {
       throw new Error('Failed to convert blob to base64.');
     }
     images.sourceImg = await base64ToImage(base64);

@@ -1,5 +1,4 @@
-import { action, json } from "@solidjs/router";
-import { rateLimit } from "../rate-limiter";
+import { action } from "@solidjs/router";
 import { getRequestEvent } from "solid-js/web";
 import { codeSchema } from "../schemas";
 import { db } from "../db";
@@ -9,15 +8,6 @@ import { isWithinExpirationDate } from "oslo";
 
 export const verifyEmailAction = action(async (formData: FormData) => {
   "use server";
-  const error = await rateLimit();
-  if (error) {
-    return {
-      fieldErrors: {
-        form: ["Too many requests"],
-        code: [],
-      },
-    };
-  }
   const event = getRequestEvent();
   const user = event?.locals.user;
   if (!user) {

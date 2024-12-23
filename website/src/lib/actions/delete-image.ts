@@ -3,15 +3,10 @@ import { and, eq } from 'drizzle-orm';
 import { getRequestEvent } from 'solid-js/web';
 import { db } from '../db';
 import { imageTable } from '../db/schema';
-import { rateLimit } from '../rate-limiter';
 
 export const deleteImageAction = action(async (formData: FormData) => {
   'use server';
   try {
-    const error = await rateLimit();
-    if (error) {
-      return error;
-    }
     const id = formData.get('id') as string | undefined;
     const userId = getRequestEvent()?.locals.userId;
     if (!id || !userId) return new Error('Inlivad request');

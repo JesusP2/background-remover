@@ -1,5 +1,5 @@
 import { action, redirect } from "@solidjs/router";
-import { rateLimit } from "../rate-limiter";
+import { authRateLimiter, rateLimit } from "../rate-limiter";
 import { resetTokenSchema, validateResetTokenSchema } from "../schemas";
 import { db } from "../db";
 import { resetTokenTable, userTable } from "../db/schema";
@@ -20,17 +20,6 @@ export const resetPasswordConfirmationAction = action(
   async (formData: FormData) => {
     "use server";
     try {
-      const error = await rateLimit();
-      if (error) {
-        return {
-          fieldErrors: {
-            form: ["Too many requests"],
-            password: [],
-            token: [],
-          },
-        };
-      }
-
       const event = getRequestEvent();
       if (event?.locals.user) {
         throw redirect("/");
@@ -92,7 +81,9 @@ export const resetPasswordConfirmationAction = action(
 export const resetPasswordEmailAction = action(async (formData: FormData) => {
   "use server";
   try {
-    const error = await rateLimit();
+    const error = await rateLimit({
+      rateLimiter: authRateLimiter
+    });
     if (error) {
       return {
         fieldErrors: {

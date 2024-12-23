@@ -1,51 +1,37 @@
-import { and, count, eq, gt } from 'drizzle-orm';
-import type { LibSQLDatabase } from 'drizzle-orm/libsql';
-import { getRequestEvent } from 'solid-js/web';
-import { ulid } from 'ulidx';
-import type * as schema from '../lib/db/schema';
-import { db } from './db';
-import { rateLimitTable } from './db/schema/rate-limit';
+import { getRequestEvent } from "solid-js/web";
+import { redisClient } from "./redis";
+import type { FetchEvent } from "@solidjs/start/server";
 
 type Sum<A extends number, B extends number> = [
   ...ArrayOfLen<A>,
   ...ArrayOfLen<B>,
-]['length'];
+]["length"];
 type NumberLine<
   A extends number,
   $acc extends unknown[] = [],
-> = A extends $acc['length']
+> = A extends $acc["length"]
   ? $acc[number]
-  : NumberLine<A, [...$acc, Sum<$acc['length'], 1>]>;
-type ArrayOfLen<A, $acc extends unknown[] = []> = A extends $acc['length']
+  : NumberLine<A, [...$acc, Sum<$acc["length"], 1>]>;
+type ArrayOfLen<A, $acc extends unknown[] = []> = A extends $acc["length"]
   ? $acc
   : ArrayOfLen<A, [...$acc, unknown]>;
-type Unit = 's' | 'm' | 'h';
+type Unit = "s" | "m" | "h";
 // NOTE: Could've done `${number}${Unit}` but I wanted to write some types
 type Time = `${NumberLine<60>}${Unit}`;
 
 export class RateLimit {
-  private db: LibSQLDatabase<typeof schema>;
   private interval: number;
   private limiter: number;
-  constructor({
-    db,
-    interval,
-    limiter,
-  }: {
-    db: LibSQLDatabase<typeof schema>;
-    interval: Time;
-    limiter: number;
-  }) {
-    this.db = db;
+  constructor({ interval, limiter }: { interval: Time; limiter: number }) {
     this.interval = this.parseTime(interval);
     this.limiter = limiter;
   }
 
   private parseTime(interval: Time) {
     let multiplier = 1;
-    if (interval.endsWith('s')) {
+    if (interval.endsWith("s")) {
       multiplier = 1000;
-    } else if (interval.endsWith('m')) {
+    } else if (interval.endsWith("m")) {
       multiplier = 1000 * 60;
     } else {
       multiplier = 1000 * 60 * 60;
@@ -55,27 +41,26 @@ export class RateLimit {
   }
 
   public async limit(identifier: string) {
-    const threshold = new Date().getTime() - this.interval;
-    const data = await this.db
-      .select({ count: count() })
-      .from(rateLimitTable)
-      .where(
-        and(
-          eq(rateLimitTable.key, identifier),
-          gt(rateLimitTable.createdAt, threshold),
-        ),
-      );
-    const hits = data[0].count;
-    if (hits > this.limiter) {
-      return {
-        success: false,
-      };
+    const key = `rate_limit_sw:${identifier}`;
+
+    const pipeline = redisClient.pipeline();
+
+    const now = new Date().getTime();
+    const threshold = now - this.interval;
+    pipeline.zremrangebyscore(key, 0, threshold);
+    pipeline.zadd(key, now, now);
+    pipeline.zcard(key);
+    pipeline.pexpire(key, this.interval * 2);
+
+    const results = await pipeline.exec();
+    if (!results) {
+      return { success: false };
     }
-    await this.db.insert(rateLimitTable).values({
-      id: ulid(),
-      key: identifier,
-      createdAt: new Date().getTime(),
-    });
+    const requestCount = results[2][1] as number;
+
+    if (requestCount > this.limiter) {
+      return { success: false };
+    }
     return {
       success: true,
     };
@@ -83,20 +68,29 @@ export class RateLimit {
 }
 
 const defaultRateLimiter = new RateLimit({
-  db: db,
-  interval: '10s',
-  limiter: 20,
+  interval: "1s",
+  limiter: 50,
 });
 
-export async function rateLimit(rateLimiter = defaultRateLimiter) {
-  const event = getRequestEvent();
-  const ip = event?.clientAddress;
+export const authRateLimiter = new RateLimit({
+  interval: "1h",
+  limiter: 10,
+});
+
+export async function rateLimit(params?: {
+  rateLimiter?: RateLimit;
+  event?: FetchEvent;
+}) {
+  const _event = params?.event ?? getRequestEvent();
+  const _rateLimiter = params?.rateLimiter ?? defaultRateLimiter;
+  const ip =
+    process.env.NODE_ENV === "production" ? _event?.clientAddress : "localhost";
   if (!ip) {
-    return new Error('Too many requests');
+    return new Error("Too many requests");
   }
-  const { success } = await rateLimiter.limit(ip);
+  const { success } = await _rateLimiter.limit(ip);
   if (!success) {
-    return new Error('Too many requests');
+    return new Error("Too many requests");
   }
   return;
 }

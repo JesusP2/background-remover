@@ -1,17 +1,12 @@
 import { A, cache, createAsync } from '@solidjs/router';
 import { Match, Show, Switch, createSignal } from 'solid-js';
 import { getRequestEvent } from 'solid-js/web';
-import { rateLimit } from '~/lib/rate-limiter';
 import { cn } from '~/lib/utils';
 import { buttonVariants } from './ui/button';
 import { UserDropdown } from './user-dropdown';
 
 const getUserInfo = cache(async () => {
   'use server';
-  const error = await rateLimit();
-  if (error) {
-    return error;
-  }
   const req = getRequestEvent();
   if (!req?.locals.userId) return null;
   return {
