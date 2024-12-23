@@ -153,6 +153,24 @@ export function useGrabcutCanvas({
       redrawEverything();
     } else if (step === 'GRABCUT') {
       setCurrentMode('draw-green');
+      if (!images.samMask && images.sourceImg) {
+        const canvas = new OffscreenCanvas(
+          images.sourceImg.width,
+          images.sourceImg.height,
+        );
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          console.error('this should never happen');
+          return;
+        }
+        ctx.fillStyle = 'black';
+        ctx.fillRect(0, 0, images.sourceImg.width, images.sourceImg.height);
+        images.samMask = await canvasToFile(
+          canvas,
+          imageNames.samMask,
+          'image/jpeg',
+        );
+      }
       if (!images.samMask || !images.destinationImg) {
         console.error('this should never happen');
         return;
@@ -406,6 +424,7 @@ export function useGrabcutCanvas({
       const formData = new FormData();
       formData.append('image_file', image);
       formData.append('mask_file', mask);
+      console.log(images.samMask);
       if (images.samMask) {
         formData.append('sammask_file', images.samMask);
       }
@@ -414,6 +433,7 @@ export function useGrabcutCanvas({
         body: formData,
       });
       if (!res.ok) {
+        console.log(await res.text());
         throw new Error('Failed to upload image');
       }
       const resultBlob = await res.blob();

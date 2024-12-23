@@ -14,9 +14,8 @@ import { createReadPresignedUrl } from '~/lib/r2';
 import initialFileSignal from '~/lib/stores/initial-file';
 import { cn } from '~/lib/utils';
 
-const getImages = async (id: string, fetch = true) => {
+const getImages = async (id: string) => {
   'use server';
-  if (!fetch) return;
   const event = getRequestEvent();
   const userId = event?.locals.userId;
   const [image] = (await db
