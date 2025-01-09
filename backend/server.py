@@ -22,12 +22,12 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-@app.on_event("startup")
-async def startup():
-    redis_connection = redis.from_url("redis://default:contraseña12345@localhost:6379", encoding="utf-8", decode_responses=True)
-    await FastAPILimiter.init(redis_connection)
+# @app.on_event("startup")
+# async def startup():
+#     redis_connection = redis.from_url("redis://default:contraseña12345@localhost:6379", encoding="utf-8", decode_responses=True)
+#     await FastAPILimiter.init(redis_connection)
 
-@app.post("/mask", dependencies=[Depends(RateLimiter(times=10, seconds=60))])
+@app.post("/mask")
 async def apply_mask_endpoint(
     mask_file: UploadFile = File(...),
     image_file: UploadFile = File(...),

@@ -1,4 +1,0 @@
-- fix problem where moving the mouse too fast while painting causes inconsistent strokes (now the bug itself is inconsistent)
-- Mobile view
-- Homepage
-- gallery
