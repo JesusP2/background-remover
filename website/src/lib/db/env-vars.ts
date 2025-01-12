@@ -7,7 +7,6 @@ const envsSchema = z.object({
   R2_ENDPOINT: z.string(),
   R2_ACCESS_KEY_ID: z.string(),
   R2_SECRET_ACCESS_KEY: z.string(),
-  PYTHON_BACKEND: z.string(),
   R2_BUCKET: z.string(),
   GOOGLE_CLIENT_ID: z.string(),
   GOOGLE_CLIENT_SECRET: z.string(),
@@ -17,5 +16,6 @@ const envsSchema = z.object({
   GITHUB_REDIRECT_URI: z.string(),
   RESEND_API_KEY: z.string(),
   EMAIL_FROM: z.string(),
+  REDIS_PASSWORD: z.string(),
 });
 export const envs = envsSchema.parse(process.env);

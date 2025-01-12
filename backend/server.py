@@ -1,6 +1,7 @@
 import io
 
 import cv2
+import os
 import numpy as np
 from fastapi import FastAPI, File, UploadFile, Depends
 from fastapi.middleware.cors import CORSMiddleware
@@ -22,10 +23,12 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-# @app.on_event("startup")
-# async def startup():
-#     redis_connection = redis.from_url("redis://default:contraseña12345@localhost:6379", encoding="utf-8", decode_responses=True)
-#     await FastAPILimiter.init(redis_connection)
+@app.on_event("startup")
+async def startup():
+    url = f"redis://default:{os.environ['REDIS_PASSWORD']}@{os.environ['REDIS_HOST']}:6379"
+    print(url)
+    redis_connection = redis.from_url(url, encoding="utf-8", decode_responses=True)
+    await FastAPILimiter.init(redis_connection)
 
 @app.post("/mask")
 async def apply_mask_endpoint(

@@ -424,11 +424,10 @@ export function useGrabcutCanvas({
       const formData = new FormData();
       formData.append('image_file', image);
       formData.append('mask_file', mask);
-      console.log(images.samMask);
       if (images.samMask) {
         formData.append('sammask_file', images.samMask);
       }
-      const res = await fetch('http://localhost:8000/mask', {
+      const res = await fetch('https://erasebg.app/mask', {
         method: 'POST',
         body: formData,
       });

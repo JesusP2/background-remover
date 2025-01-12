@@ -10,6 +10,7 @@ netlify
 # Environment
 .env
 .env*.local
+.env.prod
 
 # dependencies
 /node_modules

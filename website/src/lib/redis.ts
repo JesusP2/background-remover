@@ -1,5 +1,5 @@
 import { Redis } from "ioredis";
+import { envs } from "./db/env-vars";
 
-export const redisClient = new Redis(
-  "redis://default:contraseña12345@localhost:6379",
-);
+const url = `redis://default:${envs.REDIS_PASSWORD}@redis:6379`;
+export const redisClient = new Redis(url);
