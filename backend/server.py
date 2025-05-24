@@ -9,13 +9,13 @@ from fastapi.responses import StreamingResponse
 from PIL import Image
 import pyamg
 import pymatting
-from fastapi_limiter import FastAPILimiter
-from fastapi_limiter.depends import RateLimiter
-import redis.asyncio as redis
+# from fastapi_limiter import FastAPILimiter
+# from fastapi_limiter.depends import RateLimiter
+# import redis.asyncio as redis
 
 app = FastAPI()
 
-origins = []
+origins = ['*']
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
@@ -23,12 +23,12 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-@app.on_event("startup")
-async def startup():
-    url = f"redis://default:{os.environ['REDIS_PASSWORD']}@{os.environ['REDIS_HOST']}:6379"
-    print(url)
-    redis_connection = redis.from_url(url, encoding="utf-8", decode_responses=True)
-    await FastAPILimiter.init(redis_connection)
+# @app.on_event("startup")
+# async def startup():
+#     url = f"redis://default:{os.environ['REDIS_PASSWORD']}@{os.environ['REDIS_HOST']}:6379"
+#     print(url)
+#     redis_connection = redis.from_url(url, encoding="utf-8", decode_responses=True)
+#     await FastAPILimiter.init(redis_connection)
 
 @app.post("/mask")
 async def apply_mask_endpoint(
