@@ -111,7 +111,6 @@ export function Canvases(props: { img: SelectImage }) {
     strokesUrl: props.img.mask,
     resultUrl: props.img.result,
     samMaskUrl: props.img.samMask,
-    drawStroke: drawStroke,
     canvasLayout: canvasLayout,
   });
 

@@ -18,6 +18,7 @@ import {
   base64ToImage,
   blobToBase64,
   canvasToFile,
+  drawStroke,
   eraseStroke,
   fileToImage,
   getCanvas,
@@ -31,7 +32,6 @@ export function useGrabcutCanvas({
   strokesUrl,
   resultUrl,
   samMaskUrl,
-  drawStroke,
   canvasLayout,
 }: {
   sourceUrl: string;
@@ -39,11 +39,6 @@ export function useGrabcutCanvas({
   resultUrl: string;
   samMaskUrl: string | null;
   canvasLayout: Accessor<CanvasLayout>;
-  drawStroke: <T extends GrabcutAction>(
-    action: T,
-    ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
-    newMousePosition?: { x: number; y: number },
-  ) => void;
 }) {
   const [canvasMethod, setCanvasMethod] = createSignal<'SAM' | 'GRABCUT'>(
     'SAM',
@@ -427,7 +422,7 @@ export function useGrabcutCanvas({
       if (images.samMask) {
         formData.append('sammask_file', images.samMask);
       }
-      const res = await fetch('https://erasebg.app/mask', {
+      const res = await fetch('http://127.0.0.1:8000/mask', {
         method: 'POST',
         body: formData,
       });

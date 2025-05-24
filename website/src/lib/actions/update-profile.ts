@@ -1,5 +1,4 @@
 import { action } from "@solidjs/router";
-import { authRateLimiter, rateLimit } from "../rate-limiter";
 import { getRequestEvent } from "solid-js/web";
 import { profileSchema } from "../schemas";
 import { z } from "zod";
@@ -16,18 +15,6 @@ import { eq } from "drizzle-orm";
 export const updateProfileAction = action(async (formData: FormData) => {
   "use server";
   try {
-    const error = await rateLimit({
-      rateLimiter: authRateLimiter
-    });
-    if (error) {
-      return {
-        fieldErrors: {
-          form: ["Too many requests"],
-          name: [],
-          email: [],
-        },
-      };
-    }
     const event = getRequestEvent();
     const user = event?.locals.user;
     if (!user) {

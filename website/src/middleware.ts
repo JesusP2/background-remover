@@ -5,19 +5,11 @@ import {
   appendResponseHeader,
   getCookie,
   getRequestHeader,
-  setCookie,
 } from "vinxi/http";
 import { lucia } from "./lib/auth";
-import { rateLimit } from "./lib/rate-limiter";
 
 export default createMiddleware({
   onRequest: async (event) => {
-    const error = await rateLimit({ event });
-    if (error) {
-      return new Response("Too many requests", {
-        status: 400,
-      });
-    }
     if (event.request.method !== "GET") {
       const originHeader = getRequestHeader("Origin") ?? null;
       // NOTE: You may need to use `X-Forwarded-Host` instead

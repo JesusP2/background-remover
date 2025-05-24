@@ -5,19 +5,11 @@ import { sha256 } from "oslo/crypto";
 import { encodeHex } from "oslo/encoding";
 import { db } from "~/lib/db";
 import { magicLinkTable } from "~/lib/db/schema";
-import { rateLimit } from "~/lib/rate-limiter";
 import { validateResetTokenSchema } from "~/lib/schemas";
 import { createUserSession, deleteAllUserSessions } from "~/lib/sessions";
 
 export const GET: APIHandler = async ({ locals, params }) => {
   try {
-    const error = await rateLimit();
-    if (error) {
-      return new Response("Too many requests", {
-        status: 400,
-      });
-    }
-
     if (locals.user) {
       return new Response(null, {
         status: 302,

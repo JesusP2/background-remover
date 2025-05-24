@@ -1,5 +1,4 @@
 import { action, redirect } from "@solidjs/router";
-import { authRateLimiter, rateLimit } from "../rate-limiter";
 import { resetTokenSchema, validateResetTokenSchema } from "../schemas";
 import { db } from "../db";
 import { resetTokenTable, userTable } from "../db/schema";
@@ -81,19 +80,6 @@ export const resetPasswordConfirmationAction = action(
 export const resetPasswordEmailAction = action(async (formData: FormData) => {
   "use server";
   try {
-    const error = await rateLimit({
-      rateLimiter: authRateLimiter
-    });
-    if (error) {
-      return {
-        fieldErrors: {
-          form: ["Too many requests"],
-          username: [],
-          password: [],
-        },
-      };
-    }
-
     const submission = resetTokenSchema.safeParse({
       email: formData.get("email"),
     });
