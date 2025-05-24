@@ -1,0 +1,156 @@
+---
+import { cn } from "../lib/utils";
+import ActionsButton from "../components/action-button.astro";
+import Layout from '../layouts/Layout.astro';
+---
+<Layout>
+<main class="flex">
+      <div class="h-10 p-2 max-w-sm absolute top-2 left-2 bg-white rounded-sm flex items-center gap-x-2">
+        <ActionsButton id="cut-btn" tooltip="Cut">
+        <i data-lucide="scissors" />
+        </ActionsButton>
+        <ActionsButton id="add-btn" tooltip="Add">
+        <i data-lucide="square-plus" />
+        </ActionsButton>
+        <ActionsButton id="remove-btn" tooltip="Remove">
+        <i data-lucide="square-minus" />
+        </ActionsButton>
+        <ActionsButton id="hair-btn" tooltip="Hair">
+        <i data-lucide="brush" />
+        </ActionsButton>
+        <ActionsButton id="erase-btn" tooltip="Erase">
+        <i data-lucide="eraser" />
+        </ActionsButton>
+        <ActionsButton id="undo-btn" tooltip="Undo">
+        <i data-lucide="undo-2" />
+        </ActionsButton>
+        <ActionsButton id="redo-btn" tooltip="Redo">
+        <i data-lucide="redo-2" />
+        </ActionsButton>
+        <ActionsButton
+          id="zoom-in-btn"
+          tooltip="Zoom In"
+        >
+        <i data-lucide="zoom-in" />
+        </ActionsButton>
+        <ActionsButton
+          id="zoom-out-btn"
+          tooltip="Zoom Out"
+        >
+        <i data-lucide="zoom-out" />
+        </ActionsButton>
+        <ActionsButton id="reset-btn" tooltip="Reset">
+        <i data-lucide="focus" />
+        </ActionsButton>
+        <ActionsButton id="move-btn" tooltip="Move">
+        <i data-lucide="move" />
+        </ActionsButton>
+        <ActionsButton id="window-btn" tooltip="Window">
+        <i data-lucide="app-window" />
+        </ActionsButton>
+        <ActionsButton id="columns-btn" tooltip="Columns">
+        <i data-lucide="columns-2" />
+        </ActionsButton>
+      </div>
+      <canvas
+        class="h-screen svg-bg"
+        style={{
+		width: '49.95%',
+        }}
+        id="source"
+      />
+      <div class="h-screen w-[0.1%] bg-zinc-400" />
+      <canvas
+        style={{
+		width: '49.95%',
+        }}
+         class={cn('h-screen svg-bg')}
+        id="destination"
+      />
+</main>
+<script>
+  import type { CanvasLayout } from "@/lib/types";
+  import { useGrabcutCanvas } from "../hooks/use-canvas";
+  let canvasLayout = {
+    value: 'both' as CanvasLayout,
+  }
+  const {
+    applyMaskToImage,
+    undo,
+    redo,
+    actions,
+    redoActions,
+    zoomIn,
+    zoomOut,
+    isZooming,
+    resetToOriginal,
+    currentMode,
+    saveResult,
+    isRemovingBackground,
+  } = useGrabcutCanvas({
+    id: '1',
+    sourceUrl: 'https://cdn.myanimelist.net/images/manga/1/259070l.jpg',
+    strokesUrl: null,
+    resultUrl: 'https://cdn.myanimelist.net/images/manga/1/259070l.jpg',
+    canvasLayout: canvasLayout.value,
+  });
+  const $sourceCanvas = document.getElementById('source');
+  const $destinationCanvas = document.getElementById('destination');
+  const $cutBtn = document.getElementById('cut-btn');
+  $cutBtn?.addEventListener('click', applyMaskToImage);
+  const $addBtn = document.getElementById('add-btn');
+  $addBtn?.addEventListener('click', () => currentMode.value = 'draw-green');
+  const $removeBtn = document.getElementById('remove-btn');
+  $removeBtn?.addEventListener('click', () => currentMode.value = 'draw-red');
+  const $hairBtn = document.getElementById('hair-btn');
+  $hairBtn?.addEventListener('click', () => currentMode.value = 'draw-yellow');
+  const $eraseBtn = document.getElementById('erase-btn');
+  $eraseBtn?.addEventListener('click', () => {
+    currentMode.value = 'erase'
+  });
+  const $undoBtn = document.getElementById('undo-btn');
+  $undoBtn?.addEventListener('click', undo);
+  const $redoBtn = document.getElementById('redo-btn');
+  $redoBtn?.addEventListener('click', redo);
+  const $zoomInBtn = document.getElementById('zoom-in-btn');
+  $zoomInBtn?.addEventListener('mousedown', () =>
+    zoomIn({
+      x:
+        canvasLayout.value === 'result'
+          ? window.innerWidth / 2 - 30
+          : window.innerWidth / 4 - 30,
+      y: window.innerHeight / 2,
+    })
+  );
+  $zoomInBtn?.addEventListener('mouseup', () => {
+    isZooming.value = false;
+  });
+  const $zoomOutBtn = document.getElementById('zoom-out-btn');
+  $zoomOutBtn?.addEventListener('mouseup', () => {
+    isZooming.value = false;
+  });
+  $zoomOutBtn?.addEventListener('mousedown', () => zoomOut({ x: 417, y: 494 }));
+  const $resetBtn = document.getElementById('reset-btn');
+  $resetBtn?.addEventListener('click', resetToOriginal);
+  const $moveBtn = document.getElementById('move-btn');
+  $moveBtn?.addEventListener('click', () => currentMode.value = 'move');
+  const $windowBtn = document.getElementById('window-btn');
+  $windowBtn?.addEventListener('click', () => {
+    if ($sourceCanvas && $destinationCanvas) {
+      canvasLayout.value = 'mask'
+      $sourceCanvas.style.width = '99.9%';
+      $destinationCanvas.style.width = '99.9%';
+      $destinationCanvas.hidden = true;
+    }
+  });
+  const $columnsBtn = document.getElementById('columns-btn');
+  $columnsBtn?.addEventListener('click', () => {
+    if ($sourceCanvas && $destinationCanvas) {
+      canvasLayout.value = 'both'
+      $sourceCanvas.style.width = '49.95%';
+      $destinationCanvas.style.width = '49.95%';
+      $destinationCanvas.hidden = false;
+    }
+  });
+</script>
+</Layout>
