@@ -115,23 +115,31 @@ import Layout from '../layouts/Layout.astro';
   const $redoBtn = document.getElementById('redo-btn');
   $redoBtn?.addEventListener('click', redo);
   const $zoomInBtn = document.getElementById('zoom-in-btn');
-  $zoomInBtn?.addEventListener('mousedown', () =>
-    zoomIn({
-      x:
-        canvasLayout.value === 'result'
-          ? window.innerWidth / 2 - 30
-          : window.innerWidth / 4 - 30,
+  
+  function getZoomCenter() {
+    return {
+      x: canvasLayout.value === 'result' 
+        ? window.innerWidth / 2 
+        : canvasLayout.value === 'mask'
+        ? window.innerWidth / 2
+        : window.innerWidth / 4,
       y: window.innerHeight / 2,
-    })
-  );
+    };
+  }
+  
+  $zoomInBtn?.addEventListener('mousedown', () => {
+    zoomIn(getZoomCenter());
+  });
   $zoomInBtn?.addEventListener('mouseup', () => {
     isZooming.value = false;
   });
   const $zoomOutBtn = document.getElementById('zoom-out-btn');
+  $zoomOutBtn?.addEventListener('mousedown', () => {
+    zoomOut(getZoomCenter());
+  });
   $zoomOutBtn?.addEventListener('mouseup', () => {
     isZooming.value = false;
   });
-  $zoomOutBtn?.addEventListener('mousedown', () => zoomOut({ x: 417, y: 494 }));
   const $resetBtn = document.getElementById('reset-btn');
   $resetBtn?.addEventListener('click', resetToOriginal);
   const $moveBtn = document.getElementById('move-btn');

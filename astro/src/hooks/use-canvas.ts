@@ -466,18 +466,20 @@ export function useGrabcutCanvas({
 
   async function zoomOut(pos: { x: number; y: number }) {
     isZooming.value = true;
+    const zoomFactor = 1.02;
     while (isZooming.value) {
-      await new Promise((resolve) => setTimeout(resolve, 1));
-      scaleAt(pos, 1 / 1.01);
+      await new Promise((resolve) => setTimeout(resolve, 8));
+      scaleAt(pos, 1 / zoomFactor);
       redrawEverything();
     }
   }
 
   async function zoomIn(pos: { x: number; y: number }) {
     isZooming.value = true;
+    const zoomFactor = 1.02;
     while (isZooming.value) {
-      await new Promise((resolve) => setTimeout(resolve, 1));
-      scaleAt(pos, 1.01);
+      await new Promise((resolve) => setTimeout(resolve, 8));
+      scaleAt(pos, zoomFactor);
       redrawEverything();
     }
   }
