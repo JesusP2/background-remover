@@ -45,7 +45,10 @@ import Layout from '../layouts/Layout.astro';
         <ActionsButton id="move-btn" tooltip="Move">
         <i data-lucide="move" />
         </ActionsButton>
-        <ActionsButton id="window-btn" tooltip="Window">
+        <ActionsButton id="window-btn" tooltip="Mask">
+        <i data-lucide="app-window" />
+        </ActionsButton>
+        <ActionsButton id="result-btn" tooltip="Result">
         <i data-lucide="app-window" />
         </ActionsButton>
         <ActionsButton id="columns-btn" tooltip="Columns">
@@ -154,7 +157,6 @@ import Layout from '../layouts/Layout.astro';
       $sourceCanvas.hidden = false;
       $destinationCanvas.hidden = true;
       $separator.style.display = 'none';
-      // Trigger resize handler to properly update canvas dimensions
       updateCanvasLayout(canvasLayout.value, previousLayout);
     }
   });
@@ -168,7 +170,6 @@ import Layout from '../layouts/Layout.astro';
       $sourceCanvas.hidden = true;
       $destinationCanvas.hidden = false;
       $separator.style.display = 'none';
-      // Trigger resize handler to properly update canvas dimensions
       updateCanvasLayout(canvasLayout.value, previousLayout);
     }
   });
@@ -182,7 +183,6 @@ import Layout from '../layouts/Layout.astro';
       $sourceCanvas.hidden = false;
       $destinationCanvas.hidden = false;
       $separator.style.display = 'block';
-      // Trigger resize handler to properly update canvas dimensions
       updateCanvasLayout(canvasLayout.value, previousLayout);
     }
   });

@@ -9,43 +9,7 @@ import {
   getCanvas,
   urlToImage,
 } from "./utils";
-import type { GrabcutAction } from "./utils";
-
-let currentMode = {
-  value: "draw-green",
-}
-let currentId = {
-  value: ulid(),
-};
-let isRemovingBackground = {
-  value: false,
-};
-const images = {
-  sourceImg: null,
-  destinationImg: null,
-  strokesCanvas: null,
-  strokesImg: null,
-} as GrabcutImages;
-const isZooming = {
-  value: false,
-};
-const matrix = [1, 0, 0, 1, 0, 0];
-const scale = {
-  value: 1,
-};
-const pos = { x: 0, y: 0 };
-const dirty = {
-  value: true,
-};
-const mouse = { x: 0, y: 0, oldX: 0, oldY: 0, button: null } as {
-  x: number;
-  y: number;
-  oldX: number;
-  oldY: number;
-  button: null | number;
-};
-let actions: GrabcutAction[] = [];
-let redoActions: GrabcutAction[] = [];
+import type { GrabcutAction, GrabcutActionType } from "./utils";
 
 async function createWritePresignedUrl(arg1: any, arg2: any, arg3: any) {
   console.log("saving image");
@@ -58,23 +22,54 @@ export function useGrabcutCanvas({
   strokesUrl,
   resultUrl,
   canvasLayout,
+  currentMode = { value: "draw-green" },
+  currentId = { value: ulid() },
+  isRemovingBackground = { value: false },
+  actions = [],
+  redoActions = [],
+  isZooming = { value: false },
+  matrix = [1, 0, 0, 1, 0, 0],
+  scale = { value: 1 },
+  pos = { x: 0, y: 0 },
+  dirty = { value: true },
+  mouse = { x: 0, y: 0, oldX: 0, oldY: 0, button: null },
+  images = {
+    sourceImg: null,
+    destinationImg: null,
+    strokesCanvas: null,
+    strokesImg: null,
+  },
 }: {
   id: string;
   sourceUrl: string;
   strokesUrl: string | null;
   resultUrl: string;
   canvasLayout: CanvasLayout;
+  currentMode: { value: GrabcutActionType };
+  currentId: { value: string };
+  isRemovingBackground: { value: boolean };
+  actions: GrabcutAction[];
+  redoActions: GrabcutAction[];
+  isZooming: { value: boolean };
+  matrix: [number, number, number, number, number, number];
+  scale: { value: number };
+  pos: { x: number; y: number };
+  dirty: { value: boolean };
+  mouse: {
+    x: number;
+    y: number;
+    oldX: number;
+    oldY: number;
+    button: null | number;
+  };
+  images: GrabcutImages;
 }) {
   function redrawEverything() {
-    if (dirty) {
+    if (dirty.value) {
       update();
     }
     const { sourceCtx, destinationCtx } = getCanvas();
-    if (
-      !images.sourceImg ||
-      !images.strokesCanvas ||
-      !images.destinationImg
-    ) {
+    if (!images.sourceImg || !images.strokesCanvas || !images.destinationImg) {
       console.error("could not execute redraw everything fn");
       return;
     }
@@ -86,7 +81,7 @@ export function useGrabcutCanvas({
       matrix[2],
       matrix[3],
       matrix[4],
-      matrix[5]
+      matrix[5],
     );
     sourceCtx.drawImage(images.sourceImg, 0, 0);
     sourceCtx.globalAlpha = 0.5;
@@ -98,7 +93,7 @@ export function useGrabcutCanvas({
       0,
       0,
       destinationCtx.canvas.width,
-      destinationCtx.canvas.height
+      destinationCtx.canvas.height,
     );
     destinationCtx.setTransform(
       matrix[0],
@@ -106,16 +101,18 @@ export function useGrabcutCanvas({
       matrix[2],
       matrix[3],
       matrix[4],
-      matrix[5]
+      matrix[5],
     );
     destinationCtx.drawImage(images.destinationImg, 0, 0);
     destinationCtx.strokeStyle = "black";
-    destinationCtx.lineWidth = 1 / scale.value;
+    const borderWidth = 0.5 / scale.value;
+    const halfBorder = borderWidth / 2;
+    destinationCtx.lineWidth = borderWidth;
     destinationCtx.strokeRect(
-      0,
-      0,
-      images.destinationImg.width,
-      images.destinationImg.height
+      halfBorder,
+      halfBorder,
+      images.destinationImg.width - borderWidth,
+      images.destinationImg.height - borderWidth,
     );
   }
 
@@ -129,7 +126,7 @@ export function useGrabcutCanvas({
 
   function pan(amount: { x: number; y: number }) {
     const { sourceCtx } = getCanvas();
-    if (dirty) {
+    if (dirty.value) {
       update();
     }
     if (!images.sourceImg) return;
@@ -154,19 +151,13 @@ export function useGrabcutCanvas({
     // we discard the smallest between current x and left boundary
     // and the greatest between the previous result and the right boundary
     // the same applies for y
-    pos.x = Math.min(
-      Math.max(pos.x, leftBoundary),
-      rightBoundary
-    );
-    pos.y = Math.min(
-      Math.max(pos.y, topBoundary),
-      bottomBoundary
-    );
+    pos.x = Math.min(Math.max(pos.x, leftBoundary), rightBoundary);
+    pos.y = Math.min(Math.max(pos.y, topBoundary), bottomBoundary);
   }
 
   function scaleAt(at: { x: number; y: number }, _amount: number) {
     let amount = _amount;
-    if (dirty) {
+    if (dirty.value) {
       update();
     }
     if (scale.value * amount > 80) {
@@ -225,7 +216,7 @@ export function useGrabcutCanvas({
 
   function redrawActions(
     ctx: OffscreenCanvasRenderingContext2D,
-    actionsType: "strokes"
+    actionsType: "strokes",
   ) {
     for (const action of actions) {
       if (
@@ -272,12 +263,12 @@ export function useGrabcutCanvas({
         createWritePresignedUrl(
           `${id}-${imageNames.mask}`,
           mask.type,
-          mask.size
+          mask.size,
         ),
         createWritePresignedUrl(
           `${id}-${imageNames.result}`,
           resultFile.type,
-          resultFile.size
+          resultFile.size,
         ),
       ]);
       if (!strokesUrl || !resultUrl) return;
@@ -321,10 +312,8 @@ export function useGrabcutCanvas({
     if (!images.sourceImg) return;
     scale.value = 1;
     const _scale = calculateBaseScale(sourceCtx);
-    pos.x =
-      (sourceCtx.canvas.width / _scale - images.sourceImg.width) / 2;
-    pos.y =
-      (sourceCtx.canvas.height / _scale - images.sourceImg.height) / 2;
+    pos.x = (sourceCtx.canvas.width / _scale - images.sourceImg.width) / 2;
+    pos.y = (sourceCtx.canvas.height / _scale - images.sourceImg.height) / 2;
     scaleAt({ x: 0, y: 0 }, _scale);
     redrawEverything();
   }
@@ -336,7 +325,7 @@ export function useGrabcutCanvas({
     }
     const canvas = new OffscreenCanvas(
       images.sourceImg.width,
-      images.sourceImg.height
+      images.sourceImg.height,
     );
     const canvasCtx = canvas.getContext("2d");
     if (!canvasCtx) return;
@@ -374,7 +363,7 @@ export function useGrabcutCanvas({
 
   function trackMousePosition(
     sourceCtx: CanvasRenderingContext2D,
-    event: MouseEvent | TouchEvent
+    event: MouseEvent | TouchEvent,
   ) {
     let pageX = 0;
     let pageY = 0;
@@ -418,12 +407,7 @@ export function useGrabcutCanvas({
 
   function executeDrawingAction(sourceCtx: CanvasRenderingContext2D) {
     const strokesCanvasCtx = images.strokesCanvas?.getContext("2d");
-    if (
-      !images.sourceImg ||
-      !images.strokesCanvas ||
-      !strokesCanvasCtx
-    )
-      return;
+    if (!images.sourceImg || !images.strokesCanvas || !strokesCanvasCtx) return;
     const action = {
       id: currentId.value,
       type: currentMode.value,
@@ -455,7 +439,7 @@ export function useGrabcutCanvas({
         0,
         0,
         sourceCtx.canvas.width,
-        sourceCtx.canvas.height
+        sourceCtx.canvas.height,
       );
       sourceCtx.drawImage(images.sourceImg, 0, 0);
       sourceCtx.globalAlpha = 0.5;
@@ -504,7 +488,7 @@ export function useGrabcutCanvas({
 
   function setupListeners(
     canvas: HTMLCanvasElement,
-    type: "source" | "destination"
+    type: "source" | "destination",
   ) {
     canvas.addEventListener("mousemove", mousemove);
     canvas.addEventListener("mousedown", mousedown);
@@ -543,7 +527,10 @@ export function useGrabcutCanvas({
     redrawEverything();
   }
 
-  function updateCanvasLayout(layout: CanvasLayout, previousLayout: CanvasLayout) {
+  function updateCanvasLayout(
+    layout: CanvasLayout,
+    previousLayout: CanvasLayout,
+  ) {
     const { sourceCtx, destinationCtx } = getCanvas();
     if (layout === "both") {
       sourceCtx.canvas.width = innerWidth / 2;
@@ -552,9 +539,12 @@ export function useGrabcutCanvas({
       sourceCtx.canvas.width = innerWidth;
       destinationCtx.canvas.width = innerWidth;
     }
-    if (previousLayout === "both" &&  ['mask', 'result'].includes(layout)) {
+    if (previousLayout === "both" && ["mask", "result"].includes(layout)) {
       pos.x = pos.x * 2;
-    } else if (['mask', 'result'].includes(previousLayout) && layout === 'both') {
+    } else if (
+      ["mask", "result"].includes(previousLayout) &&
+      layout === "both"
+    ) {
       pos.x = pos.x / 2;
     }
     sourceCtx.canvas.height = innerHeight;
@@ -590,10 +580,8 @@ export function useGrabcutCanvas({
     }
     saveSnapshot();
     const scale = calculateBaseScale(sourceCtx);
-    pos.x =
-      (sourceCtx.canvas.width / scale - images.sourceImg.width) / 2;
-    pos.y =
-      (sourceCtx.canvas.height / scale - images.sourceImg.height) / 2;
+    pos.x = (sourceCtx.canvas.width / scale - images.sourceImg.width) / 2;
+    pos.y = (sourceCtx.canvas.height / scale - images.sourceImg.height) / 2;
     scaleAt({ x: 0, y: 0 }, scale);
     redrawEverything();
     sourceCtx.imageSmoothingEnabled = false;
