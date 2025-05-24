@@ -1,7 +1,7 @@
 ---
-import { cn } from "../lib/utils";
-import ActionsButton from "../components/action-button.astro";
-import Layout from '../layouts/Layout.astro';
+import { cn } from "../../lib/utils";
+import ActionsButton from "../../components/action-button.astro";
+import Layout from '../../layouts/Layout.astro';
 ---
 <Layout>
 <main class="flex">
@@ -72,8 +72,9 @@ import Layout from '../layouts/Layout.astro';
       />
 </main>
 <script>
-  import type { CanvasLayout } from "@/lib/types";
-  import { useGrabcutCanvas } from "../hooks/use-canvas";
+  const id = window.location.pathname.split('/')[2];
+  import type { CanvasLayout } from "../../lib/types";
+  import { useGrabcutCanvas } from "../../hooks/use-canvas";
   let canvasLayout = {
     value: 'both' as CanvasLayout,
   }
@@ -92,10 +93,7 @@ import Layout from '../layouts/Layout.astro';
     isRemovingBackground,
     updateCanvasLayout,
   } = useGrabcutCanvas({
-    id: '1',
-    sourceUrl: 'https://cdn.myanimelist.net/images/manga/1/259070l.jpg',
-    strokesUrl: null,
-    resultUrl: 'https://cdn.myanimelist.net/images/manga/1/259070l.jpg',
+    id,
     canvasLayout: canvasLayout.value,
   });
   const $sourceCanvas = document.getElementById('source') as HTMLCanvasElement;

@@ -34,7 +34,7 @@ app.add_middleware(
 async def apply_mask_endpoint(
     mask_file: UploadFile = File(...),
     image_file: UploadFile = File(...),
-    sammask_file: UploadFile = File(...),
+    # sammask_file: UploadFile = File(...),
 ):
     bgdModel = np.zeros((1, 65), np.float64)
     fgdModel = np.zeros((1, 65), np.float64)
@@ -46,8 +46,8 @@ async def apply_mask_endpoint(
     mask = Image.open(io.BytesIO(await mask_file.read())).convert("RGB")
     mask_array = cv2.cvtColor(np.array(mask), cv2.COLOR_RGB2GRAY)
 
-    base_mask = Image.open(io.BytesIO(await sammask_file.read())).convert("RGB")
-    base_mask_array = cv2.cvtColor(np.array(base_mask), cv2.COLOR_RGB2GRAY)
+    # base_mask = Image.open(io.BytesIO(await sammask_file.read())).convert("RGB")
+    # base_mask_array = cv2.cvtColor(np.array(base_mask), cv2.COLOR_RGB2GRAY)
 
     max_x = 1080
     max_y = 720
@@ -62,9 +62,9 @@ async def apply_mask_endpoint(
         mask_array = cv2.resize(
             mask_array, None, fx=scale_factor, fy=scale_factor
         )
-        base_mask_array = cv2.resize(
-            base_mask_array, None, fx=scale_factor, fy=scale_factor
-        )
+        # base_mask_array = cv2.resize(
+        #     base_mask_array, None, fx=scale_factor, fy=scale_factor
+        # )
     elif original_bgr_image.shape[1] > max_x:
         scale_factor = max_x / original_bgr_image.shape[1]
         bgr_image = cv2.resize(
@@ -73,27 +73,27 @@ async def apply_mask_endpoint(
         mask_array = cv2.resize(
             mask_array, None, fx=scale_factor, fy=scale_factor
         )
-        base_mask_array = cv2.resize(
-            base_mask_array, None, fx=scale_factor, fy=scale_factor
-        )
+        # base_mask_array = cv2.resize(
+        #     base_mask_array, None, fx=scale_factor, fy=scale_factor
+        # )
 
-    base_mask_array_copy = base_mask_array.copy()
+    mask_array_copy = mask_array.copy()
 
-    base_mask_array[:] = cv2.GC_PR_BGD
-    base_mask_array[base_mask_array_copy == 0] = cv2.GC_PR_BGD
-    base_mask_array[base_mask_array_copy == 255] = cv2.GC_PR_FGD
-    base_mask_array[mask_array == 122] = cv2.GC_BGD
-    base_mask_array[mask_array == 177] = cv2.GC_FGD
+    mask_array[:] = cv2.GC_PR_BGD
+    # mask_array[mask_array_copy == 0] = cv2.GC_PR_BGD
+    # mask_array[mask_array_copy == 255] = cv2.GC_PR_FGD
+    mask_array[mask_array_copy == 122] = cv2.GC_BGD
+    mask_array[mask_array_copy == 177] = cv2.GC_FGD
 
     cv2.grabCut(
-        bgr_image, base_mask_array, None, bgdModel, fgdModel, 1, cv2.GC_INIT_WITH_MASK
+        bgr_image, mask_array, None, bgdModel, fgdModel, 1, cv2.GC_INIT_WITH_MASK
     )
-    new_mask = np.where((base_mask_array == 2) | (base_mask_array == 0), 0, 1).astype(
+    new_mask = np.where((mask_array == 2) | (mask_array == 0), 0, 1).astype(
         "uint8"
     )
     new_mask = np.array(cv2.blur(new_mask * 255, (2, 2)), dtype=np.uint8)
     trimap = new_mask.copy().astype("float32")
-    trimap[mask_array == 229] = 128
+    trimap[mask_array_copy == 229] = 128
     trimap = trimap / 255
 
     bgr_image_float = bgr_image.astype(np.float64) / 255.0

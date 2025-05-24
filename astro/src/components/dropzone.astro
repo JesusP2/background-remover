@@ -1,0 +1,156 @@
+<!-- Modal Dialog Backdrop - Always visible and uncloseable -->
+<div class="fixed inset-0 bg-inherit z-50 flex items-center justify-center">
+    <!-- Dialog Container -->
+    <div class="bg-white rounded-2xl shadow-2xl max-w-3xl w-full mx-4 p-8 relative">
+        <!-- Dialog Header -->
+        <div class="text-center mb-6">
+            <h2 class="text-2xl font-bold text-gray-800 mb-2">Upload Your Image</h2>
+            <p class="text-gray-600">Select an image to start removing the background</p>
+        </div>
+
+        <!-- Main Dropzone -->
+        <sp-dropzone 
+            tabindex="0" 
+            id="dropzone" 
+            drop-effect="copy"
+            class="relative w-full mx-auto border-2 border-dashed border-gray-300 rounded-2xl p-8 bg-gradient-to-br from-gray-50 to-gray-100 hover:from-blue-50 hover:to-indigo-50 hover:border-blue-400 transition-all duration-300 ease-in-out focus:outline-none focus:ring-4 focus:ring-blue-200 focus:border-blue-500"
+        >
+            <!-- Illustrated Message -->
+            <sp-illustrated-message 
+                heading="Drag and drop your file" 
+                id="message"
+                class="flex flex-col items-center justify-center text-center space-y-4"
+            >
+                <!-- SVG Icon with styling -->
+                <div class="w-24 h-16 mb-4 opacity-60 transition-opacity duration-300 hover:opacity-80">
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 150 103"
+                        class="w-full h-full text-gray-400"
+                        fill="currentColor"
+                    >
+                        <path
+                            d="M133.7,8.5h-118c-1.9,0-3.5,1.6-3.5,3.5v27c0,0.8,0.7,1.5,1.5,1.5s1.5-0.7,1.5-1.5V23.5h119V92c0,0.3-0.2,0.5-0.5,0.5h-118c-0.3,0-0.5-0.2-0.5-0.5V69c0-0.8-0.7-1.5-1.5-1.5s-1.5,0.7-1.5,1.5v23c0,1.9,1.6,3.5,3.5,3.5h118c1.9,0,3.5-1.6,3.5-3.5V12C137.2,10.1,135.6,8.5,133.7,8.5z M15.2,21.5V12c0-0.3,0.2-0.5,0.5-0.5h118c0.3,0,0.5,0.2,0.5,0.5v9.5H15.2z M32.6,16.5c0,0.6-0.4,1-1,1h-10c-0.6,0-1-0.4-1-1s0.4-1,1-1h10C32.2,15.5,32.6,15.9,32.6,16.5z M13.6,56.1l-8.6,8.5C4.8,65,4.4,65.1,4,65.1c-0.4,0-0.8-0.1-1.1-0.4c-0.6-0.6-0.6-1.5,0-2.1l8.6-8.5l-8.6-8.5c-0.6-0.6-0.6-1.5,0-2.1c0.6-0.6,1.5-0.6,2.1,0l8.6,8.5l8.6-8.5c0.6-0.6,1.5-0.6,2.1,0c0.6,0.6,0.6,1.5,0,2.1L15.8,54l8.6,8.5c0.6,0.6,0.6,1.5,0,2.1c-0.3,0.3-0.7,0.4-1.1,0.4c-0.4,0-0.8-0.1-1.1-0.4L13.6,56.1z"
+                        ></path>
+                    </svg>
+                </div>
+            </sp-illustrated-message>
+            
+            <!-- File Selection Section -->
+            <div class="mt-6 space-y-4">
+                <div class="text-gray-600">
+                    <label for="file-input" class="cursor-pointer">
+                        <sp-link
+                            href="javascript:;"
+                            onclick="this.parentElement.nextElementSibling.click()"
+                            class="inline-flex items-center px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-lg transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-blue-200"
+                        >
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                            </svg>
+                            Select a File
+                        </sp-link>
+                        <span class="ml-2 text-gray-500">from your computer</span>
+                    </label>
+                    <input type="file" id="file-input" class="hidden" accept="image/*" />
+                </div>
+                
+                <!-- Divider -->
+                <div class="flex items-center justify-center space-x-4">
+                    <div class="flex-1 h-px bg-gray-300"></div>
+                    <span class="text-gray-500 font-medium">or</span>
+                    <div class="flex-1 h-px bg-gray-300"></div>
+                </div>
+                
+                <div class="text-center">
+                    <p class="ml-2 text-gray-500">
+                        Drag and drop your file
+                    </p>
+                </div>
+            </div>
+        </sp-dropzone>
+
+        <!-- Support Text -->
+        <div class="text-center mt-6 text-sm text-gray-500">
+            <p>Supported formats: JPG, PNG, WEBP • Max file size: 10MB</p>
+        </div>
+    </div>
+</div>
+
+<script>
+import '@spectrum-web-components/dropzone/sp-dropzone.js';
+import { db } from "../lib/db";
+import { ulid } from "ulidx";
+
+interface CustomElement extends HTMLElement {
+    heading?: string;
+}
+
+customElements.whenDefined('sp-dropzone').then(() => {
+    const dropzone = document.getElementById('dropzone') as HTMLElement | null;
+    const message = document.getElementById('message') as CustomElement | null;
+    const fileInput = document.getElementById('file-input') as HTMLInputElement | null;
+    let input: string | undefined;
+    let beingDraggedOver = false;
+
+    const updateMessage = () => {
+        if (message) {
+            message.heading = input !== undefined
+                ? (beingDraggedOver ? 'Drop here to replace!' : 'You dropped something!')
+                : 'Drag and drop your file';
+        }
+    };
+
+    const handleDropOrChange = async (files?: FileList | null) => {
+        if (dropzone) {
+            dropzone.setAttribute("filled", "true");
+            dropzone.classList.add('border-green-400', 'bg-green-50');
+            dropzone.classList.remove('border-gray-300', 'hover:border-blue-400');
+        }
+        beingDraggedOver = false;
+        updateMessage();
+        const file = files?.item(0);
+        if (!file) return;
+        const id = ulid();
+        await db.images.add({
+            id,
+            name: file.name,
+            source: file,
+            mask: null,
+            result: file,
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+        });
+        window.location.href = `/canvas/${id}`;
+    };
+
+    if (dropzone) {
+        dropzone.addEventListener('dragover', (event) => {
+            event.preventDefault();
+            beingDraggedOver = true;
+            dropzone.classList.add('border-blue-500', 'bg-blue-50', 'scale-105');
+            updateMessage();
+        });
+
+        dropzone.addEventListener('dragleave', () => {
+            beingDraggedOver = false;
+            dropzone.classList.remove('border-blue-500', 'bg-blue-50', 'scale-105');
+            updateMessage();
+        });
+
+        dropzone.addEventListener('drop', (event) => {
+            event.preventDefault();
+            dropzone.classList.remove('border-blue-500', 'bg-blue-50', 'scale-105');
+            const files = event.dataTransfer?.files;
+            handleDropOrChange(files);
+        });
+    }
+
+    if (fileInput) {
+        fileInput.addEventListener('change', (event) => {
+            const target = event.target as HTMLInputElement;
+            handleDropOrChange(target.files);
+        });
+    }
+});
+</script>

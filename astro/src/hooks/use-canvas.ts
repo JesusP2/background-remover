@@ -10,17 +10,11 @@ import {
   urlToImage,
 } from "./utils";
 import type { GrabcutAction, GrabcutActionType } from "./utils";
+import { PYTHON_BACKEND_URL } from "astro:env/client";
+import { db } from "../lib/db";
 
-async function createWritePresignedUrl(arg1: any, arg2: any, arg3: any) {
-  console.log("saving image");
-  console.log(arg1, arg2, arg3);
-  return "https://example.com/image.png";
-}
 export function useGrabcutCanvas({
   id,
-  sourceUrl,
-  strokesUrl,
-  resultUrl,
   canvasLayout,
   currentMode = { value: "draw-green" },
   currentId = { value: ulid() },
@@ -41,28 +35,25 @@ export function useGrabcutCanvas({
   },
 }: {
   id: string;
-  sourceUrl: string;
-  strokesUrl: string | null;
-  resultUrl: string;
   canvasLayout: CanvasLayout;
-  currentMode: { value: GrabcutActionType };
-  currentId: { value: string };
-  isRemovingBackground: { value: boolean };
-  actions: GrabcutAction[];
-  redoActions: GrabcutAction[];
-  isZooming: { value: boolean };
-  matrix: [number, number, number, number, number, number];
-  scale: { value: number };
-  pos: { x: number; y: number };
-  dirty: { value: boolean };
-  mouse: {
+  currentMode?: { value: GrabcutActionType };
+  currentId?: { value: string };
+  isRemovingBackground?: { value: boolean };
+  actions?: GrabcutAction[];
+  redoActions?: GrabcutAction[];
+  isZooming?: { value: boolean };
+  matrix?: [number, number, number, number, number, number];
+  scale?: { value: number };
+  pos?: { x: number; y: number };
+  dirty?: { value: boolean };
+  mouse?: {
     x: number;
     y: number;
     oldX: number;
     oldY: number;
     button: null | number;
   };
-  images: GrabcutImages;
+  images?: GrabcutImages;
 }) {
   function redrawEverything() {
     if (dirty.value) {
@@ -245,7 +236,7 @@ export function useGrabcutCanvas({
       const formData = new FormData();
       formData.append("image_file", image);
       formData.append("mask_file", mask);
-      const res = await fetch("http://127.0.0.1:8000/mask", {
+      const res = await fetch(PYTHON_BACKEND_URL, {
         method: "POST",
         body: formData,
       });
@@ -257,37 +248,12 @@ export function useGrabcutCanvas({
       const resultFile = new File([resultBlob], imageNames.result, {
         type: "image/png",
       });
+      await db.images.update(id, {
+        mask: mask,
+        result: resultFile,
+      });
       images.destinationImg = await fileToImage(resultFile);
       redrawEverything();
-      const [strokesUrl, resultUrl] = await Promise.all([
-        createWritePresignedUrl(
-          `${id}-${imageNames.mask}`,
-          mask.type,
-          mask.size,
-        ),
-        createWritePresignedUrl(
-          `${id}-${imageNames.result}`,
-          resultFile.type,
-          resultFile.size,
-        ),
-      ]);
-      if (!strokesUrl || !resultUrl) return;
-      await Promise.all([
-        fetch(strokesUrl, {
-          method: "PUT",
-          body: mask,
-          headers: {
-            "Content-Type": mask.type,
-          },
-        }),
-        fetch(resultUrl, {
-          method: "PUT",
-          body: resultFile,
-          headers: {
-            "Content-Type": resultFile.type,
-          },
-        }),
-      ]);
     } catch (err) {
       console.error(err);
     } finally {
@@ -557,7 +523,7 @@ export function useGrabcutCanvas({
     redrawEverything();
   }
 
-  async function loadCanvases() {
+  async function setupCanvases() {
     const { sourceCtx, destinationCtx } = getCanvas();
     if (canvasLayout === "both") {
       sourceCtx.canvas.width = innerWidth / 2;
@@ -569,30 +535,31 @@ export function useGrabcutCanvas({
     sourceCtx.canvas.height = innerHeight;
     destinationCtx.canvas.height = innerHeight;
 
-    images.sourceImg = await urlToImage(sourceUrl);
-    images.destinationImg = await urlToImage(resultUrl);
-    if (strokesUrl !== null) {
-      images.strokesImg = await urlToImage(strokesUrl);
+    const storedImage = await db.images.get(id);
+    if (!storedImage) return;
+    images.sourceImg = await fileToImage(storedImage.source);
+    images.destinationImg = await fileToImage(storedImage.result);
+    if (storedImage.mask) {
+      images.strokesImg = await fileToImage(storedImage.mask);
     }
     if (!images.sourceImg || !images.destinationImg) {
       console.error("Could not load source image");
       return;
     }
+    sourceCtx.imageSmoothingEnabled = false;
+    destinationCtx.imageSmoothingEnabled = false;
     saveSnapshot();
     const scale = calculateBaseScale(sourceCtx);
     pos.x = (sourceCtx.canvas.width / scale - images.sourceImg.width) / 2;
     pos.y = (sourceCtx.canvas.height / scale - images.sourceImg.height) / 2;
     scaleAt({ x: 0, y: 0 }, scale);
     redrawEverything();
-    sourceCtx.imageSmoothingEnabled = false;
-    destinationCtx.imageSmoothingEnabled = false;
 
     setupListeners(sourceCtx.canvas, "source");
     setupListeners(destinationCtx.canvas, "destination");
     window.addEventListener("resize", handleResize);
   }
-  loadCanvases();
-  window.addEventListener("resize", handleResize);
+  setupCanvases();
 
   return {
     applyMaskToImage,
