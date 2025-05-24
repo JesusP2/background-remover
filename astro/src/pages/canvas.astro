@@ -87,6 +87,7 @@ import Layout from '../layouts/Layout.astro';
     currentMode,
     saveResult,
     isRemovingBackground,
+    updateCanvasLayout,
   } = useGrabcutCanvas({
     id: '1',
     sourceUrl: 'https://cdn.myanimelist.net/images/manga/1/259070l.jpg',
@@ -94,8 +95,9 @@ import Layout from '../layouts/Layout.astro';
     resultUrl: 'https://cdn.myanimelist.net/images/manga/1/259070l.jpg',
     canvasLayout: canvasLayout.value,
   });
-  const $sourceCanvas = document.getElementById('source');
-  const $destinationCanvas = document.getElementById('destination');
+  const $sourceCanvas = document.getElementById('source') as HTMLCanvasElement;
+  const $destinationCanvas = document.getElementById('destination') as HTMLCanvasElement;
+  const $separator = document.querySelector('.w-\\[0\\.1\\%\\]') as HTMLElement;
   const $cutBtn = document.getElementById('cut-btn');
   $cutBtn?.addEventListener('click', applyMaskToImage);
   const $addBtn = document.getElementById('add-btn');
@@ -136,20 +138,42 @@ import Layout from '../layouts/Layout.astro';
   $moveBtn?.addEventListener('click', () => currentMode.value = 'move');
   const $windowBtn = document.getElementById('window-btn');
   $windowBtn?.addEventListener('click', () => {
-    if ($sourceCanvas && $destinationCanvas) {
+    if ($sourceCanvas && $destinationCanvas && $separator) {
+      const previousLayout = canvasLayout.value;
       canvasLayout.value = 'mask'
-      $sourceCanvas.style.width = '99.9%';
-      $destinationCanvas.style.width = '99.9%';
+      $sourceCanvas.style.width = '100%';
+      $destinationCanvas.style.width = '100%';
+      $sourceCanvas.hidden = false;
       $destinationCanvas.hidden = true;
+      $separator.style.display = 'none';
+      // Trigger resize handler to properly update canvas dimensions
+      updateCanvasLayout(canvasLayout.value, previousLayout);
+    }
+  });
+  const $resultBtn = document.getElementById('result-btn');
+  $resultBtn?.addEventListener('click', () => {
+    if ($sourceCanvas && $destinationCanvas && $separator) {
+      canvasLayout.value = 'result'
+      $sourceCanvas.style.width = '100%';
+      $destinationCanvas.style.width = '100%';
+      $sourceCanvas.hidden = true;
+      $destinationCanvas.hidden = false;
+      $separator.style.display = 'none';
+      // Trigger resize handler to properly update canvas dimensions
+      updateCanvasLayout(canvasLayout.value);
     }
   });
   const $columnsBtn = document.getElementById('columns-btn');
   $columnsBtn?.addEventListener('click', () => {
-    if ($sourceCanvas && $destinationCanvas) {
+    if ($sourceCanvas && $destinationCanvas && $separator) {
       canvasLayout.value = 'both'
       $sourceCanvas.style.width = '49.95%';
       $destinationCanvas.style.width = '49.95%';
+      $sourceCanvas.hidden = false;
       $destinationCanvas.hidden = false;
+      $separator.style.display = 'block';
+      // Trigger resize handler to properly update canvas dimensions
+      updateCanvasLayout(canvasLayout.value);
     }
   });
 </script>

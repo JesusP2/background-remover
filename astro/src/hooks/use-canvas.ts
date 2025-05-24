@@ -185,7 +185,6 @@ export function useGrabcutCanvas({
   }
 
   function undo() {
-    console.log('undo:', actions)
     const lastAction = actions[actions.length - 1];
     if (!lastAction) return;
     const lastStroke: GrabcutAction[] = [];
@@ -198,7 +197,6 @@ export function useGrabcutCanvas({
       return true;
     });
     redoActions = redoActions.concat(lastStroke);
-    console.log('undo after:', actions, redoActions)
     saveSnapshot();
     redrawEverything();
   }
@@ -526,7 +524,6 @@ export function useGrabcutCanvas({
 
   function handleResize() {
     const { sourceCtx, destinationCtx } = getCanvas();
-    console.log(canvasLayout);
     if (canvasLayout === "both") {
       sourceCtx.canvas.width = innerWidth / 2;
       destinationCtx.canvas.width = innerWidth / 2;
@@ -541,6 +538,30 @@ export function useGrabcutCanvas({
     sourceCtx.imageSmoothingEnabled = false;
     destinationCtx.imageSmoothingEnabled = false;
     adjustImagePosition(sourceCtx);
+    redrawEverything();
+  }
+
+  function updateCanvasLayout(layout: CanvasLayout, previousLayout: CanvasLayout) {
+    const { sourceCtx, destinationCtx } = getCanvas();
+    if (layout === "both") {
+      sourceCtx.canvas.width = innerWidth / 2;
+      destinationCtx.canvas.width = innerWidth / 2;
+    } else {
+      sourceCtx.canvas.width = innerWidth;
+      destinationCtx.canvas.width = innerWidth;
+    }
+    if (previousLayout === "both" &&  ['mask', 'result'].includes(layout)) {
+      pos.x = pos.x * 2;
+    } else if (['mask', 'result'].includes(previousLayout) && layout === 'both') {
+      pos.x = pos.x / 2;
+    }
+    sourceCtx.canvas.height = innerHeight;
+    destinationCtx.canvas.height = innerHeight;
+    dirty.value = true;
+    // sometimes the canvases need to get ajusted again after resizing
+    sourceCtx.imageSmoothingEnabled = false;
+    destinationCtx.imageSmoothingEnabled = false;
+    // adjustImagePosition(sourceCtx);
     redrawEverything();
   }
 
@@ -596,5 +617,6 @@ export function useGrabcutCanvas({
     currentMode,
     saveResult,
     isRemovingBackground,
+    updateCanvasLayout,
   };
 }
