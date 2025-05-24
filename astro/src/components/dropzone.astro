@@ -1,27 +1,23 @@
-<!-- Modal Dialog Backdrop - Always visible and uncloseable -->
+---
+export const prerender = true;
+---
 <div class="fixed inset-0 bg-inherit z-50 flex items-center justify-center">
-    <!-- Dialog Container -->
     <div class="bg-white rounded-2xl shadow-2xl max-w-3xl w-full mx-4 p-8 relative">
-        <!-- Dialog Header -->
         <div class="text-center mb-6">
             <h2 class="text-2xl font-bold text-gray-800 mb-2">Upload Your Image</h2>
             <p class="text-gray-600">Select an image to start removing the background</p>
         </div>
 
-        <!-- Main Dropzone -->
         <sp-dropzone 
             tabindex="0" 
             id="dropzone" 
             drop-effect="copy"
             class="relative w-full mx-auto border-2 border-dashed border-gray-300 rounded-2xl p-8 bg-gradient-to-br from-gray-50 to-gray-100 hover:from-blue-50 hover:to-indigo-50 hover:border-blue-400 transition-all duration-300 ease-in-out focus:outline-none focus:ring-4 focus:ring-blue-200 focus:border-blue-500"
         >
-            <!-- Illustrated Message -->
             <sp-illustrated-message 
                 heading="Drag and drop your file" 
-                id="message"
                 class="flex flex-col items-center justify-center text-center space-y-4"
             >
-                <!-- SVG Icon with styling -->
                 <div class="w-24 h-16 mb-4 opacity-60 transition-opacity duration-300 hover:opacity-80">
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -35,14 +31,10 @@
                     </svg>
                 </div>
             </sp-illustrated-message>
-            
-            <!-- File Selection Section -->
             <div class="mt-6 space-y-4">
                 <div class="text-gray-600">
                     <label for="file-input" class="cursor-pointer">
                         <sp-link
-                            href="javascript:;"
-                            onclick="this.parentElement.nextElementSibling.click()"
                             class="inline-flex items-center px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-lg transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-blue-200"
                         >
                             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -54,19 +46,17 @@
                     </label>
                     <input type="file" id="file-input" class="hidden" accept="image/*" />
                 </div>
-                
                 <!-- Divider -->
-                <div class="flex items-center justify-center space-x-4">
-                    <div class="flex-1 h-px bg-gray-300"></div>
-                    <span class="text-gray-500 font-medium">or</span>
-                    <div class="flex-1 h-px bg-gray-300"></div>
-                </div>
-                
-                <div class="text-center">
-                    <p class="ml-2 text-gray-500">
-                        Drag and drop your file
-                    </p>
-                </div>
+                <!-- <div class="flex items-center justify-center space-x-4"> -->
+                <!--     <div class="flex-1 h-px bg-gray-300"></div> -->
+                <!--     <span class="text-gray-500 font-medium">or</span> -->
+                <!--     <div class="flex-1 h-px bg-gray-300"></div> -->
+                <!-- </div> -->
+                <!-- <div class="text-center"> -->
+                <!--     <p class="ml-2 text-gray-500" id="message"> -->
+                <!--         Drag and drop your file -->
+                <!--     </p> -->
+                <!-- </div> -->
             </div>
         </sp-dropzone>
 
@@ -82,24 +72,9 @@ import '@spectrum-web-components/dropzone/sp-dropzone.js';
 import { db } from "../lib/db";
 import { ulid } from "ulidx";
 
-interface CustomElement extends HTMLElement {
-    heading?: string;
-}
-
 customElements.whenDefined('sp-dropzone').then(() => {
     const dropzone = document.getElementById('dropzone') as HTMLElement | null;
-    const message = document.getElementById('message') as CustomElement | null;
     const fileInput = document.getElementById('file-input') as HTMLInputElement | null;
-    let input: string | undefined;
-    let beingDraggedOver = false;
-
-    const updateMessage = () => {
-        if (message) {
-            message.heading = input !== undefined
-                ? (beingDraggedOver ? 'Drop here to replace!' : 'You dropped something!')
-                : 'Drag and drop your file';
-        }
-    };
 
     const handleDropOrChange = async (files?: FileList | null) => {
         if (dropzone) {
@@ -107,8 +82,6 @@ customElements.whenDefined('sp-dropzone').then(() => {
             dropzone.classList.add('border-green-400', 'bg-green-50');
             dropzone.classList.remove('border-gray-300', 'hover:border-blue-400');
         }
-        beingDraggedOver = false;
-        updateMessage();
         const file = files?.item(0);
         if (!file) return;
         const id = ulid();
@@ -124,33 +97,25 @@ customElements.whenDefined('sp-dropzone').then(() => {
         window.location.href = `/canvas/${id}`;
     };
 
-    if (dropzone) {
-        dropzone.addEventListener('dragover', (event) => {
-            event.preventDefault();
-            beingDraggedOver = true;
-            dropzone.classList.add('border-blue-500', 'bg-blue-50', 'scale-105');
-            updateMessage();
-        });
+    dropzone.addEventListener('dragover', (event) => {
+        event.preventDefault();
+        dropzone.classList.add('border-blue-500', 'bg-blue-50', 'scale-105');
+    });
 
-        dropzone.addEventListener('dragleave', () => {
-            beingDraggedOver = false;
-            dropzone.classList.remove('border-blue-500', 'bg-blue-50', 'scale-105');
-            updateMessage();
-        });
+    dropzone.addEventListener('dragleave', () => {
+        dropzone.classList.remove('border-blue-500', 'bg-blue-50', 'scale-105');
+    });
 
-        dropzone.addEventListener('drop', (event) => {
-            event.preventDefault();
-            dropzone.classList.remove('border-blue-500', 'bg-blue-50', 'scale-105');
-            const files = event.dataTransfer?.files;
-            handleDropOrChange(files);
-        });
-    }
+    dropzone.addEventListener('drop', (event) => {
+        event.preventDefault();
+        dropzone.classList.remove('border-blue-500', 'bg-blue-50', 'scale-105');
+        const files = event.dataTransfer?.files;
+        handleDropOrChange(files);
+    });
 
-    if (fileInput) {
-        fileInput.addEventListener('change', (event) => {
-            const target = event.target as HTMLInputElement;
-            handleDropOrChange(target.files);
-        });
-    }
+    fileInput.addEventListener('change', (event) => {
+        const target = event.target as HTMLInputElement;
+        handleDropOrChange(target.files);
+    });
 });
 </script>
