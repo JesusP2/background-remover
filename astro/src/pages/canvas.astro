@@ -59,7 +59,7 @@ import Layout from '../layouts/Layout.astro';
         }}
         id="source"
       />
-      <div class="h-screen w-[0.1%] bg-zinc-400" />
+      <div class="h-screen w-[0.1%] bg-zinc-400" id="separator" />
       <canvas
         style={{
 		width: '49.95%',
@@ -97,7 +97,7 @@ import Layout from '../layouts/Layout.astro';
   });
   const $sourceCanvas = document.getElementById('source') as HTMLCanvasElement;
   const $destinationCanvas = document.getElementById('destination') as HTMLCanvasElement;
-  const $separator = document.querySelector('.w-\\[0\\.1\\%\\]') as HTMLElement;
+  const $separator = document.getElementById('separator') as HTMLElement;
   const $cutBtn = document.getElementById('cut-btn');
   $cutBtn?.addEventListener('click', applyMaskToImage);
   const $addBtn = document.getElementById('add-btn');
@@ -153,6 +153,7 @@ import Layout from '../layouts/Layout.astro';
   const $resultBtn = document.getElementById('result-btn');
   $resultBtn?.addEventListener('click', () => {
     if ($sourceCanvas && $destinationCanvas && $separator) {
+      const previousLayout = canvasLayout.value;
       canvasLayout.value = 'result'
       $sourceCanvas.style.width = '100%';
       $destinationCanvas.style.width = '100%';
@@ -160,12 +161,13 @@ import Layout from '../layouts/Layout.astro';
       $destinationCanvas.hidden = false;
       $separator.style.display = 'none';
       // Trigger resize handler to properly update canvas dimensions
-      updateCanvasLayout(canvasLayout.value);
+      updateCanvasLayout(canvasLayout.value, previousLayout);
     }
   });
   const $columnsBtn = document.getElementById('columns-btn');
   $columnsBtn?.addEventListener('click', () => {
     if ($sourceCanvas && $destinationCanvas && $separator) {
+      const previousLayout = canvasLayout.value;
       canvasLayout.value = 'both'
       $sourceCanvas.style.width = '49.95%';
       $destinationCanvas.style.width = '49.95%';
@@ -173,7 +175,7 @@ import Layout from '../layouts/Layout.astro';
       $destinationCanvas.hidden = false;
       $separator.style.display = 'block';
       // Trigger resize handler to properly update canvas dimensions
-      updateCanvasLayout(canvasLayout.value);
+      updateCanvasLayout(canvasLayout.value, previousLayout);
     }
   });
 </script>
