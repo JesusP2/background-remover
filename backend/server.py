@@ -1,17 +1,12 @@
 import io
 
 import cv2
-import os
 import numpy as np
-from fastapi import FastAPI, File, UploadFile, Depends
+from fastapi import FastAPI, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from PIL import Image
-import pyamg
-import pymatting
-# from fastapi_limiter import FastAPILimiter
-# from fastapi_limiter.depends import RateLimiter
-# import redis.asyncio as redis
+from diffmate import get_data, infer_one_image, init_model
 
 app = FastAPI()
 
@@ -23,12 +18,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-# @app.on_event("startup")
-# async def startup():
-#     url = f"redis://default:{os.environ['REDIS_PASSWORD']}@{os.environ['REDIS_HOST']}:6379"
-#     print(url)
-#     redis_connection = redis.from_url(url, encoding="utf-8", decode_responses=True)
-#     await FastAPILimiter.init(redis_connection)
 
 @app.post("/mask")
 async def apply_mask_endpoint(
@@ -42,12 +31,10 @@ async def apply_mask_endpoint(
     original_bgr_image = cv2.cvtColor(
         np.array(Image.open(image_file_stream).convert("RGB")), cv2.COLOR_RGB2BGR
     )
+    cv2.imwrite('demo/original.png', original_bgr_image)
 
     mask = Image.open(io.BytesIO(await mask_file.read())).convert("RGB")
     mask_array = cv2.cvtColor(np.array(mask), cv2.COLOR_RGB2GRAY)
-
-    # base_mask = Image.open(io.BytesIO(await sammask_file.read())).convert("RGB")
-    # base_mask_array = cv2.cvtColor(np.array(base_mask), cv2.COLOR_RGB2GRAY)
 
     max_x = 1080
     max_y = 720
@@ -62,9 +49,6 @@ async def apply_mask_endpoint(
         mask_array = cv2.resize(
             mask_array, None, fx=scale_factor, fy=scale_factor
         )
-        # base_mask_array = cv2.resize(
-        #     base_mask_array, None, fx=scale_factor, fy=scale_factor
-        # )
     elif original_bgr_image.shape[1] > max_x:
         scale_factor = max_x / original_bgr_image.shape[1]
         bgr_image = cv2.resize(
@@ -73,17 +57,13 @@ async def apply_mask_endpoint(
         mask_array = cv2.resize(
             mask_array, None, fx=scale_factor, fy=scale_factor
         )
-        # base_mask_array = cv2.resize(
-        #     base_mask_array, None, fx=scale_factor, fy=scale_factor
-        # )
 
     mask_array_copy = mask_array.copy()
 
     mask_array[:] = cv2.GC_PR_BGD
-    # mask_array[mask_array_copy == 0] = cv2.GC_PR_BGD
-    # mask_array[mask_array_copy == 255] = cv2.GC_PR_FGD
     mask_array[mask_array_copy == 122] = cv2.GC_BGD
     mask_array[mask_array_copy == 177] = cv2.GC_FGD
+    cv2.imwrite('demo/mask.png', mask_array_copy)
 
     cv2.grabCut(
         bgr_image, mask_array, None, bgdModel, fgdModel, 1, cv2.GC_INIT_WITH_MASK
@@ -93,25 +73,21 @@ async def apply_mask_endpoint(
     )
     new_mask = np.array(cv2.blur(new_mask * 255, (2, 2)), dtype=np.uint8)
     trimap = new_mask.copy().astype("float32")
+    cv2.imwrite('demo/trimap_before_edit.png', trimap)
     trimap[mask_array_copy == 229] = 128
+    cv2.imwrite('demo/trimap_after_edit.png', trimap)
     trimap = trimap / 255
 
-    bgr_image_float = bgr_image.astype(np.float64) / 255.0
-
-    def pyamg_preconditioner(A):
-        return pyamg.smoothed_aggregation_solver(A).aspreconditioner()
-
-    alpha = pymatting.estimate_alpha_cf(
-        bgr_image_float, trimap, preconditioner=pyamg_preconditioner
-    )
-    alpha_uint8 = (alpha * 255).astype(np.uint8)
+    input = get_data(bgr_image, trimap)
+    model = init_model('configs/ViTS_1024.py', 'checkpoint.pth', 'cpu', 'ddim10')
+    alpha = infer_one_image(model, input, 'demo/result.png')
 
     if scale_factor != 1:
-        alpha_uint8 = cv2.resize(
-            alpha_uint8, (original_bgr_image.shape[1], original_bgr_image.shape[0])
+        alpha = cv2.resize(
+            alpha, (original_bgr_image.shape[1], original_bgr_image.shape[0])
         )
     bgra_image = cv2.cvtColor(original_bgr_image, cv2.COLOR_BGR2BGRA)
-    bgra_image[:, :, 3] = alpha_uint8
+    bgra_image[:, :, 3] = alpha
     _, encoded_rgba_image = cv2.imencode(".png", bgra_image)
     image_bytes = encoded_rgba_image.tobytes()
     image_stream = io.BytesIO(image_bytes)

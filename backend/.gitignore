@@ -2,3 +2,4 @@
 test_images
 result_images
 __pycache__
+checkpoint.pth
