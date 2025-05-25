@@ -1,60 +1,11 @@
 ---
 import { cn } from "../../lib/utils";
-import ActionsButton from "../../components/action-button.astro";
+import ActionMenu from "../../components/action-menu.astro";
 import Layout from '../../layouts/Layout.astro';
 ---
 <Layout>
 <main class="flex">
-      <div class="h-10 p-2 max-w-sm absolute top-2 left-2 bg-white rounded-sm flex items-center gap-x-2">
-        <ActionsButton id="cut-btn" tooltip="Cut">
-        <i data-lucide="scissors" />
-        </ActionsButton>
-        <ActionsButton id="add-btn" tooltip="Add">
-        <i data-lucide="square-plus" />
-        </ActionsButton>
-        <ActionsButton id="remove-btn" tooltip="Remove">
-        <i data-lucide="square-minus" />
-        </ActionsButton>
-        <ActionsButton id="hair-btn" tooltip="Hair">
-        <i data-lucide="brush" />
-        </ActionsButton>
-        <ActionsButton id="erase-btn" tooltip="Erase">
-        <i data-lucide="eraser" />
-        </ActionsButton>
-        <ActionsButton id="undo-btn" tooltip="Undo">
-        <i data-lucide="undo-2" />
-        </ActionsButton>
-        <ActionsButton id="redo-btn" tooltip="Redo">
-        <i data-lucide="redo-2" />
-        </ActionsButton>
-        <ActionsButton
-          id="zoom-in-btn"
-          tooltip="Zoom In"
-        >
-        <i data-lucide="zoom-in" />
-        </ActionsButton>
-        <ActionsButton
-          id="zoom-out-btn"
-          tooltip="Zoom Out"
-        >
-        <i data-lucide="zoom-out" />
-        </ActionsButton>
-        <ActionsButton id="reset-btn" tooltip="Reset">
-        <i data-lucide="focus" />
-        </ActionsButton>
-        <ActionsButton id="move-btn" tooltip="Move">
-        <i data-lucide="move" />
-        </ActionsButton>
-        <ActionsButton id="window-btn" tooltip="Mask">
-        <i data-lucide="app-window" />
-        </ActionsButton>
-        <ActionsButton id="result-btn" tooltip="Result">
-        <i data-lucide="app-window" />
-        </ActionsButton>
-        <ActionsButton id="columns-btn" tooltip="Columns">
-        <i data-lucide="columns-2" />
-        </ActionsButton>
-      </div>
+    <ActionMenu />
       <canvas
         class="h-screen svg-bg"
         style={{
@@ -184,5 +135,7 @@ import Layout from '../../layouts/Layout.astro';
       updateCanvasLayout(canvasLayout.value, previousLayout);
     }
   });
+  const $downloadBtn = document.getElementById('download-btn');
+  $downloadBtn?.addEventListener('click', () => saveResult());
 </script>
 </Layout>

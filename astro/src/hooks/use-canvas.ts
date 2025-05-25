@@ -466,8 +466,9 @@ export function useGrabcutCanvas({
     canvas.addEventListener("wheel", (e) => mouseWheelEvent(e, type));
   }
 
-  async function saveResult(name: string) {
+  async function saveResult() {
     if (!images.destinationImg) return;
+    const { name } = await db.images.get(id);
     const anchor = document.createElement("a");
     anchor.download = `${name.split(".")[0]}.png`;
     anchor.href = images.destinationImg.src;

@@ -8,6 +8,6 @@ type Props = {
 const { tooltip, ...buttonProps } = Astro.props;
 ---
 
-<button {...buttonProps} class="size-[20px] flex items-center text-zinc-950 opacity-70 hover:opacity-100 duration-200">
+<button title={tooltip} {...buttonProps} class="size-[20px] flex items-center text-zinc-950 opacity-70 hover:opacity-100 duration-200">
 	<slot />
 </button>
