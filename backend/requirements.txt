@@ -11,7 +11,6 @@ cloudpickle==3.1.1
 cmake==4.0.2
 contourpy==1.1.1
 cycler==0.12.1
-detectron2 @ git+https://github.com/facebookresearch/detectron2.git@65184fc057d4fab080a98564f6b60fae0b94edc4
 dnspython==2.6.1
 easydict==1.13
 einops==0.8.1
