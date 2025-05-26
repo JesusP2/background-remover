@@ -1,0 +1,7 @@
+name = "background-remover"
+pages_build_output_dir = "./dist"
+compatibility_flags = [ "nodejs_compat" ]
+compatibility_date = "2024-09-23"
+
+[vars]
+PYTHON_BACKEND_URL="https://erasebg.app/mask"
